@@ -1,0 +1,1846 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmsPsoMapper">
+		    
+    <!-- 신제품개발서류목록관리 : 신제품개발서류목록 정보 조회 -->				
+	<select id="SELECT_PSO_DOCU_MSTR" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PDM.OU_CODE
+			     , PDM.DOC_ID
+			     , PDM.DOC_STEP
+			     , PDM.DOC_CHASU
+			     , PDM.DOC_DETAIL_CHASU
+			     , PDM.CONTENTS
+			     , PDM.MANAGER_DEPT
+			     , PDM.FIRST_GRADE
+			     , PDM.SECOND_GRADE
+			     , PDM.THIRD_GRADE
+			     , PDM.APQP
+			     , DECODE(NVL(SMT_GET_ATTFILE_ID_FUNC(PDM.OU_CODE,'Pso1010',PDM.DOC_ID,NULL),'N'),'N','N','Y') AS ATTFILE_YN
+			     , TO_CHAR(PDM.EFFECTIVE_START_DATE,'RRRRMMDD') AS EFFECTIVE_START_DATE
+			     , TO_CHAR(PDM.EFFECTIVE_END_DATE,'RRRRMMDD')   AS EFFECTIVE_END_DATE
+			     , PDM.REMARK
+			  FROM OMS_PSO_DEV_DOCU_MSTR   PDM
+			 WHERE PDM.OU_CODE = #{OU_CODE}
+			   AND PDM.LANG    = #{GV_LANG}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(DOC_STEP)">
+        	<![CDATA[
+        	   AND PDM.DOC_STEP = #{DOC_STEP}
+        	]]>  
+        </if> 	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(MANAGER_DEPT)">
+            <![CDATA[
+        	   AND PDM.MANAGER_DEPT LIKE '%'|| #{MANAGER_DEPT} || '%'  
+        	]]>
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(STD_DATE)">
+        	<![CDATA[
+        	   AND TO_DATE(#{STD_DATE},'RRRR-MM-DD') BETWEEN NVL(PDM.EFFECTIVE_START_DATE,TO_DATE(#{STD_DATE},'RRRR-MM-DD'))
+        	                                             AND NVL(PDM.EFFECTIVE_END_DATE,TO_DATE(#{STD_DATE},'RRRR-MM-DD'))
+        	]]>  
+        </if> 
+		<![CDATA[
+			 ORDER BY PDM.DOC_STEP, TO_NUMBER(PDM.DOC_CHASU), TO_NUMBER(PDM.DOC_DETAIL_CHASU)
+        ]]>
+    </select>
+    
+    <!-- 신제품개발서류목록관리  : PSO_DOC_ID_SEQ -->  
+    <select id="SELECT_PSO_DOC_ID_SEQ" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT OMS_PSO_DOC_ID_SEQ.NEXTVAL  SEQ 
+          	  FROM DUAL
+   		]]>
+   	</select>
+   	
+   	<!-- 신제품개발서류목록관리 : 신제품개발서류목록관리  정보 insert -->
+    <insert id="INSERT_PSO_DOCU_MSTR" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+            INSERT INTO OMS_PSO_DEV_DOCU_MSTR
+			  (OU_CODE
+			  ,DOC_ID
+			  ,DOC_STEP
+			  ,DOC_CHASU
+			  ,DOC_DETAIL_CHASU
+			  ,CONTENTS
+			  ,MANAGER_DEPT
+			  ,FIRST_GRADE
+			  ,SECOND_GRADE
+			  ,THIRD_GRADE
+			  ,APQP
+			  ,EFFECTIVE_START_DATE
+			  ,EFFECTIVE_END_DATE
+			  ,REMARK
+			  ,LANG
+			  ,INS_DATE
+			  ,INS_USER_ID
+			  ,UPD_DATE
+			  ,UPD_USER_ID)
+			VALUES
+			  (#{OU_CODE}
+			  ,#{DOC_ID}
+			  ,#{DOC_STEP}
+			  ,#{DOC_CHASU}
+			  ,#{DOC_DETAIL_CHASU}
+			  ,#{CONTENTS}
+			  ,#{MANAGER_DEPT}
+			  ,#{FIRST_GRADE}
+			  ,#{SECOND_GRADE}
+			  ,#{THIRD_GRADE}
+			  ,#{APQP}
+			  ,TO_DATE(#{EFFECTIVE_START_DATE},'RRRRMMDD')
+			  ,TO_DATE(#{EFFECTIVE_END_DATE},'RRRRMMDD')
+			  ,#{REMARK}
+			  ,#{GV_LANG}
+			  ,SYSDATE
+	          ,#{GV_USER_ID}
+	          ,SYSDATE
+	          ,#{GV_USER_ID})
+        ]]>
+    </insert>
+    
+    <!-- 신제품개발서류목록관리 : 신제품개발서류목록관리 정보 update -->
+    <update id="UPDATE_PSO_DOCU_MSTR" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_PSO_DEV_DOCU_MSTR
+			   SET DOC_STEP             = #{DOC_STEP}
+			     , DOC_CHASU            = #{DOC_CHASU}
+			     , DOC_DETAIL_CHASU     = #{DOC_DETAIL_CHASU}
+			     , CONTENTS             = #{CONTENTS}
+			     , MANAGER_DEPT         = #{MANAGER_DEPT}
+			     , FIRST_GRADE          = #{FIRST_GRADE}
+			     , SECOND_GRADE         = #{SECOND_GRADE}
+			     , THIRD_GRADE          = #{THIRD_GRADE}
+			     , APQP                 = #{APQP}
+			     , EFFECTIVE_START_DATE = TO_DATE(#{EFFECTIVE_START_DATE},'RRRRMMDD')
+			     , EFFECTIVE_END_DATE   = TO_DATE(#{EFFECTIVE_END_DATE},'RRRRMMDD')
+			     , REMARK               = #{REMARK}
+			     , UPD_DATE             = SYSDATE
+			     , UPD_USER_ID          = #{GV_USER_ID}
+			 WHERE OU_CODE              = #{OU_CODE}
+			   AND DOC_ID               = #{DOC_ID}
+        ]]> 
+    </update>
+    
+    <!-- 신제품개발서류목록관리 : 신제품개발서류목록관리 정보 삭제 -->
+    <delete id="DELETE_PSO_DOCU_MSTR" parameterType="java.util.Map">  
+    		DELETE OMS_PSO_DEV_DOCU_MSTR
+			 WHERE OU_CODE     = #{OU_CODE}
+			   AND DOC_ID      = #{DOC_ID}
+    </delete>
+    
+    <!-- 개발착수등급산정표 : 개발착수 등급 산정표 정보 조회 -->				
+	<select id="SELECT_PSO_RATING_BOARD" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PRB.OU_CODE
+			     , PRB.RATING_ID
+			     , PRB.RATING_STEP
+			     , PRB.DISPLAY_SEQ
+			     , PRB.TYPE
+			     , PRB.SCORE
+			     , TO_CHAR(PRB.EFFECTIVE_START_DATE,'RRRRMMDD') AS EFFECTIVE_START_DATE
+			     , TO_CHAR(PRB.EFFECTIVE_END_DATE,'RRRRMMDD')   AS EFFECTIVE_END_DATE
+			     , PRB.REMARK
+			  FROM OMS_PSO_DEV_RATING_BOARD  PRB
+			 WHERE PRB.OU_CODE = #{OU_CODE}
+			   AND PRB.LANG    = #{GV_LANG}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(STD_DATE)">
+        	<![CDATA[
+        	   AND TO_DATE(#{STD_DATE},'RRRR-MM-DD') BETWEEN NVL(PRB.EFFECTIVE_START_DATE,TO_DATE(#{STD_DATE},'RRRR-MM-DD'))
+        	                                             AND NVL(PRB.EFFECTIVE_END_DATE,TO_DATE(#{STD_DATE},'RRRR-MM-DD'))
+        	]]>  
+        </if> 	
+		<![CDATA[
+			 ORDER BY PRB.RATING_STEP, PRB.DISPLAY_SEQ
+        ]]>
+    </select>
+    
+    <!-- 개발착수등급산정표  : PSO_RATING_ID_SEQ -->  
+    <select id="SELECT_PSO_RATING_ID_SEQ" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT OMS_PSO_RATING_ID_SEQ.NEXTVAL  SEQ 
+          	  FROM DUAL
+   		]]>
+   	</select>
+   	
+   	<!-- 개발착수등급산정표 : 개발착수등급산정표  정보 insert -->
+    <insert id="INSERT_PSO_RATING_BOARD" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+            INSERT INTO OMS_PSO_DEV_RATING_BOARD
+			  (OU_CODE
+			  ,RATING_ID
+			  ,RATING_STEP
+			  ,DISPLAY_SEQ
+			  ,TYPE
+			  ,SCORE
+			  ,EFFECTIVE_START_DATE
+			  ,EFFECTIVE_END_DATE
+			  ,REMARK
+			  ,LANG
+			  ,INS_DATE
+			  ,INS_USER_ID
+			  ,UPD_DATE
+			  ,UPD_USER_ID)
+			VALUES
+			  (#{OU_CODE}
+			  ,#{RATING_ID}
+			  ,#{RATING_STEP}
+			  ,#{DISPLAY_SEQ}
+			  ,#{TYPE}
+			  ,#{SCORE}
+			  ,TO_DATE(#{EFFECTIVE_START_DATE},'RRRRMMDD')
+			  ,TO_DATE(#{EFFECTIVE_END_DATE},'RRRRMMDD')
+			  ,#{REMARK}
+			  ,#{GV_LANG}
+			  ,SYSDATE
+	          ,#{GV_USER_ID}
+	          ,SYSDATE
+	          ,#{GV_USER_ID})
+        ]]>
+    </insert>
+    
+    <!-- 개발착수등급산정표 : 개발착수등급산정표 정보 update -->
+    <update id="UPDATE_PSO_RATING_BOARD" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_PSO_DEV_RATING_BOARD
+			   SET RATING_STEP          = #{RATING_STEP}
+			     , DISPLAY_SEQ          = #{DISPLAY_SEQ}
+			     , TYPE     			= #{TYPE}
+			     , SCORE             	= #{SCORE}
+			     , EFFECTIVE_START_DATE = TO_DATE(#{EFFECTIVE_START_DATE},'RRRRMMDD')
+			     , EFFECTIVE_END_DATE   = TO_DATE(#{EFFECTIVE_END_DATE},'RRRRMMDD')
+			     , REMARK               = #{REMARK}
+			     , UPD_DATE             = SYSDATE
+			     , UPD_USER_ID          = #{GV_USER_ID}
+			 WHERE OU_CODE              = #{OU_CODE}
+			   AND RATING_ID            = #{RATING_ID}
+        ]]> 
+    </update>
+    
+    <!-- 개발착수등급산정표 : 개발착수등급산정표 정보 삭제 -->
+    <delete id="DELETE_PSO_RATING_BOARD" parameterType="java.util.Map">  
+    		DELETE OMS_PSO_DEV_RATING_BOARD
+			 WHERE OU_CODE     = #{OU_CODE}
+			   AND RATING_ID   = #{RATING_ID}
+    </delete>
+    
+    <!-- PSO대상프로젝트관리  : PSO대상프로젝트 담당자 조회 -->  
+    <select id="SELECT_PSO_PROJECT_CHARGE" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT UM.USER_ID     AS PM_CHG_ID
+			     , UM.USER_NAME   AS PM_CHG_NAME
+			  FROM SMT_USER_MSTR  UM
+			 WHERE UM.OU_CODE = #{OU_CODE}
+			   AND UM.BIZ_DIV = 'PM'
+			   AND UPPER(UM.LOGIN_NO) <> 'PMADMIN'
+			   AND TRUNC(SYSDATE) BETWEEN NVL(UM.ST_DATE,TRUNC(SYSDATE))
+			                          AND NVL(UM.ED_DATE,TRUNC(SYSDATE))
+   		]]>
+   	</select>
+   	
+    <!-- PSO대상프로젝트관리 : PSO대상 프로젝트 정보 조회 -->				
+	<select id="SELECT_PSO_PROJECT_MSTR" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PM.OU_CODE
+	 		     , PM.PSO_PROJECT_ID
+			     , PM.PROJECT_CODE
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , OP.REGISTER_YEAR
+			     , OP.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , SC.NATION_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O005', SC.NATION_CODE, #{GV_LANG}) AS NATION_NAME
+			     , OP.OU_COUNTRY_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O001', OP.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+			     , OP.CUSTOMER_AREA
+			     , OP.PRODUCTION_AREA_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O002', OP.PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+			     , PM.BUSINESS_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O013', PM.BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+			     , PM.PRODUCT_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O007', PM.PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+			     , PM.PRODUCT_NAME_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O008', PM.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+			     , PM.PRODUCT_MODEL_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O010', PM.PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+			     , PM.PRODUCT_PKG_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O012', PM.PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+			     , PM.ITEM_NAME
+			     , PP.ERP_ITEM_NO
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			     , PM.PSO_TARGET_YN
+			     , PM.NO_TARGET_REASON
+			     , PM.PSO_CREATE_YN
+			     , PRB.R_BOARD_ID
+			  FROM OMS_PSO_PROJECT_MSTR  PM
+			     , OMS_PROJECT           OP
+			     , SMT_CUSTOMER          SC
+			     , OMS_PROJECT_PRODUCT   PP
+			     , OMS_PSO_PROJECT_R_BOARD  PRB
+			 WHERE PM.OU_CODE = OP.OU_CODE
+			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			   AND PM.OU_CODE = PRB.OU_CODE(+) 
+               AND PM.PSO_PROJECT_ID = PRB.PSO_PROJECT_ID(+) 
+			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
+			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			   AND PM.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PM.PROJECT_CODE = #{PROJECT_CODE}
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_TARGET_YN)">
+        	<![CDATA[
+        	   AND PM.PSO_TARGET_YN = #{PSO_TARGET_YN} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_ID)">
+        	<![CDATA[
+        	   AND PM.UPD_USER_ID = #{PM_CHG_ID} 
+        	]]>  
+        </if>		   
+		<![CDATA[
+			 ORDER BY TO_NUMBER(SUBSTR(PM.PROJECT_CODE,LENGTH(PM.PROJECT_CODE)-2))
+        ]]>
+    </select>
+    
+    <!-- PSO대상프로젝트관리 : PSO대상 프로젝트 정보 update -->
+    <update id="UPDATE_PSO_PROJECT_MSTR" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_PSO_PROJECT_MSTR
+			   SET PSO_TARGET_YN        = #{PSO_TARGET_YN}
+			     , NO_TARGET_REASON     = #{NO_TARGET_REASON}
+			     , PSO_CREATE_YN	    = DECODE(#{PSO_TARGET_YN},'N','Y',PSO_CREATE_YN)
+			     , UPD_DATE             = SYSDATE
+			     , UPD_USER_ID          = #{GV_USER_ID}
+			 WHERE OU_CODE              = #{OU_CODE}
+			   AND PSO_PROJECT_ID       = #{PSO_PROJECT_ID}
+        ]]> 
+    </update>
+    
+    <!-- PSO대상프로젝트관리 : PSO대상 프로젝트 정보(POPUP) 조회 -->				
+	<select id="SELECT_PSO_PROJECT_ALL" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PM.OU_CODE
+	 		     , PM.PSO_PROJECT_ID
+			     , PM.PROJECT_CODE
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , OP.REGISTER_YEAR
+			     , OP.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , SC.NATION_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O005', SC.NATION_CODE, #{GV_LANG}) AS NATION_NAME
+			     , OP.OU_COUNTRY_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O001', OP.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+			     , OP.CUSTOMER_AREA
+			     , OP.PRODUCTION_AREA_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O002', OP.PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+			     , PM.BUSINESS_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O013', PM.BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+			     , PM.PRODUCT_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O007', PM.PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+			     , PM.PRODUCT_NAME_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O008', PM.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+			     , PM.PRODUCT_MODEL_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O010', PM.PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+			     , PM.PRODUCT_PKG_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O012', PM.PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+			     , PM.ITEM_NAME
+			     , PP.ERP_ITEM_NO
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			     , PM.PSO_TARGET_YN
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P005', PM.PSO_TARGET_YN, #{GV_LANG}) AS PSO_TARGET_YN_NAME 
+			     , PM.NO_TARGET_REASON
+			     , PM.PSO_CREATE_YN
+			     , PM.UPD_USER_ID   AS PM_USER
+			     , SMT_GET_USER_NAME_FUNC(PM.OU_CODE,PM.UPD_USER_ID) AS PM_USER_NAME 
+			  FROM OMS_PSO_PROJECT_MSTR  PM
+			     , OMS_PROJECT           OP
+			     , SMT_CUSTOMER          SC
+			     , OMS_PROJECT_PRODUCT   PP
+			 WHERE PM.OU_CODE = OP.OU_CODE
+			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
+			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			   AND PM.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND OP.CAR_TYPE_CODE LIKE '%'|| #{CAR_TYPE_CODE} || '%'
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ITEM_NAME)">
+        	<![CDATA[
+        	   AND PM.ITEM_NAME LIKE '%'|| #{ITEM_NAME} || '%'
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_TARGET_YN)">
+        	<![CDATA[
+        	   AND PM.PSO_TARGET_YN = #{PSO_TARGET_YN} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_ID)">
+        	<![CDATA[
+        	   AND PM.UPD_USER_ID = #{PM_CHG_ID} 
+        	]]>  
+        </if> 
+		<![CDATA[
+			 ORDER BY TO_NUMBER(SUBSTR(PM.PROJECT_CODE,LENGTH(PM.PROJECT_CODE)-2)), PM.ITEM_NAME
+        ]]>
+    </select>
+    
+    <!-- PSO대상프로젝트관리 : PSO대상 프로젝트  개발착수등급표 생성 -->
+    <select id="PSO_R_BOARD_CREATE_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+        <![CDATA[       
+			CALL  OMS_PSO_R_BOARD_CREATE_PKG.PSO_R_BOARD_CREATE_PROC( 
+			                                             #{X_RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{X_RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{USER_ID}
+			                                            ,#{OU_CODE}
+			                                            ,#{PSO_PROJECT_ID}
+			                                            ,#{LANGUAGE}			                                            
+			                                            )
+        ]]>
+    </select>
+    
+    <!-- PSO개발착수등급산정관리 : PSO개발착수등급산정 정보 (MAIN) 조회 -->				
+	<select id="SELECT_PSO_R_BOARD_MAIN" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PRB.OU_CODE
+			     , PRB.R_BOARD_ID
+			     , PRB.PSO_PROJECT_ID
+			     , PM.PROJECT_CODE
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , OP.REGISTER_YEAR
+			     , OP.OU_COUNTRY_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O001', OP.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+			     , OP.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , SC.NATION_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O005', SC.NATION_CODE, #{GV_LANG}) AS NATION_NAME
+			     , OP.CUSTOMER_AREA
+			     , OP.PRODUCTION_AREA_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O002', OP.PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+			     , PM.BUSINESS_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O013', PM.BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+			     , PM.PRODUCT_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O007', PM.PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+			     , PM.PRODUCT_NAME_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O008', PM.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+			     , PM.PRODUCT_MODEL_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O010', PM.PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+			     , PM.PRODUCT_PKG_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O012', PM.PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+			     , PM.ITEM_NAME
+			     , PP.ERP_ITEM_NO
+			     , SUBSTR(OP.SOP,1,4)||'-'||SUBSTR(OP.SOP,5) AS SOP
+				 , SUBSTR(OP.EOP,1,4)||'-'||SUBSTR(OP.EOP,5) AS EOP
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			     , PRB.R_BOARD_STATUS
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P008', PRB.R_BOARD_STATUS, #{GV_LANG}) AS R_BOARD_STATUS_NAME
+			     , PRB.GRADE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P007', PRB.GRADE, #{GV_LANG}) AS GRADE_NAME
+			     , PRB.T_SCORE
+			     , PRB.APQP_YN
+			     , PRB.IND_GROUP
+			     , PRB.REMARK
+			     , DECODE(#{GV_USER_ID},PM.UPD_USER_ID,'W','R') AS READ_WRITE
+			     , OMS_PSO_GET_USER_AUTH_FUNC(PM.OU_CODE,#{GV_USER_ID}) AS PM_AUTH  
+			  FROM OMS_PSO_PROJECT_R_BOARD  PRB
+			     , OMS_PSO_PROJECT_MSTR     PM
+			     , OMS_PROJECT              OP
+			     , SMT_CUSTOMER             SC
+			     , OMS_PROJECT_PRODUCT      PP
+			 WHERE PRB.OU_CODE = PM.OU_CODE
+			   AND PRB.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PM.OU_CODE = OP.OU_CODE
+			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
+			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			   AND PRB.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_PROJECT_ID)">
+        	<![CDATA[
+        	   AND PRB.PSO_PROJECT_ID = #{PSO_PROJECT_ID}
+        	]]>  
+        </if>
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(R_BOARD_ID)">
+        	<![CDATA[
+        	   AND PRB.R_BOARD_ID = #{R_BOARD_ID}
+        	]]>  
+        </if>  
+    </select>
+    
+    <!-- PSO개발착수등급산정관리 : PSO개발착수등급산정 정보 (DETAIL) 조회 -->				
+	<select id="SELECT_PSO_R_BOARD_DETAIL" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PRL.OU_CODE
+			     , PRL.R_BOARD_ID
+			     , PRL.R_BOARD_LINE_ID
+			     , PRL.RATING_ID
+			     , PRL.RATING_STEP
+			     , SMT_GET_CODE_NAME_FUNC('P004',PRL.RATING_STEP,#{GV_LANG}) AS RATING_STEP_NAME
+			     , PRL.DISPLAY_SEQ
+			     , DRB.TYPE
+			     , PRL.SCORE
+			     , PRL.MARK
+			     , PRL.S_SCORE
+			     , PRL.ITEM_DESC
+			  FROM OMS_PSO_PROJECT_R_BOARD_LINE  PRL
+			     , OMS_PSO_DEV_RATING_BOARD      DRB
+			 WHERE PRL.OU_CODE = #{OU_CODE}
+			   AND PRL.R_BOARD_ID = #{R_BOARD_ID}
+			   AND PRL.OU_CODE = DRB.OU_CODE
+			   AND PRL.RATING_ID = DRB.RATING_ID  
+			   AND PRL.LANG = DRB.LANG
+			   AND PRL.LANG = #{GV_LANG} 
+			 ORDER BY PRL.RATING_STEP, PRL.DISPLAY_SEQ
+		]]>	
+    </select>
+    
+    <!-- PSO개발착수등급산정관리 : PSO개발착수등급산정 정보 (MAIN) update -->
+    <update id="UPDATE_PSO_R_BOARD_MAIN" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_PSO_PROJECT_R_BOARD
+			   SET GRADE                = #{GRADE}
+			     , T_SCORE	            = #{T_SCORE}
+			     , IND_GROUP            = #{IND_GROUP}
+			     , REMARK      	        = #{REMARK}
+			     , UPD_DATE             = SYSDATE
+			     , UPD_USER_ID          = #{GV_USER_ID}
+			 WHERE OU_CODE              = #{OU_CODE}
+			   AND R_BOARD_ID           = #{R_BOARD_ID}
+        ]]> 
+    </update>
+    
+    <!-- PSO개발착수등급산정관리 : PSO개발착수등급산정 정보 (DETAIL) update -->
+    <update id="UPDATE_PSO_R_BOARD_DETAIL" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_PSO_PROJECT_R_BOARD_LINE
+			   SET MARK                 = #{MARK}
+			     , S_SCORE              = #{S_SCORE}
+			     , ITEM_DESC            = #{ITEM_DESC}
+			     , UPD_DATE             = SYSDATE
+			     , UPD_USER_ID          = #{GV_USER_ID}
+			 WHERE OU_CODE              = #{OU_CODE}
+			   AND R_BOARD_ID           = #{R_BOARD_ID}
+			   AND R_BOARD_LINE_ID 	    = #{R_BOARD_LINE_ID}
+			   AND RATING_ID    	    = #{RATING_ID}
+        ]]> 
+    </update>
+    
+    <!-- PSO개발착수등급산정관리 : PSO개발착수등급산정 정보(POPUP) 조회 -->				
+	<select id="SELECT_PSO_R_BOARD_ALL" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PRB.OU_CODE
+			     , PRB.R_BOARD_ID
+			     , PRB.PSO_PROJECT_ID
+			     , PM.PROJECT_CODE
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , OP.REGISTER_YEAR
+			     , OP.OU_COUNTRY_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O001', OP.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+			     , OP.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , SC.NATION_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O005', SC.NATION_CODE, #{GV_LANG}) AS NATION_NAME
+			     , OP.CUSTOMER_AREA
+			     , OP.PRODUCTION_AREA_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O002', OP.PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+			     , PM.BUSINESS_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O013', PM.BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+			     , PM.PRODUCT_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O007', PM.PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+			     , PM.PRODUCT_NAME_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O008', PM.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+			     , PM.PRODUCT_MODEL_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O010', PM.PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+			     , PM.PRODUCT_PKG_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O012', PM.PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+			     , PM.ITEM_NAME
+			     , PP.ERP_ITEM_NO
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			     , PRB.R_BOARD_STATUS
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P008', PRB.R_BOARD_STATUS, #{GV_LANG}) AS R_BOARD_STATUS_NAME
+			     , PRB.GRADE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P007', PRB.GRADE, #{GV_LANG}) AS GRADE_NAME
+			     , PRB.T_SCORE
+			     , PRB.APQP_YN
+			     , PRB.IND_GROUP
+			     , PRB.REMARK
+			     , PM.UPD_USER_ID   AS PM_USER
+			     , SMT_GET_USER_NAME_FUNC(PM.OU_CODE,PM.UPD_USER_ID) AS PM_USER_NAME 	
+			  FROM OMS_PSO_PROJECT_R_BOARD  PRB
+			     , OMS_PSO_PROJECT_MSTR     PM
+			     , OMS_PROJECT              OP
+			     , SMT_CUSTOMER             SC
+			     , OMS_PROJECT_PRODUCT      PP
+			 WHERE PRB.OU_CODE = PM.OU_CODE
+			   AND PRB.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PM.OU_CODE = OP.OU_CODE
+			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
+			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			   AND PRB.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND OP.CAR_TYPE_CODE LIKE '%'|| #{CAR_TYPE_CODE} || '%'
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ITEM_NAME)">
+        	<![CDATA[
+        	   AND PM.ITEM_NAME LIKE '%'|| #{ITEM_NAME} || '%'
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(R_BOARD_STATUS)">
+        	<![CDATA[
+        	   AND PRB.R_BOARD_STATUS = #{R_BOARD_STATUS} 
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_ID)">
+        	<![CDATA[
+        	   AND PRB.INS_USER_ID = #{PM_CHG_ID} 
+        	]]>  
+        </if>  
+		<![CDATA[
+			 ORDER BY TO_NUMBER(SUBSTR(PM.PROJECT_CODE,LENGTH(PM.PROJECT_CODE)-2)), PM.ITEM_NAME
+        ]]>
+    </select>
+    
+    <!-- PSO개발착수등급산정관리  : 개발 등급 SELECT -->  
+    <select id="SELECT_DEV_GRADE" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT CSC.ITEM_CODE  
+        	     , CSC.ITEM_NAME
+			  FROM (SELECT SCC.ITEM_CODE
+			             , SCC.ITEM_NAME
+			             , TO_NUMBER(REGEXP_REPLACE(SCC.REF_1, '[^0-9]', '')) AS REF_1 
+			             , TO_NUMBER(REGEXP_REPLACE(SCC.REF_2, '[^0-9]', '')) AS REF_2
+			          FROM SMT_COMM_CODE   SCC
+			         WHERE SCC.GRP_CODE = 'P007' 
+			           AND NVL(SCC.ACTIVE_FLAG,'N') = 'Y') CSC
+			 WHERE TO_NUMBER(#{T_SCORE}) >= CSC.REF_1
+			   AND TO_NUMBER(#{T_SCORE}) <  CSC.REF_2
+   		]]>
+   	</select>
+   	
+   	<!-- PSO개발착수등급산정관리 : PSO대상 프로젝트  신제품개발서류목록 생성 -->
+    <select id="PSO_DOCUMENT_CREATE_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+        <![CDATA[       
+			CALL  OMS_PSO_DOCUMENT_PKG.PSO_DOCUMENT_CREATE_PROC( 
+			                                             #{X_RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{X_RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{USER_ID}
+			                                            ,#{OU_CODE}
+			                                            ,#{PSO_PROJECT_ID}
+			                                            ,#{PSO_R_BOARD_ID}
+			                                            ,#{LANGUAGE}			                                            
+			                                            )
+        ]]>
+    </select>
+    
+    <!-- PSO신제품개발서류목록관리  : PSO ADMIN 권한 조회 -->  
+    <select id="SELECT_PSO_GET_USER_AUTH" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT OMS_PSO_GET_USER_AUTH_FUNC(#{OU_CODE},#{GV_USER_ID}) AS PM_USER_AUTH
+			  FROM DUAL
+   		]]>
+   	</select>
+   	
+    <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록 정보 (MAIN) 조회 -->				
+	<select id="SELECT_PSO_DOCU_MAIN" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PD.OU_CODE
+			     , PD.PSO_DOCU_ID
+			     , PD.PSO_PROJECT_ID
+			     , PD.R_BOARD_ID
+			     , PM.PROJECT_CODE
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , OP.REGISTER_YEAR
+			     , OP.OU_COUNTRY_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O001', OP.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+			     , OP.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , SC.NATION_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O005', SC.NATION_CODE, #{GV_LANG}) AS NATION_NAME
+			     , OP.CUSTOMER_AREA
+			     , OP.PRODUCTION_AREA_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O002', OP.PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+			     , PM.BUSINESS_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O013', PM.BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+			     , PM.PRODUCT_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O007', PM.PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+			     , PM.PRODUCT_NAME_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O008', PM.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+			     , PM.PRODUCT_MODEL_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O010', PM.PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+			     , PM.PRODUCT_PKG_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O012', PM.PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+			     , PM.ITEM_NAME
+			     , PP.ERP_ITEM_NO
+			     , SUBSTR(OP.SOP,1,4)||'-'||SUBSTR(OP.SOP,5) AS SOP
+				 , SUBSTR(OP.EOP,1,4)||'-'||SUBSTR(OP.EOP,5) AS EOP
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			     , RB.GRADE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P007', RB.GRADE, #{GV_LANG}) AS GRADE_NAME
+			     , RB.T_SCORE
+			     , RB.APQP_YN
+			     , PD.PSO_DOCU_STATUS
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P008', PD.PSO_DOCU_STATUS, #{GV_LANG}) AS DOCU_STATUS_NAME
+			     , PD.DESCRIPTION
+			     , DECODE(#{GV_USER_ID},PM.UPD_USER_ID,'W','R') AS READ_WRITE
+			     , OMS_PSO_GET_USER_AUTH_FUNC(PM.OU_CODE,#{GV_USER_ID}) AS PM_AUTH
+			  FROM OMS_PSO_PROJECT_DOCU     PD
+			     , OMS_PSO_PROJECT_MSTR     PM
+			     , OMS_PSO_PROJECT_R_BOARD  RB
+			     , OMS_PROJECT              OP
+			     , SMT_CUSTOMER             SC
+			     , OMS_PROJECT_PRODUCT      PP
+			 WHERE PD.OU_CODE = PM.OU_CODE
+			   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PD.OU_CODE = RB.OU_CODE
+			   AND PD.R_BOARD_ID = RB.R_BOARD_ID
+			   AND PM.OU_CODE = OP.OU_CODE
+			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
+			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			   AND PD.OU_CODE = #{OU_CODE}
+			   AND PD.PSO_DOCU_ID = #{PSO_DOCU_ID}
+		]]>	
+        <if test='USER_PM_DIV.equals("N")'>
+        	<![CDATA[
+        	   AND PD.PSO_DOCU_STATUS = 'Y'
+        	   AND PD.PSO_DOCU_ID IN (SELECT PPD.PSO_DOCU_ID
+			                            FROM OMS_PSO_PROJECT_DOCU       PPD
+			                               , OMS_PSO_PROJECT_DOCU_LINE  PPL
+			                           WHERE PPD.OU_CODE = PD.OU_CODE
+			                             AND PPD.OU_CODE = PPL.OU_CODE
+			                             AND PPD.PSO_DOCU_ID = PPL.PSO_DOCU_ID
+			                             AND PPL.CHG_USER_ID = #{GV_USER_ID})
+        	]]>  
+        </if> 
+    </select>
+    
+    <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록 정보 (DETAIL) 조회 -->				
+	<select id="SELECT_PSO_DOCU_DETAIL" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PDL.OU_CODE
+			     , PDL.PSO_DOCU_ID
+			     , PDL.PSO_DOCU_LINE_ID
+			     , PDL.DOC_ID
+			     , PDL.PSO_DOC_STEP
+			     , SMT_GET_CODE_NAME_FUNC('P003',PDL.PSO_DOC_STEP,#{GV_LANG}) AS DOC_STEP_NAME
+			     , PDL.PSO_DOC_CHASU
+			     , PDL.PSO_DOC_DETAIL_CHASU
+			     , PDL.PSO_CONTENTS
+			     , PDL.MANAGER_DEPT
+			     , PDL.PSO_DEPT_CODE
+			     , PDL.PSO_DEPT_NAME
+			     , PDL.CHG_USER_ID
+			     , PDL.CHG_USER_NAME
+			     , PDL.CHG_EMAIL_ADDR
+			     , TO_CHAR(PDL.MAKE_PLAN_DATE,'RRRRMMDD') AS MAKE_PLAN_DATE
+			     , TO_CHAR(PDL.MAKE_COMP_DATE,'RRRRMMDD') AS MAKE_COMP_DATE
+			     , DECODE(NVL(SMT_GET_ATTFILE_ID_NID_FUNC(PDL.OU_CODE,'Pso1010',PDL.DOC_ID,NULL),'N'),'N','N','Y') AS STD_DOCU_ATT_YN
+			     , DECODE(NVL(SMT_GET_ATTFILE_ID_NID_FUNC(PDL.OU_CODE,'Pso1050',PDL.PSO_DOCU_LINE_ID,NULL),'N'),'N','N','Y') AS PSO_DOCU_ATT_YN
+			     , PDL.PSO_DOCU_LINE_STAT
+			     , PDL.REMARK
+			  FROM OMS_PSO_PROJECT_DOCU_LINE     PDL
+			 WHERE PDL.OU_CODE = #{OU_CODE}
+			   AND PDL.PSO_DOCU_ID = #{PSO_DOCU_ID}
+        ]]>
+        <if test='USER_PM_DIV.equals("N")'>
+        	<![CDATA[
+        	   AND PDL.CHG_USER_ID = #{GV_USER_ID}
+        	]]>  
+        </if>
+        <![CDATA[
+			 ORDER BY PDL.PSO_DOC_STEP, TO_NUMBER(PDL.PSO_DOC_CHASU), TO_NUMBER(PDL.PSO_DOC_DETAIL_CHASU)
+		]]>	
+    </select>
+    
+    <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록 정보 (DETAIL) 전체 조회 -->				
+	<select id="SELECT_PSO_DOCU_DETAIL_ALL" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PDL.OU_CODE
+			     , PDL.PSO_DOCU_ID
+			     , PDL.PSO_DOCU_LINE_ID
+			     , PDL.DOC_ID
+			     , PDL.PSO_DOC_STEP
+			     , SMT_GET_CODE_NAME_FUNC('P003',PDL.PSO_DOC_STEP,#{GV_LANG}) AS DOC_STEP_NAME
+			     , PDL.PSO_DOC_CHASU
+			     , PDL.PSO_DOC_DETAIL_CHASU
+			     , PDL.PSO_CONTENTS
+			     , PDL.MANAGER_DEPT
+			     , PDL.PSO_DEPT_CODE
+			     , PDL.PSO_DEPT_NAME
+			     , PDL.CHG_USER_ID
+			     , PDL.CHG_USER_NAME
+			     , PDL.CHG_EMAIL_ADDR
+			     , TO_CHAR(PDL.MAKE_PLAN_DATE,'RRRRMMDD') AS MAKE_PLAN_DATE
+			     , TO_CHAR(PDL.MAKE_COMP_DATE,'RRRRMMDD') AS MAKE_COMP_DATE
+			     , DECODE(NVL(SMT_GET_ATTFILE_ID_NID_FUNC(PDL.OU_CODE,'Pso1010',PDL.DOC_ID,NULL),'N'),'N','N','Y') AS STD_DOCU_ATT_YN
+			     , DECODE(NVL(SMT_GET_ATTFILE_ID_NID_FUNC(PDL.OU_CODE,'Pso1050',PDL.PSO_DOCU_LINE_ID,NULL),'N'),'N','N','Y') AS PSO_DOCU_ATT_YN
+			     , PDL.PSO_DOCU_LINE_STAT
+			     , PDL.REMARK
+			  FROM OMS_PSO_PROJECT_DOCU_LINE     PDL
+			 WHERE PDL.OU_CODE = #{OU_CODE}
+			   AND PDL.PSO_DOCU_ID = #{PSO_DOCU_ID}
+			 ORDER BY PDL.PSO_DOC_STEP, TO_NUMBER(PDL.PSO_DOC_CHASU), TO_NUMBER(PDL.PSO_DOC_DETAIL_CHASU)
+		]]>	
+    </select>
+    
+    <!-- PSO신제품개발서류목록관리  : PSO_DOCU_LINE_ID_SEQ -->  
+    <select id="SELECT_PSO_DOCU_LINE_ID_SEQ" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT OMS_PSO_DOCU_LINE_ID_SEQ.NEXTVAL  SEQ 
+          	  FROM DUAL
+   		]]>
+   	</select>
+   	
+    <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록 정보 (MAIN) update -->
+    <update id="UPDATE_PSO_DOCU_MAIN" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_PSO_PROJECT_DOCU
+			   SET DESCRIPTION          = #{DESCRIPTION}
+			     , PSO_DOCU_STATUS	    = #{PSO_DOCU_STATUS}
+			     , UPD_DATE             = SYSDATE
+			     , UPD_USER_ID          = #{GV_USER_ID}
+			 WHERE OU_CODE              = #{OU_CODE}
+			   AND PSO_DOCU_ID          = #{PSO_DOCU_ID}
+        ]]> 
+    </update>
+    
+    <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록(DETAIL)  정보 insert -->
+    <insert id="INSERT_PSO_DOCU_DETAIL" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+            INSERT INTO OMS_PSO_PROJECT_DOCU_LINE
+			  (OU_CODE
+			  ,PSO_DOCU_ID
+			  ,PSO_DOCU_LINE_ID
+			  ,DOC_ID
+			  ,PSO_DOC_STEP
+			  ,PSO_DOC_CHASU
+			  ,PSO_DOC_DETAIL_CHASU
+			  ,PSO_CONTENTS
+			  ,MANAGER_DEPT
+			  ,PSO_DEPT_CODE
+			  ,PSO_DEPT_NAME
+			  ,CHG_USER_ID
+			  ,CHG_USER_NAME
+			  ,CHG_EMAIL_ADDR
+			  ,MAKE_PLAN_DATE
+			  ,MAKE_COMP_DATE
+			  ,PSO_DOCU_LINE_STAT
+			  ,REMARK
+			  ,INS_DATE
+			  ,INS_USER_ID
+			  ,UPD_DATE
+			  ,UPD_USER_ID)
+			VALUES
+			  (#{OU_CODE}
+			  ,#{PSO_DOCU_ID}
+			  ,#{PSO_DOCU_LINE_ID}
+			  ,#{DOC_ID}
+			  ,#{PSO_DOC_STEP}
+			  ,#{PSO_DOC_CHASU}
+			  ,#{PSO_DOC_DETAIL_CHASU}
+			  ,#{PSO_CONTENTS}
+			  ,#{MANAGER_DEPT}
+			  ,#{PSO_DEPT_CODE}
+			  ,#{PSO_DEPT_NAME}
+			  ,#{CHG_USER_ID}
+			  ,#{CHG_USER_NAME}
+			  ,#{CHG_EMAIL_ADDR}
+			  ,TO_DATE(#{MAKE_PLAN_DATE},'RRRRMMDD')
+			  ,TO_DATE(#{MAKE_COMP_DATE},'RRRRMMDD')
+			  ,'N'
+			  ,#{REMARK}
+			  ,SYSDATE
+	          ,#{GV_USER_ID}
+	          ,SYSDATE
+	          ,#{GV_USER_ID})
+        ]]>
+    </insert>
+    
+    <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록(DETAIL) 정보 update -->
+    <update id="UPDATE_PSO_DOCU_DETAIL" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_PSO_PROJECT_DOCU_LINE
+			   SET PSO_DOC_STEP         = #{PSO_DOC_STEP}
+			     , PSO_DOC_CHASU        = #{PSO_DOC_CHASU}
+			     , PSO_DOC_DETAIL_CHASU = #{PSO_DOC_DETAIL_CHASU}
+			     , PSO_CONTENTS         = #{PSO_CONTENTS}
+			     , PSO_DEPT_CODE        = #{PSO_DEPT_CODE}
+			     , PSO_DEPT_NAME        = #{PSO_DEPT_NAME}
+			     , CHG_USER_ID          = #{CHG_USER_ID}
+			     , CHG_USER_NAME        = #{CHG_USER_NAME}
+			     , CHG_EMAIL_ADDR       = #{CHG_EMAIL_ADDR}
+			     , MAKE_PLAN_DATE 	    = TO_DATE(#{MAKE_PLAN_DATE},'RRRRMMDD')
+			     , MAKE_COMP_DATE   	= TO_DATE(#{MAKE_COMP_DATE},'RRRRMMDD')
+			     , PSO_DOCU_LINE_STAT   = #{PSO_DOCU_LINE_STAT}
+			     , REMARK               = #{REMARK}
+			     , UPD_DATE             = SYSDATE
+			     , UPD_USER_ID          = #{GV_USER_ID}
+			 WHERE OU_CODE              = #{OU_CODE}
+			   AND PSO_DOCU_LINE_ID     = #{PSO_DOCU_LINE_ID}
+        ]]> 
+    </update>
+    
+    <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록(DETAIL) 정보 삭제 -->
+    <delete id="DELETE_PSO_DOCU_DETAIL" parameterType="java.util.Map">  
+    		DELETE OMS_PSO_PROJECT_DOCU_LINE
+			 WHERE OU_CODE          = #{OU_CODE}
+			   AND PSO_DOCU_LINE_ID = #{PSO_DOCU_LINE_ID}
+    </delete>
+    
+    <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록 정보(POPUP) 조회 -->				
+	<select id="SELECT_PSO_DOCU_ALL" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PD.OU_CODE
+			     , PD.PSO_DOCU_ID
+			     , PD.PSO_PROJECT_ID
+			     , PD.R_BOARD_ID
+			     , PM.PROJECT_CODE
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , OP.REGISTER_YEAR
+			     , OP.OU_COUNTRY_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O001', OP.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+			     , OP.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , SC.NATION_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O005', SC.NATION_CODE, #{GV_LANG}) AS NATION_NAME
+			     , OP.CUSTOMER_AREA
+			     , OP.PRODUCTION_AREA_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O002', OP.PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+			     , PM.BUSINESS_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O013', PM.BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+			     , PM.PRODUCT_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O007', PM.PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+			     , PM.PRODUCT_NAME_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O008', PM.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+			     , PM.PRODUCT_MODEL_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O010', PM.PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+			     , PM.PRODUCT_PKG_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O012', PM.PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+			     , PM.ITEM_NAME
+			     , PP.ERP_ITEM_NO
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			     , RB.GRADE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P007', RB.GRADE, #{GV_LANG}) AS GRADE_NAME
+			     , RB.T_SCORE
+			     , RB.APQP_YN
+			     , PD.PSO_DOCU_STATUS
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P008', PD.PSO_DOCU_STATUS, #{GV_LANG}) AS DOCU_STATUS_NAME
+			     , PD.DESCRIPTION
+			     , PM.UPD_USER_ID   AS PM_USER
+			     , SMT_GET_USER_NAME_FUNC(PM.OU_CODE,PM.UPD_USER_ID) AS PM_USER_NAME 	
+			  FROM OMS_PSO_PROJECT_DOCU     PD
+			     , OMS_PSO_PROJECT_MSTR     PM
+			     , OMS_PSO_PROJECT_R_BOARD  RB
+			     , OMS_PROJECT              OP
+			     , SMT_CUSTOMER             SC
+			     , OMS_PROJECT_PRODUCT      PP
+			 WHERE PD.OU_CODE = PM.OU_CODE
+			   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PD.OU_CODE = RB.OU_CODE
+			   AND PD.R_BOARD_ID = RB.R_BOARD_ID
+			   AND PM.OU_CODE = OP.OU_CODE
+			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
+			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			   AND PD.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND OP.CAR_TYPE_CODE LIKE '%'|| #{CAR_TYPE_CODE} || '%'
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ITEM_NAME)">
+        	<![CDATA[
+        	   AND PM.ITEM_NAME LIKE '%'|| #{ITEM_NAME} || '%'
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DOCU_STATUS)">
+        	<![CDATA[
+        	   AND PD.PSO_DOCU_STATUS = #{PSO_DOCU_STATUS} 
+        	]]>  
+        </if> 
+        <if test='USER_PM_DIV.equals("N")'>
+        	<![CDATA[
+        	   AND PD.PSO_DOCU_STATUS = 'Y'
+        	   AND PD.PSO_DOCU_ID IN (SELECT PPD.PSO_DOCU_ID
+			                            FROM OMS_PSO_PROJECT_DOCU       PPD
+			                               , OMS_PSO_PROJECT_DOCU_LINE  PPL
+			                           WHERE PPD.OU_CODE = PD.OU_CODE
+			                             AND PPD.OU_CODE = PPL.OU_CODE
+			                             AND PPD.PSO_DOCU_ID = PPL.PSO_DOCU_ID
+			                             AND PPL.CHG_USER_ID = #{GV_USER_ID})
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_ID)">
+        	<![CDATA[
+        	   AND PM.UPD_USER_ID = #{PM_CHG_ID} 
+        	]]>  
+        </if>  
+		<![CDATA[
+			 ORDER BY TO_NUMBER(SUBSTR(PM.PROJECT_CODE,LENGTH(PM.PROJECT_CODE)-2)), PM.ITEM_NAME
+        ]]>
+    </select>    
+    
+    <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록 요약정보 (담당자지정현황) 전체 조회 -->				
+	<select id="SELECT_PSO_DOCU_CHG_LIST" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT DL.OU_CODE
+	 		     , DL.PSO_DOCU_ID
+			     , DL.PSO_DEPT_CODE
+			     , DL.PSO_DEPT_NAME
+			     , DL.CHG_USER_ID
+			     , DL.CHG_USER_NAME
+			  FROM OMS_PSO_PROJECT_DOCU_LINE  DL
+			 WHERE DL.OU_CODE = #{OU_CODE}
+			   AND DL.PSO_DOCU_ID = #{PSO_DOCU_ID}
+			 GROUP BY DL.OU_CODE
+			        , DL.PSO_DOCU_ID
+			        , DL.PSO_DEPT_CODE
+			        , DL.PSO_DEPT_NAME
+			        , DL.CHG_USER_ID
+			        , DL.CHG_USER_NAME
+		]]>	
+    </select>
+    
+    <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록 요약정보 (작성계획일현황) 전체 조회 -->					
+	<select id="SELECT_PSO_DOCU_PLAN_DATE_LIST" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT DL.OU_CODE
+	 		     , DL.PSO_DOCU_ID
+			     , DL.PSO_DOC_STEP
+			     , SMT_GET_CODE_NAME_FUNC('P003',DL.PSO_DOC_STEP,'KO') AS DOC_STEP_NAME
+			     , TO_CHAR(MAX(DL.MAKE_PLAN_DATE),'RRRRMMDD') AS M_MAKE_PLAN_DATE
+			  FROM OMS_PSO_PROJECT_DOCU_LINE  DL
+			 WHERE DL.OU_CODE = #{OU_CODE}
+			   AND DL.PSO_DOCU_ID = #{PSO_DOCU_ID}
+			 GROUP BY DL.OU_CODE
+			        , DL.PSO_DOCU_ID
+			        , DL.PSO_DOC_STEP 
+			 ORDER BY DL.PSO_DOC_STEP
+		]]>	
+    </select>
+    
+    <!-- PSO개발등급별프로젝트조회 : PSO개발등급별프로젝트 정보 조회 -->				
+	<select id="SELECT_PSO_PROJECT_GRADE" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PRB.OU_CODE
+			     , PRB.R_BOARD_ID
+			     , PRB.PSO_PROJECT_ID
+			     , PRB.GRADE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P007', PRB.GRADE, #{GV_LANG}) AS GRADE_NAME
+			     , PRB.APQP_YN
+			     , PRB.T_SCORE
+			     , PM.PROJECT_CODE
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , OP.REGISTER_YEAR
+			     , OP.OU_COUNTRY_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O001', OP.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+			     , OP.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , SC.NATION_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O005', SC.NATION_CODE, #{GV_LANG}) AS NATION_NAME
+			     , OP.CUSTOMER_AREA
+			     , OP.PRODUCTION_AREA_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O002', OP.PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+			     , PM.BUSINESS_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O013', PM.BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+			     , PM.PRODUCT_GROUP_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O007', PM.PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+			     , PM.PRODUCT_NAME_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O008', PM.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+			     , PM.PRODUCT_MODEL_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O010', PM.PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+			     , PM.PRODUCT_PKG_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O012', PM.PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+			     , PM.ITEM_NAME
+			     , PP.ERP_ITEM_NO
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			     , PRB.R_BOARD_STATUS
+			     , NVL(PM.PSO_COMPLETE_YN,'N')  AS PSO_COMPLETE_YN
+			     , PM.UPD_USER_ID   AS PM_USER
+			     , SMT_GET_USER_NAME_FUNC(PM.OU_CODE,PM.UPD_USER_ID) AS PM_USER_NAME   
+			  FROM OMS_PSO_PROJECT_R_BOARD  PRB
+			     , OMS_PSO_PROJECT_MSTR     PM
+			     , OMS_PROJECT              OP
+			     , SMT_CUSTOMER             SC
+			     , OMS_PROJECT_PRODUCT      PP
+			 WHERE PRB.OU_CODE = PM.OU_CODE
+			   AND PRB.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PM.OU_CODE = OP.OU_CODE
+			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
+			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			   AND PM.ITEM_NAME = PP.ITEM_NAME  
+			   AND NVL(PRB.R_BOARD_STATUS,'N') = 'Y' 
+			   AND PRB.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_GRADE)">
+        	<![CDATA[
+        	   AND PRB.GRADE = #{PSO_GRADE} 
+        	]]>  
+        </if> 
+        <if test='CHK_APQP.equals("Y")'>
+            <![CDATA[
+               AND NVL(PRB.APQP_YN,'N') = 'Y'	
+            ]]>
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(REGISTER_YEAR)">
+        	<![CDATA[
+        	   AND OP.REGISTER_YEAR = #{REGISTER_YEAR} 
+        	]]>  
+        </if>  
+        <if test='PSO_COMPLETE_YN.equals("N")'>
+        	<![CDATA[
+        	   AND NVL(PM.PSO_COMPLETE_YN,'N') = #{PSO_COMPLETE_YN} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_GROUP_CODE)">
+        	<![CDATA[
+        	   AND PM.PRODUCT_GROUP_CODE '%'|| #{PRODUCT_GROUP_CODE} || '%'
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND OP.CAR_TYPE_CODE LIKE '%'|| #{CAR_TYPE_CODE} || '%'
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ITEM_NAME)">
+        	<![CDATA[
+        	   AND PM.ITEM_NAME LIKE '%'|| #{ITEM_NAME} || '%'
+        	]]>  
+        </if>
+		<![CDATA[
+			 ORDER BY TO_NUMBER(SUBSTR(PM.PROJECT_CODE,LENGTH(PM.PROJECT_CODE)-2)), PM.ITEM_NAME
+        ]]>
+    </select>
+    
+    <!-- PSO진행지연프로젝트조회 : PSO진행지연프로젝트 정보 조회 -->				
+	<select id="SELECT_PSO_DELAY_PROJECT" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PD.OU_CODE
+			     , PD.PSO_DOCU_ID
+			     , PD.PSO_PROJECT_ID
+			     , PD.R_BOARD_ID
+			     , DL.DELAY_DIV
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P010', DL.DELAY_DIV, #{GV_LANG}) AS DELAY_DIV_NAME
+			     , PM.PROJECT_CODE
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , OP.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , RB.GRADE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P007', RB.GRADE, #{GV_LANG}) AS GRADE_NAME
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			     , DL.PSO_DOC_STEP
+				 , SMT_GET_CODE_NAME_FUNC('P003',DL.PSO_DOC_STEP,#{GV_LANG}) AS DOC_STEP_NAME 
+			     , DL.PSO_DOC_CHASU
+			     , DL.PSO_DOC_DETAIL_CHASU
+			     , DL.PSO_CONTENTS
+			     , DL.PSO_DEPT_CODE
+			     , DL.PSO_DEPT_NAME
+			     , DL.CHG_USER_ID
+			     , DL.CHG_USER_NAME
+			     , TO_CHAR(DL.MAKE_PLAN_DATE,'RRRR-MM-DD') AS MAKE_PLAN_DATE 
+			     , TO_CHAR(DL.MAKE_COMP_DATE,'RRRR-MM-DD') AS MAKE_COMP_DATE
+			     , DL.DELAY_DAY  
+			  FROM OMS_PSO_PROJECT_DOCU      PD
+			     , OMS_PSO_PROJECT_DOCU_LINE DL
+			     , OMS_PSO_PROJECT_MSTR      PM
+			     , OMS_PSO_PROJECT_R_BOARD   RB
+			     , OMS_PROJECT               OP
+			     , SMT_CUSTOMER              SC
+			     , OMS_PROJECT_PRODUCT       PP
+			 WHERE PD.OU_CODE = PM.OU_CODE
+			   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PD.OU_CODE = DL.OU_CODE
+			   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			   AND PD.OU_CODE = RB.OU_CODE
+			   AND PD.R_BOARD_ID = RB.R_BOARD_ID
+			   AND PM.OU_CODE = OP.OU_CODE
+			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
+			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			   AND NVL(PD.PSO_DOCU_STATUS,'N') = 'Y'
+			   AND DL.DELAY_DIV IS NOT NULL
+			   AND PD.OU_CODE = #{OU_CODE}
+ 		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DELAY_DIV)">
+        	<![CDATA[
+        	   AND DL.DELAY_DIV = #{DELAY_DIV}
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_NAME)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
+        </if> 
+        <if test='PSO_COMPLETE_YN.equals("N")'>
+        	<![CDATA[
+        	   AND NVL(PM.PSO_COMPLETE_YN,'N') = #{PSO_COMPLETE_YN} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CHG_USER_NAME)">
+        	<![CDATA[
+        	   AND DL.CHG_USER_NAME LIKE '%'|| #{CHG_USER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CHG_USER_ID)">
+        	<![CDATA[
+        	   AND DL.CHG_USER_ID LIKE '%'|| #{CHG_USER_ID} || '%'
+        	]]>  
+        </if> 
+		<![CDATA[
+			 ORDER BY TO_NUMBER(SUBSTR(PM.PROJECT_CODE
+			        , LENGTH(PM.PROJECT_CODE)-2))
+			        , PM.ITEM_NAME
+			        , DL.PSO_DOC_STEP
+			        , TO_NUMBER(DL.PSO_DOC_CHASU)
+			        , TO_NUMBER(DL.PSO_DOC_DETAIL_CHASU)
+        ]]>
+    </select>
+    
+    <!-- PSO진행지연프로젝트조회  : PSO진행지연프로젝트 주관부서 조회 -->  
+    <select id="SELECT_PSO_DELAY_DEPT" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT DL.PSO_DEPT_CODE   AS DEPT_CODE
+			     , DL.PSO_DEPT_NAME   AS DEPT_NAME
+			  FROM OMS_PSO_PROJECT_DOCU      PD
+			     , OMS_PSO_PROJECT_DOCU_LINE DL
+			 WHERE PD.OU_CODE = DL.OU_CODE
+			   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			   AND NVL(PD.PSO_DOCU_STATUS,'N') = 'Y'
+			   AND PD.OU_CODE = #{OU_CODE}
+			 GROUP BY DL.PSO_DEPT_CODE
+			        , DL.PSO_DEPT_NAME
+   		]]>
+   	</select>
+   	
+   	<!-- PSO부서별진도현황조회 : PSO부서별진도현황 정보 조회 -->				
+	<select id="SELECT_PSO_DEPT_PRO" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PD.OU_CODE
+			     , PD.PSO_DOCU_ID
+			     , PD.PSO_PROJECT_ID
+			     , PD.R_BOARD_ID
+			     , DL.DELAY_DIV
+			     , NVL(SMT_GET_COMMON_CODE_NAME_FUNC('P010', DL.DELAY_DIV, #{GV_LANG}),'정상') AS DELAY_DIV_NAME
+			     , PM.PROJECT_CODE
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , OP.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , RB.GRADE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P007', RB.GRADE, #{GV_LANG}) AS GRADE_NAME
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			     , DL.PSO_DOC_STEP
+			     , SMT_GET_CODE_NAME_FUNC('P003',DL.PSO_DOC_STEP,#{GV_LANG}) AS DOC_STEP_NAME 
+			     , DL.PSO_DOC_CHASU
+			     , DL.PSO_DOC_DETAIL_CHASU
+			     , DL.PSO_CONTENTS
+			     , DL.PSO_DEPT_CODE
+			     , DL.PSO_DEPT_NAME
+			     , DL.CHG_USER_ID
+			     , DL.CHG_USER_NAME
+			     , TO_CHAR(DL.MAKE_PLAN_DATE,'RRRR-MM-DD') AS MAKE_PLAN_DATE 
+			     , TO_CHAR(DL.MAKE_COMP_DATE,'RRRR-MM-DD') AS MAKE_COMP_DATE
+			     , DL.DELAY_DAY  
+			     , DL.PROGRESS_RATE
+			     , DL.PROGRESS_GRADE
+			  FROM OMS_PSO_PROJECT_DOCU      PD
+			     , OMS_PSO_PROJECT_DOCU_LINE DL
+			     , OMS_PSO_PROJECT_MSTR      PM
+			     , OMS_PSO_PROJECT_R_BOARD   RB
+			     , OMS_PROJECT               OP
+			     , SMT_CUSTOMER              SC
+			     , OMS_PROJECT_PRODUCT       PP
+			 WHERE PD.OU_CODE = PM.OU_CODE
+			   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PD.OU_CODE = DL.OU_CODE
+			   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			   AND PD.OU_CODE = RB.OU_CODE
+			   AND PD.R_BOARD_ID = RB.R_BOARD_ID
+			   AND PM.OU_CODE = OP.OU_CODE
+			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
+			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			   AND NVL(PD.PSO_DOCU_STATUS,'N') = 'Y'
+			   AND PD.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+         
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_NAME)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_GRADE)">
+        	<![CDATA[
+        	   AND RB.GRADE = #{PSO_GRADE}
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(MAKE_PLAN_DATE_F)">
+        	<![CDATA[
+        	   AND DL.MAKE_PLAN_DATE BETWEEN TO_DATE(#{MAKE_PLAN_DATE_F},'RRRR-MM-DD')
+                                         AND TO_DATE(#{MAKE_PLAN_DATE_T},'RRRR-MM-DD')
+        	]]>  
+        </if>    
+        <if test='PSO_COMPLETE_YN.equals("N")'>
+        	<![CDATA[
+        	   AND NVL(PM.PSO_COMPLETE_YN,'N') = #{PSO_COMPLETE_YN} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROGRESS_GRADE)">
+        	<![CDATA[
+        	   AND DL.PROGRESS_GRADE = #{PROGRESS_GRADE}
+        	]]>  
+        </if> 
+		<![CDATA[
+			 ORDER BY TO_NUMBER(SUBSTR(PM.PROJECT_CODE
+			        , LENGTH(PM.PROJECT_CODE)-2))
+			        , PM.ITEM_NAME
+			        , DL.PSO_DOC_STEP
+			        , TO_NUMBER(DL.PSO_DOC_CHASU)
+			        , TO_NUMBER(DL.PSO_DOC_DETAIL_CHASU)
+        ]]>
+    </select>
+    
+    <!-- PSO부서별진행율조회 : PSO부서별진행율 정보 조회 -->				
+	<select id="SELECT_PSO_DEPT_PRO_RATE" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT XX.PSO_DEPT_CODE
+			     , XX.PSO_DEPT_NAME
+			     , XX.AVG_DELAY_DAY
+			     , XX.AVG_PRO_RATE
+			     , (SELECT CSC.ITEM_CODE
+			          FROM (SELECT SCC.ITEM_CODE
+			                     , SCC.ITEM_NAME
+			                     , TO_NUMBER(REGEXP_REPLACE(SCC.REF_1, '[^0-9]', '')) AS REF_1 
+			                     , TO_NUMBER(REGEXP_REPLACE(SCC.REF_2, '[^0-9]', '')) AS REF_2
+			                  FROM SMT_COMM_CODE   SCC
+			                 WHERE SCC.GRP_CODE = 'P013' 
+			                   AND NVL(SCC.ACTIVE_FLAG,'N') = 'Y') CSC
+			         WHERE XX.AVG_PRO_RATE >= CSC.REF_1
+			           AND XX.AVG_PRO_RATE <  CSC.REF_2) AS AVG_GRADE
+			  FROM (SELECT X.PSO_DEPT_CODE
+			             , X.PSO_DEPT_NAME
+			             , ROUND(AVG(X.DELAY_DAY),2)      AS AVG_DELAY_DAY  
+			             , ROUND(AVG(X.PROGRESS_RATE),2)  AS AVG_PRO_RATE
+			          FROM (SELECT DL.PSO_DEPT_CODE
+			                     , DL.PSO_DEPT_NAME
+			                     , DL.DELAY_DAY  
+			                     , DL.PROGRESS_RATE
+			                  FROM OMS_PSO_PROJECT_DOCU      PD
+			                     , OMS_PSO_PROJECT_DOCU_LINE DL
+			                     , OMS_PSO_PROJECT_MSTR      PM
+			                     , OMS_PSO_PROJECT_R_BOARD   RB
+			                     , OMS_PROJECT               OP
+			                     , SMT_CUSTOMER              SC
+			                     , OMS_PROJECT_PRODUCT       PP
+			                 WHERE PD.OU_CODE = PM.OU_CODE
+			                   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			                   AND PD.OU_CODE = DL.OU_CODE
+			                   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			                   AND PD.OU_CODE = RB.OU_CODE
+			                   AND PD.R_BOARD_ID = RB.R_BOARD_ID
+			                   AND PM.OU_CODE = OP.OU_CODE
+			                   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			                   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			                   AND OP.OU_CODE = SC.OU_CODE
+			                   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			                   AND OP.OU_CODE = PP.OU_CODE
+			                   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			                   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			                   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			                   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			                   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			                   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			                   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			                   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			                   AND NVL(PD.PSO_DOCU_STATUS,'N') = 'Y'
+			                   AND PD.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+         
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_NAME)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_GRADE)">
+        	<![CDATA[
+        	   AND RB.GRADE = #{PSO_GRADE}
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(MAKE_PLAN_DATE_F)">
+        	<![CDATA[
+        	   AND DL.MAKE_PLAN_DATE BETWEEN TO_DATE(#{MAKE_PLAN_DATE_F},'RRRR-MM-DD')
+                                         AND TO_DATE(#{MAKE_PLAN_DATE_T},'RRRR-MM-DD')
+        	]]>  
+        </if>    
+        <if test='PSO_COMPLETE_YN.equals("N")'>
+        	<![CDATA[
+        	   AND NVL(PM.PSO_COMPLETE_YN,'N') = #{PSO_COMPLETE_YN} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROGRESS_GRADE)">
+        	<![CDATA[
+        	   AND DL.PROGRESS_GRADE = #{PROGRESS_GRADE}
+        	]]>  
+        </if> 
+		<![CDATA[
+		      ) X
+          GROUP BY X.PSO_DEPT_CODE
+                 , X.PSO_DEPT_NAME ) XX
+          ORDER BY XX.PSO_DEPT_NAME
+        ]]>
+    </select>    
+        
+   	<!-- PSO부서별진도현황조회 : PSO부서별진도현황 정보 조회 -->				
+	<select id="SELECT_PSO_DEPT_PRO2" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT PD.OU_CODE
+			     , PD.PSO_DOCU_ID
+			     , PD.PSO_PROJECT_ID
+			     , PD.R_BOARD_ID
+			     , DL.DELAY_DIV
+			     , DECODE(DL.MAKE_COMP_DATE, NULL, '대기', '완료') AS DELAY_DIV_NAME
+			     , PM.PROJECT_CODE
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , OP.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , RB.GRADE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P007', RB.GRADE, #{GV_LANG}) AS GRADE_NAME
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			     , DL.PSO_DOC_STEP
+			     , SMT_GET_CODE_NAME_FUNC('P003',DL.PSO_DOC_STEP,#{GV_LANG}) AS DOC_STEP_NAME 
+			     , DL.PSO_DOC_CHASU
+			     , DL.PSO_DOC_DETAIL_CHASU
+			     , DL.PSO_CONTENTS
+			     , DL.PSO_DEPT_CODE
+			     , DL.PSO_DEPT_NAME
+			     , DL.CHG_USER_ID
+			     , DL.CHG_USER_NAME
+			     , TO_CHAR(DL.MAKE_PLAN_DATE,'RRRR-MM-DD') AS MAKE_PLAN_DATE 
+			     , TO_CHAR(DL.MAKE_COMP_DATE,'RRRR-MM-DD') AS MAKE_COMP_DATE
+			     , DL.DELAY_DAY  
+			     , DECODE(DL.MAKE_COMP_DATE, NULL, 0, 100)   PROGRESS_RATE
+			     , DECODE(DL.MAKE_COMP_DATE, NULL, 'D', 'S') PROGRESS_GRADE
+			  FROM OMS_PSO_PROJECT_DOCU      PD
+			     , OMS_PSO_PROJECT_DOCU_LINE DL
+			     , OMS_PSO_PROJECT_MSTR      PM
+			     , OMS_PSO_PROJECT_R_BOARD   RB
+			     , OMS_PROJECT               OP
+			     , SMT_CUSTOMER              SC
+			     , OMS_PROJECT_PRODUCT       PP
+			 WHERE PD.OU_CODE = PM.OU_CODE
+			   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PD.OU_CODE = DL.OU_CODE
+			   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			   AND PD.OU_CODE = RB.OU_CODE
+			   AND PD.R_BOARD_ID = RB.R_BOARD_ID
+			   AND PM.OU_CODE = OP.OU_CODE
+			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
+			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			   AND NVL(PD.PSO_DOCU_STATUS,'N') = 'Y'
+			   AND PD.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+         
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_NAME)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_GRADE)">
+        	<![CDATA[
+        	   AND RB.GRADE = #{PSO_GRADE}
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(MAKE_PLAN_DATE_F)">
+        	<![CDATA[
+        	   AND DL.MAKE_PLAN_DATE BETWEEN TO_DATE(#{MAKE_PLAN_DATE_F},'RRRR-MM-DD')
+                                         AND TO_DATE(#{MAKE_PLAN_DATE_T},'RRRR-MM-DD')
+        	]]>  
+        </if>    
+        <if test='PSO_COMPLETE_YN.equals("N")'>
+        	<![CDATA[
+        	   AND NVL(PM.PSO_COMPLETE_YN,'N') = #{PSO_COMPLETE_YN} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROGRESS_GRADE)">
+        	<![CDATA[
+        	   AND DL.PROGRESS_GRADE = #{PROGRESS_GRADE}
+        	]]>  
+        </if> 
+		<![CDATA[
+			 ORDER BY TO_NUMBER(SUBSTR(PM.PROJECT_CODE
+			        , LENGTH(PM.PROJECT_CODE)-2))
+			        , PM.ITEM_NAME
+			        , DL.PSO_DOC_STEP
+			        , TO_NUMBER(DL.PSO_DOC_CHASU)
+			        , TO_NUMBER(DL.PSO_DOC_DETAIL_CHASU)
+        ]]>
+    </select>
+    
+    <!-- PSO부서별진행율조회 : PSO부서별진행율 정보 조회 -->				
+	<select id="SELECT_PSO_DEPT_PRO_RATE2" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT XX.PSO_DEPT_CODE
+			     , XX.PSO_DEPT_NAME
+			     , XX.AVG_DELAY_DAY
+			     , XX.AVG_PRO_RATE
+			     , (SELECT CSC.ITEM_CODE
+			          FROM (SELECT SCC.ITEM_CODE
+			                     , SCC.ITEM_NAME
+			                     , TO_NUMBER(REGEXP_REPLACE(SCC.REF_1, '[^0-9]', '')) AS REF_1 
+			                     , TO_NUMBER(REGEXP_REPLACE(SCC.REF_2, '[^0-9]', '')) AS REF_2
+			                  FROM SMT_COMM_CODE   SCC
+			                 WHERE SCC.GRP_CODE = 'P013' 
+			                   AND NVL(SCC.ACTIVE_FLAG,'N') = 'Y') CSC
+			         WHERE XX.AVG_PRO_RATE >= CSC.REF_1
+			           AND XX.AVG_PRO_RATE <  CSC.REF_2) AS AVG_GRADE
+			  FROM (SELECT X.PSO_DEPT_CODE
+			             , X.PSO_DEPT_NAME
+			             , ROUND(AVG(X.DELAY_DAY),2)      AS AVG_DELAY_DAY  
+			             , ROUND(AVG(X.PROGRESS_RATE),2)  AS AVG_PRO_RATE
+			          FROM (SELECT DL.PSO_DEPT_CODE
+			                     , DL.PSO_DEPT_NAME
+			                     , DL.DELAY_DAY  
+			                     , DECODE(DL.MAKE_COMP_DATE, NULL, 0, 100)   PROGRESS_RATE
+			                  FROM OMS_PSO_PROJECT_DOCU      PD
+			                     , OMS_PSO_PROJECT_DOCU_LINE DL
+			                     , OMS_PSO_PROJECT_MSTR      PM
+			                     , OMS_PSO_PROJECT_R_BOARD   RB
+			                     , OMS_PROJECT               OP
+			                     , SMT_CUSTOMER              SC
+			                     , OMS_PROJECT_PRODUCT       PP
+			                 WHERE PD.OU_CODE = PM.OU_CODE
+			                   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			                   AND PD.OU_CODE = DL.OU_CODE
+			                   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			                   AND PD.OU_CODE = RB.OU_CODE
+			                   AND PD.R_BOARD_ID = RB.R_BOARD_ID
+			                   AND PM.OU_CODE = OP.OU_CODE
+			                   AND PM.PROJECT_CODE = OP.PROJECT_CODE
+			                   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			                   AND OP.OU_CODE = SC.OU_CODE
+			                   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			                   AND OP.OU_CODE = PP.OU_CODE
+			                   AND OP.PROJECT_CODE = PP.PROJECT_CODE
+			                   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
+			                   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
+			                   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
+			                   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
+			                   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
+			                   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
+			                   AND PM.ITEM_NAME = PP.ITEM_NAME   
+			                   AND NVL(PD.PSO_DOCU_STATUS,'N') = 'Y'
+			                   AND PD.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+         
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_NAME)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_GRADE)">
+        	<![CDATA[
+        	   AND RB.GRADE = #{PSO_GRADE}
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(MAKE_PLAN_DATE_F)">
+        	<![CDATA[
+        	   AND DL.MAKE_PLAN_DATE BETWEEN TO_DATE(#{MAKE_PLAN_DATE_F},'RRRR-MM-DD')
+                                         AND TO_DATE(#{MAKE_PLAN_DATE_T},'RRRR-MM-DD')
+        	]]>  
+        </if>    
+        <if test='PSO_COMPLETE_YN.equals("N")'>
+        	<![CDATA[
+        	   AND NVL(PM.PSO_COMPLETE_YN,'N') = #{PSO_COMPLETE_YN} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROGRESS_GRADE)">
+        	<![CDATA[
+        	   AND DL.PROGRESS_GRADE = #{PROGRESS_GRADE}
+        	]]>  
+        </if> 
+		<![CDATA[
+		      ) X
+          GROUP BY X.PSO_DEPT_CODE
+                 , X.PSO_DEPT_NAME ) XX
+          ORDER BY XX.PSO_DEPT_NAME
+        ]]>
+    </select>    
+        
+</mapper>

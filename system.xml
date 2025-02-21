@@ -1,0 +1,2769 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="systemMapper">
+
+<resultMap id="SMTAgreeClobMap" type="java.util.Map">
+<result property="CONTENT" column="CONTENT" jdbcType="CLOB" javaType="java.lang.String"/> 
+</resultMap>
+
+<resultMap id="SMTPopupBoardClobMap" type="java.util.Map">
+<result property="CONTENT" column="CONTENT" jdbcType="CLOB" javaType="java.lang.String"/> 
+</resultMap>
+     
+    <!--(2022/02/15) 재정의용 여기서 부터 시작 -->
+    <!-- 공통코드 주코드 조회 -->				
+	<select id="SELECT_SMT_COMM_GRP" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+	        SELECT GRP_CODE
+	             , GRP_NAME
+	             , PARENT_GRP_CODE     
+	          FROM SMT_COMM_GRP A
+	         WHERE 1 = 1
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(GRP_CODE)">
+        	<![CDATA[
+        	   AND GRP_CODE LIKE '%'|| #{GRP_CODE} || '%'
+        	]]>   
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(GRP_NAME)">
+        	<![CDATA[
+               AND GRP_NAME LIKE '%'|| #{GRP_NAME} || '%'
+            ]]>   
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ITEM_CODE)">
+        	<![CDATA[
+               AND GRP_CODE IN (SELECT GRP_CODE FROM SMT_COMM_CODE WHERE ITEM_CODE like UPPER('%'|| #{ITEM_CODE} ||'%') )
+            ]]>
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ITEM_NAME)">
+        	<![CDATA[
+               AND GRP_CODE IN (SELECT GRP_CODE FROM SMT_COMM_CODE WHERE ITEM_NAME like UPPER('%'|| #{ITEM_NAME} ||'%') )
+            ]]>   
+        </if>
+        <![CDATA[    
+             ORDER BY GRP_CODE   
+        ]]>      
+    </select>   
+     
+    <!-- 공통코드 세부코드 조회 -->
+    <select id="SELECT_SMT_COMM_CODE" parameterType="java.util.Map" resultType="java.util.Map">  
+     	<![CDATA[     
+	        SELECT GRP_CODE
+	             , ITEM_CODE
+	 			 , ITEM_NAME
+	             , ACTIVE_FLAG
+	             , ARR_NO
+	             , REF_MAIN_CD
+	             , REF_1
+	             , REF_2
+	             , REF_3
+	             , REF_4
+	             , REF_5
+	             , ITEM_DESC    
+	        FROM SMT_COMM_CODE A
+	        WHERE GRP_CODE = #{GRP_CODE}
+        	ORDER BY ARR_NO, ITEM_CODE
+        ]]>        
+    </select>
+     
+    <!-- 코드관리,메뉴관리 : 다국어(언어) 종류 조회 (KO, EN, JP ....) -->
+    <select id="SELECT_LANG_KIND" parameterType="java.util.Map" resultType="java.util.Map">
+     	<![CDATA[   
+     		SELECT CC.ITEM_CODE  AS LANG_CODE
+			     , CC.ITEM_NAME  AS LANG_DISPLAY 	
+			  FROM SMT_COMM_CODE  CC
+			 WHERE NVL(CC.ACTIVE_FLAG,'N') = 'Y'
+			   AND CC.GRP_CODE = 'F030' 
+			 ORDER BY CC.ARR_NO, CC.ITEM_CODE
+		]]> 
+    </select>
+     
+    <!-- 코드관리 : 다국어 데이터(Group Code lang_info) 조회 -->
+    <select id="SELECT_GRP_LANG" parameterType="java.util.Map" resultType="java.util.Map">  
+        <![CDATA[    
+            SELECT MLI.OBJ_CD           AS OBJ_CD
+                 , MLI.OBJ_SCN_CD		AS OBJ_SCN_CD
+                 , MLI.LANG_SCN_CD		AS LANG_SCN_CD
+                 , MLI.LANG_DISPLAY		AS LANG_DISPLAY
+                 , MLI.SUB_OBJ_CD       AS SUB_OBJ_CD
+              FROM SMT_LANG_INFO MLI
+             WHERE 1 = 1 
+               AND MLI.OBJ_SCN_CD = 'GRP_CODE'
+        ]]>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(GRP_CODE)">
+        	<![CDATA[
+               AND MLI.OBJ_CD = #{GRP_CODE}
+            ]]>    
+        </if>
+        <![CDATA[    
+             ORDER BY DECODE(MLI.LANG_SCN_CD,'KO','1','EN','2','3')
+        ]]> 
+    </select>
+     
+    <!-- 코드관리 : 다국어 데이터(Item Code lang_info) 조회 -->
+    <select id="SELECT_ITEM_LANG" parameterType="java.util.Map" resultType="java.util.Map">  
+        <![CDATA[    
+            SELECT MLI.OBJ_CD
+                 , MLI.OBJ_SCN_CD
+                 , MLI.LANG_SCN_CD
+                 , MLI.LANG_DISPLAY
+                 , MLI.SUB_OBJ_CD       
+              FROM SMT_LANG_INFO MLI
+             WHERE 1 = 1 
+               AND MLI.OBJ_SCN_CD = 'ITEM_CODE'
+        ]]>    
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ITEM_CODE)">
+            <![CDATA[
+               AND MLI.OBJ_CD = #{ITEM_CODE}    
+            ]]>
+        </if>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(GRP_CODE)">
+        	<![CDATA[
+               AND MLI.SUB_OBJ_CD = #{GRP_CODE}
+            ]]>
+        </if>
+        <![CDATA[    
+            ORDER BY DECODE(MLI.LANG_SCN_CD,'KO','1','EN','2','3')
+        ]]>     
+    </select>
+     
+     <!-- 코드관리 : 주코드 등록-->
+     <insert id="INSERT_SMT_COMM_GRP" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[    
+            INSERT INTO SMT_COMM_GRP
+            (   
+              GRP_CODE
+			, GRP_NAME
+			, PARENT_GRP_CODE
+			, INS_DATE
+			, INS_USER_ID
+			, UPD_DATE
+			, UPD_USER_ID
+			)
+            VALUES
+            (
+              #{GRP_CODE}
+            , #{GRP_NAME}
+            , #{PARENT_GRP_CODE}               
+            , SYSDATE
+            , #{GV_USER_ID}
+            , SYSDATE
+            , #{GV_USER_ID}
+            )
+        ]]>
+     </insert>
+     
+     <!-- 코드관리 : 주코드 수정-->
+     <update id="UPDATE_SMT_COMM_GRP" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE SMT_COMM_GRP 
+               SET GRP_NAME = #{GRP_NAME}                
+                 , PARENT_GRP_CODE = #{PARENT_GRP_CODE}
+                 , UPD_DATE = SYSDATE
+                 , UPD_USER_ID = #{GV_USER_ID}
+             WHERE GRP_CODE = #{GRP_CODE}    
+     	]]>
+     </update> 
+     
+     <!-- 코드관리 : 주코드 삭제-->
+     <delete id="DELETE_SMT_COMM_GRP" parameterType="java.util.Map"> 
+	    <![CDATA[ 
+	        DELETE SMT_COMM_GRP  
+	         WHERE GRP_CODE = #{GRP_CODE}  
+ 		]]>    
+     </delete> 
+    
+     <!-- 코드관리 : 세부코드 등록-->
+     <insert id="INSERT_SMT_COMM_CODE" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+            INSERT INTO SMT_COMM_CODE
+            ( GRP_CODE
+            , ITEM_CODE
+			, ITEM_NAME
+			, ITEM_DESC
+			, ACTIVE_FLAG
+			, ARR_NO
+			, REF_MAIN_CD
+			, REF_1
+			, REF_2
+			, REF_3
+			, REF_4
+			, REF_5
+			, SYSTEM_SEED_FLAG
+			, INS_DATE
+			, INS_USER_ID
+			, UPD_DATE
+			, UPD_USER_ID
+			)
+            VALUES
+            ( #{GRP_CODE}
+            , #{ITEM_CODE}
+            , #{ITEM_NAME}   
+            , #{ITEM_DESC}
+            , #{ACTIVE_FLAG}
+            , #{ARR_NO}
+            , #{REF_MAIN_CD}
+            , #{REF_1}
+            , #{REF_2}
+            , #{REF_3}
+            , #{REF_4}
+            , #{REF_5}
+            , 'N'            
+            , SYSDATE
+            , #{GV_USER_ID}
+            , SYSDATE
+            , #{GV_USER_ID}
+            )
+        ]]>
+     </insert>
+     
+     <!-- 코드관리 : 세부코드 수정-->
+     <update id="UPDATE_SMT_COMM_CODE" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE SMT_COMM_CODE
+               SET ITEM_NAME = #{ITEM_NAME}                
+                 , ITEM_DESC = #{ITEM_DESC}
+                 , ACTIVE_FLAG = #{ACTIVE_FLAG}
+                 , ARR_NO = #{ARR_NO}
+                 , REF_MAIN_CD = #{REF_MAIN_CD}
+                 , REF_1 = #{REF_1}
+                 , REF_2 = #{REF_2}
+                 , REF_3 = #{REF_3}
+                 , REF_4 = #{REF_4}
+                 , REF_5 = #{REF_5}
+                 , UPD_DATE = SYSDATE
+                 , UPD_USER_ID = #{GV_USER_ID}
+             WHERE GRP_CODE = #{GRP_CODE}  
+               AND ITEM_CODE = #{ITEM_CODE} 
+        ]]> 
+     </update> 
+     
+     <!-- 코드관리 : 세부코드 삭제-->
+     <delete id="DELETE_SMT_COMM_CODE" parameterType="java.util.Map"> 
+	    <![CDATA[
+	        DELETE SMT_COMM_CODE  
+	         WHERE GRP_CODE  = #{GRP_CODE}
+	           AND ITEM_CODE = #{ITEM_CODE}  
+	    ]]>
+     </delete> 
+     
+     <!-- 다국어  : 라벨  다국어(META) 정보 조회 -->
+    <select id="SELECT_SMT_LANG_INFO_LABEL" parameterType="java.util.Map" resultType="java.util.Map">       
+        <![CDATA[    
+            SELECT OBJ_CD 
+                 , SUB_OBJ_CD
+                 , OBJ_SCN_CD 
+                 , LANG_SCN_CD 
+                 , LANG_DISPLAY 
+                 , INS_DATE , INS_USER_ID 
+                 , UPD_DATE , UPD_USER_ID                    
+              FROM SMT_LANG_INFO
+             WHERE 1 = 1                           
+               AND OBJ_SCN_CD IN ('LABEL')
+        ]]>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(LANG_CODE)">
+            <![CDATA[   
+               AND LANG_SCN_CD = #{LANG_CODE}
+            ]]>    
+        </if>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(LABEL_CODE)">
+            <![CDATA[
+        	   AND OBJ_CD LIKE UPPER('%'|| #{LABEL_CODE} || '%')	
+            ]]>    
+        </if>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(LABEL_NAME)">
+            <![CDATA[
+        	   AND UPPER(LANG_DISPLAY) LIKE UPPER('%'|| #{LABEL_NAME} || '%')	
+            ]]>    
+        </if>
+        
+        <![CDATA[
+             ORDER BY OBJ_CD, SUB_OBJ_CD, LANG_SCN_CD
+        ]]>
+    </select>
+     
+     <!-- 다국어 데이터 등록 -->
+     <insert id="INSERT_SMT_LANG_INFO" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+	        INSERT INTO SMT_LANG_INFO(
+	              OBJ_CD , SUB_OBJ_CD , OBJ_SCN_CD , LANG_SCN_CD
+	            , LANG_DISPLAY 
+	            , INS_USER_ID , INS_DATE
+	            , UPD_USER_ID , UPD_DATE
+	        )VALUES(
+	              #{OBJ_CD} , #{SUB_OBJ_CD} , #{OBJ_SCN_CD} , #{LANG_SCN_CD}
+	            , #{LANG_DISPLAY,jdbcType=VARCHAR} 
+	            , #{GV_USER_ID} , SYSDATE
+	            , #{GV_USER_ID} , SYSDATE
+	        )  
+	    ]]>    
+     </insert>
+     
+     <!-- 다국어 데이터 수정 -->
+     <update id="UPDATE_SMT_LANG_INFO" parameterType="java.util.Map" >
+	    <![CDATA[ 
+	        UPDATE SMT_LANG_INFO
+	           SET LANG_DISPLAY = #{LANG_DISPLAY,jdbcType=VARCHAR}
+	             , UPD_USER_ID = #{GV_USER_ID} 
+	             , UPD_DATE = SYSDATE
+	         WHERE OBJ_CD = #{OBJ_CD}
+	           AND OBJ_SCN_CD = #{OBJ_SCN_CD}
+	           AND LANG_SCN_CD = #{LANG_SCN_CD}
+        ]]>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(SUB_OBJ_CD)">
+            AND SUB_OBJ_CD = #{SUB_OBJ_CD}    
+        </if>
+        
+     </update>
+     
+     <!-- 다국어 데이터 삭제 -->
+     <delete id="DELETE_SMT_LANG_INFO" parameterType="java.util.Map">
+	    <![CDATA[
+	        DELETE FROM SMT_LANG_INFO
+	         WHERE OBJ_CD = #{OBJ_CD}
+	           AND OBJ_SCN_CD = #{OBJ_SCN_CD}
+	           AND LANG_SCN_CD = #{LANG_SCN_CD}
+	    ]]>
+	    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(SUB_OBJ_CD)">
+            AND SUB_OBJ_CD = #{SUB_OBJ_CD}    
+        </if>
+     </delete>
+     
+     <!-- 공통코드 주코드/세부코드 조회 -->				
+	 <select id="SELECT_GRP_ITEM_CODE" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+	        SELECT CG.GRP_CODE
+			     , CG.GRP_NAME
+			     , CC.ITEM_CODE
+			     , CC.ITEM_NAME
+			     , CC.ACTIVE_FLAG
+			     , CC.ITEM_DESC     
+	          FROM SMT_COMM_GRP   CG
+     		     , SMT_COMM_CODE  CC
+	         WHERE CG.GRP_CODE = CC.GRP_CODE
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(GRP_CODE)">
+        	<![CDATA[
+        	   AND CG.GRP_CODE LIKE UPPER('%'|| #{GRP_CODE} || '%')
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(GRP_NAME)">
+            <![CDATA[
+               AND CG.GRP_NAME LIKE UPPER('%'|| #{GRP_NAME} || '%')
+            ]]>   
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ITEM_CODE)">
+            <![CDATA[
+               AND CC.ITEM_CODE LIKE UPPER('%'|| #{ITEM_CODE} ||'%')
+            ]]> 
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ITEM_NAME)">
+            <![CDATA[
+               AND CC.ITEM_NAME LIKE UPPER('%'|| #{ITEM_NAME} ||'%')
+            ]]>    
+        </if>
+        <![CDATA[    
+            ORDER BY CG.GRP_CODE, CC.ARR_NO, CC.ITEM_CODE  
+        ]]>      
+     </select>
+     
+     <!-- 법인 등록 정보 조회 -->
+     <select id="SELECT_OU_DATA" parameterType="java.util.Map" resultType="java.util.Map">    
+    	<![CDATA[       
+	        SELECT OU_CODE
+	             , SMT_GET_OU_NAME_FUNC(OU_CODE,#{GV_LANG})   AS OU_NAME
+	          FROM SMT_OU_MSTR
+	         ORDER BY 1
+    	]]> 
+     </select>
+     
+     <!-- 사용자 정보 조회 -->				
+	 <select id="SELECT_SMT_USER_MSTR" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+	        SELECT  CUM.USER_ID
+			     ,  CUM.LOGIN_NO
+			     ,  TO_CHAR(INSA.RETR_DATE, 'RRRR-MM-DD') AS RETR_DATE
+			     ,  CUM.OU_CODE
+			     ,  SMT_GET_OU_NAME_FUNC(CUM.OU_CODE, #{GV_LANG}) AS OU_NAME
+			     ,  CUM.USER_TYPE
+			     ,  DEPT.DEPT_NAME AS DEPT_NAME 
+			     ,  JIK.ITEM_NAME AS JIKCHAK_NAME 
+			     ,  SMT_GET_CODE_NAME_FUNC('P001', CUM.USER_TYPE, #{GV_LANG}) AS USER_TYPE_NAME
+			     ,  CUM.VENDOR_CODE
+			     ,  NULL AS VENDOR_NAME
+			     ,  CUM.EMP_NO
+			     ,  CUM.USER_NAME
+			     ,  CUM.PASSWORD
+			     ,  TO_CHAR(CUM.ST_DATE, 'RRRR-MM-DD') AS ST_DATE
+			     ,  TO_CHAR(CUM.ED_DATE, 'RRRR-MM-DD') AS ED_DATE
+			     ,  CUM.EMAIL_ADDR
+			     ,  CUM.MOBILE_PHONE_NO
+			     ,  CUM.AT_OU
+			     ,  CUM.E_COMMERCE_YN
+			     ,  CUM.PERSONAL_INFO_YN
+			     ,  CUM.INFO_SECURIT_YN
+			     ,  CUM.BIZ_DIV
+			     ,  CUM.OU_COUNTRY_CODE
+			     ,  (SELECT CASE WHEN MAX(NVL((SELECT 1 
+			            FROM SMT_USER_AUTH B
+			            WHERE B.USER_ID = CUM.USER_ID
+			            AND B.AUTH_CODE = A.AUTH_CODE
+			         ), 0)) = 1 
+			            THEN 'Y' 
+			            ELSE 'N' 
+			         END
+			         FROM SMT_AUTH A      
+			         WHERE A.ACTIVE_FLAG = 'Y'
+			         AND A.AUTH_LEVEL >= 2 AND 
+               		 (A.AUTH_CODE LIKE 'SA%' OR A.AUTH_CODE LIKE 'PM%')) AS ROLL
+                 
+			FROM SMT_USER_MSTR CUM
+			LEFT OUTER JOIN HS_HRM.EHR_INSA_MSTR INSA
+			ON INSA.OU_CODE = CUM.OU_CODE
+			AND INSA.EMP_NO = CUM.LOGIN_NO
+			LEFT OUTER JOIN HS_HRM.EHR_DEPT_MSTR DEPT
+			ON DEPT.OU_CODE = INSA.OU_CODE
+			AND DEPT.DEPT_CODE = INSA.DEPT_CODE
+			LEFT OUTER JOIN HS_HRM.SMT_COMM_CODE JIK
+			ON JIK.GRP_CODE = 'H006'
+			AND JIK.ITEM_CODE = INSA.JIKCHAK_CODE
+		 	WHERE 1=1  /**CUM.USER_ID   > 100*/
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(OU_CODE)">
+        	<![CDATA[
+        	   AND CUM.OU_CODE = #{OU_CODE}
+        	]]>  
+        </if>  
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(USER_TYPE)">
+        	<![CDATA[
+        	   AND CUM.USER_TYPE = #{USER_TYPE}
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(OU_COUNTRY_CODE)">
+        	<![CDATA[
+        	   AND CUM.OU_COUNTRY_CODE = #{OU_COUNTRY_CODE}
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_NAME)">
+        	<![CDATA[
+        	   AND DEPT.DEPT_NAME LIKE '%'|| #{DEPT_NAME} ||'%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(VENDOR_CODE)">
+        	<![CDATA[
+        	   AND CUM.VENDOR_CODE = #{VENDOR_CODE}
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(LOGIN_NO)">
+            <![CDATA[
+               AND CUM.LOGIN_NO LIKE UPPER('%'|| #{LOGIN_NO} || '%')
+            ]]>   
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NO)">
+            <![CDATA[
+               AND CUM.EMP_NO LIKE UPPER('%'|| #{EMP_NO} ||'%')
+            ]]>    
+        </if>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(USER_NAME)">
+            <![CDATA[
+               AND CUM.USER_NAME LIKE '%'|| #{USER_NAME} ||'%'
+            ]]>    
+        </if>
+        
+        <![CDATA[    
+             ORDER BY CUM.USER_ID  
+        ]]>      
+        
+        <!-- <![CDATA[  
+	        SELECT CUM.USER_ID  
+			     , CUM.LOGIN_NO
+			     , CUM.OU_CODE
+			     , SMT_GET_OU_NAME_FUNC(CUM.OU_CODE,{GV_LANG}) AS OU_NAME
+			     , CUM.USER_TYPE
+			     , SMT_GET_CODE_NAME_FUNC('P001',CUM.USER_TYPE,{GV_LANG}) AS USER_TYPE_NAME
+			     , CUM.VENDOR_CODE
+			     , NULL   AS VENDOR_NAME 
+			     , CUM.EMP_NO
+			     , CUM.USER_NAME
+			     , CUM.PASSWORD 
+			     , TO_CHAR(CUM.ST_DATE, 'RRRR-MM-DD')  AS ST_DATE
+			     , TO_CHAR(CUM.ED_DATE, 'RRRR-MM-DD')  AS ED_DATE
+			     , CUM.EMAIL_ADDR
+			     , CUM.MOBILE_PHONE_NO
+			     , CUM.AT_OU
+			     , CUM.E_COMMERCE_YN
+			     , CUM.PERSONAL_INFO_YN
+			     , CUM.INFO_SECURIT_YN
+			     , CUM.BIZ_DIV
+			  FROM SMT_USER_MSTR  CUM
+			 WHERE 1=1  /**CUM.USER_ID   > 100*/
+        ]]>    
+          <if test="@com.oms.MyBatisUtil@isNotEmpty(OU_CODE)">
+        	<![CDATA[
+        	   AND CUM.OU_CODE = #{OU_CODE}
+        	]]>  
+        </if>  
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(USER_TYPE)">
+        	<![CDATA[
+        	   AND CUM.USER_TYPE = #{USER_TYPE}
+        	]]>  
+        </if>  
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(VENDOR_CODE)">
+        	<![CDATA[
+        	   AND CUM.VENDOR_CODE = #{VENDOR_CODE}
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(LOGIN_NO)">
+            <![CDATA[
+               AND CUM.LOGIN_NO LIKE UPPER('%'|| #{LOGIN_NO} || '%')
+            ]]>   
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NO)">
+            <![CDATA[
+               AND CUM.EMP_NO LIKE UPPER('%'|| #{EMP_NO} ||'%')
+            ]]>    
+        </if>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(USER_NAME)">
+            <![CDATA[
+               AND CUM.USER_NAME LIKE '%'|| #{USER_NAME} ||'%'
+            ]]>    
+        </if>
+        
+        <![CDATA[    
+             ORDER BY CUM.USER_ID  
+        ]]>      
+			 // HRM(EHR_INSA_MSTR)에서 ORM(SMT_USER_MSTR)로 주테이블 변경  Edited by. yelee -->
+     </select>
+     
+     <!-- UserId에 따른 사용자 권한 정보 조회 -->				
+	 <select id="SELECT_AUTH_CODE" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+	        SELECT A.AUTH_CODE
+			     , A.AUTH_NAME
+			     , #{USER_ID} AS USER_ID
+			     , NVL((SELECT 1 
+			             FROM SMT_USER_AUTH B
+			                , SMT_USER_MSTR D 
+			            WHERE A.AUTH_CODE = B.AUTH_CODE
+			              AND B.USER_ID   = D.USER_ID 
+			              AND D.USER_ID   = #{USER_ID}
+			           ),0) CHOICE    
+			  FROM SMT_AUTH A      
+			 WHERE ACTIVE_FLAG = 'Y'
+			   AND AUTH_LEVEL >= 2
+			 ORDER BY A.UP_AUTH_CODE, A.ORDER_NO
+        ]]>      
+     </select>
+     
+     <!-- 모든 ROLE 정보 조회 -->				
+	 <select id="SELECT_ALL_AUTH_CODE" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+	        SELECT A.AUTH_CODE
+			     , A.AUTH_NAME    
+			FROM SMT_AUTH A      
+			WHERE ACTIVE_FLAG = 'Y'
+			   	  AND AUTH_LEVEL >= 2
+			   	  AND A.OU_CODE = #{OU_CODE}
+			ORDER BY A.UP_AUTH_CODE, A.ORDER_NO
+        ]]>      
+     </select>
+     
+     <!-- 사용자 사업장 권한 정보 조회 -->				
+	 <select id="SELECT_USER_SITE_CODE" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+	        SELECT A.SITE_CODE
+			     , A.SITE_NAME
+			     , #{USER_ID} AS USER_ID
+			     , NVL((SELECT 1 
+			             FROM SMT_USER_SITE B
+			                , SMT_USER_MSTR D 
+			            WHERE A.SITE_CODE = B.SITE_CODE
+			              AND B.USER_ID   = D.USER_ID 
+			              AND D.OU_CODE   = A.OU_CODE
+			              AND D.USER_ID   = #{USER_ID}
+			           ),0) CHOICE    
+			  FROM SMT_SITE_MSTR A      
+			 WHERE A.OU_CODE  =  #{OU_CODE}
+			 ORDER BY A.SITE_CODE
+        ]]>      
+     </select>
+     
+     <!-- 사용자 정보 등록-->
+     <insert id="INSERT_SMT_USER_MSTR" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+            INSERT INTO SMT_USER_MSTR
+            ( USER_ID
+			, LOGIN_NO
+			, OU_CODE
+		    , USER_TYPE
+		    , USER_NAME
+		    , VENDOR_CODE
+		    , EMP_NO
+		    , PASSWORD
+		    , ST_DATE
+		    , ED_DATE
+		    , EMAIL_ADDR
+		    , MOBILE_PHONE_NO
+		    , AT_OU
+		    , E_COMMERCE_YN
+		    , PERSONAL_INFO_YN
+		    , INFO_SECURIT_YN
+		    , BIZ_DIV
+			, INS_DATE
+			, INS_USER_ID
+			, UPD_DATE
+			, UPD_USER_ID       
+			, OU_COUNTRY_CODE      
+			)
+            VALUES
+            ( #{USER_ID}
+            , #{LOGIN_NO}
+            , #{OU_CODE}
+            , #{USER_TYPE}
+            , #{USER_NAME}
+            , #{VENDOR_CODE}   
+            , #{EMP_NO}
+            , 'ed8794d61ba87faa0997e41d7232bee4b8a0668ff47117c5388f0f3b00adff2f'    /** 최초 password (hsoms!@#) 으로 set */
+            , TO_DATE(#{ST_DATE},'RRRR-MM-DD') 
+            , TO_DATE(#{ED_DATE},'RRRR-MM-DD')
+            , #{EMAIL_ADDR}
+            , #{MOBILE_PHONE_NO}
+            , #{AT_OU}
+            , #{E_COMMERCE_YN}
+            , #{PERSONAL_INFO_YN}
+            , #{INFO_SECURIT_YN}
+            , #{BIZ_DIV}
+            , SYSDATE
+            , #{GV_USER_ID}
+            , SYSDATE
+            , #{GV_USER_ID}
+            , #{OU_COUNTRY_CODE}
+            )
+        ]]>
+     </insert>
+     
+     <!-- 사용자 정보 수정-->
+     <update id="UPDATE_SMT_USER_MSTR" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE SMT_USER_MSTR
+               SET LOGIN_NO = UPPER(#{LOGIN_NO})                
+                 , OU_CODE = #{OU_CODE}
+                 , USER_TYPE = #{USER_TYPE}
+                 , USER_NAME = #{USER_NAME}
+                 , VENDOR_CODE = #{VENDOR_CODE}
+                 , EMP_NO = #{EMP_NO}
+                 , ST_DATE = TO_DATE(#{ST_DATE},'RRRR-MM-DD')
+                 , ED_DATE = TO_DATE(#{ED_DATE},'RRRR-MM-DD')
+                 , EMAIL_ADDR = #{EMAIL_ADDR}
+                 , MOBILE_PHONE_NO = #{MOBILE_PHONE_NO}
+                 , AT_OU = #{AT_OU}
+                 , E_COMMERCE_YN = #{E_COMMERCE_YN}
+                 , PERSONAL_INFO_YN = #{PERSONAL_INFO_YN}
+                 , INFO_SECURIT_YN = #{INFO_SECURIT_YN}
+                 , BIZ_DIV = #{BIZ_DIV}
+                 , UPD_DATE = SYSDATE
+                 , UPD_USER_ID = #{GV_USER_ID}
+                 , OU_COUNTRY_CODE = #{OU_COUNTRY_CODE}
+             WHERE USER_ID = #{USER_ID}  
+        ]]> 
+     </update>
+     
+     <!-- 사용자 정보 삭제-->
+     <delete id="DELETE_SMT_USER_MSTR" parameterType="java.util.Map"> 
+	    <![CDATA[
+	        DELETE SMT_USER_MSTR  
+	        WHERE  USER_ID = #{USER_ID} 
+	    ]]>
+     </delete> 
+     
+     <!-- 사용자 권한 정보 등록-->
+     <update id="UPDATE_AUTH_CODE" parameterType="java.util.Map">
+        <![CDATA[
+            MERGE INTO SMT_USER_AUTH
+            USING DUAL
+            ON (USER_ID = #{USER_ID} AND AUTH_CODE = #{AUTH_CODE})
+            WHEN MATCHED THEN
+            UPDATE SET
+              UPD_DATE    = SYSDATE
+            , UPD_USER_ID = #{GV_USER_ID}
+        ]]> 
+            <if test='CHOICE.equals("0")'> 
+                DELETE WHERE (USER_ID = #{USER_ID} AND AUTH_CODE = #{AUTH_CODE}) 
+            </if>
+        <![CDATA[    
+            WHEN NOT MATCHED THEN
+            INSERT 
+            ( USER_ID
+			, AUTH_CODE
+			, INS_DATE
+			, INS_USER_ID
+			, UPD_DATE
+			, UPD_USER_ID             
+			)
+            VALUES
+            ( #{USER_ID}
+            , #{AUTH_CODE}
+            , SYSDATE
+            , #{GV_USER_ID}
+            , SYSDATE
+            , #{GV_USER_ID}
+            )
+        ]]>
+     </update>
+     
+     <!-- 사용자 사업장 권한 정보 등록-->
+     <update id="UPDATE_USER_SITE_CODE" parameterType="java.util.Map">
+        <![CDATA[
+            MERGE INTO SMT_USER_SITE
+            USING DUAL
+            ON (USER_ID = #{USER_ID} AND SITE_CODE = #{SITE_CODE})
+            WHEN MATCHED THEN
+            UPDATE SET
+              UPD_DATE    = SYSDATE
+            , UPD_USER_ID = #{GV_USER_ID}
+        ]]> 
+            <if test='CHOICE.equals("0")'> 
+                DELETE WHERE (USER_ID = #{USER_ID} AND SITE_CODE = #{SITE_CODE}) 
+            </if>
+        <![CDATA[    
+            WHEN NOT MATCHED THEN
+            INSERT 
+            ( USER_ID
+			, SITE_CODE
+			, INS_DATE
+			, INS_USER_ID
+			, UPD_DATE
+			, UPD_USER_ID             
+			)
+            VALUES
+            ( #{USER_ID}
+            , #{SITE_CODE}
+            , SYSDATE
+            , #{GV_USER_ID}
+            , SYSDATE
+            , #{GV_USER_ID}
+            )
+        ]]>
+     </update>
+     
+     <!-- 사용자 User id 조회 -->
+     <select id="SELECT_USER_ID_SEQ" parameterType="java.util.Map" resultType="java.util.Map">    
+    	<![CDATA[       
+	        SELECT SMT_USER_MSTR_SEQ.NEXTVAL  USER_ID 
+	          FROM DUAL
+    	]]> 
+     </select>
+     
+     <!-- 사용자 User Password 수정 -->
+     <update id="UPDATE_USER_MSTR_PWDRESET" parameterType="java.util.Map">    
+        <![CDATA[
+            UPDATE SMT_USER_MSTR
+               SET PASSWORD = #{TRANCE_NEW_PW}
+                 , FIRST_PWD_CHANGE = #{FIRST_PWD_CHANGE}
+                 , PRE_PWD  = PASSWORD
+                 , PRE_PRE_PWD = PRE_PWD
+                 , PWD_UPDATE_DATE = SYSDATE
+                 , PWD_UPDATED_BY = #{GV_USER_ID}
+                 , UPD_DATE = SYSDATE
+                 , UPD_USER_ID = #{GV_USER_ID}                      
+             WHERE USER_ID = #{USER_ID}
+        ]]>    
+           
+     </update>
+    
+     <!-- 사용자 정보 팝업(인사마스터기준) 조회 -->				
+	 <select id="SELECT_USER_MSTR_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+	        SELECT SUI.OU_CODE
+			     , SOM.OU_NAME
+			     , SUI.EMP_NO    
+			     , SUI.EMP_NAME
+			     , SUI.DEPT_CODE
+			     , SUI.DEPT_NAME
+			     , SUI.EMAIL_ADDR
+			  FROM SMT_USER_INFO_V SUI
+			     , SMT_OU_MSTR     SOM
+			 WHERE SUI.OU_CODE  = #{OU_CODE}
+			   AND SOM.OU_CODE  = SUI.OU_CODE
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_CODE)">
+        	<![CDATA[
+        	   AND SUI.DEPT_CODE = #{DEPT_CODE}
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_NAME)">
+            <![CDATA[
+               AND SUI.DEPT_NAME LIKE '%'|| #{DEPT_NAME} || '%'
+            ]]>   
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NO)">
+            <![CDATA[
+               AND SUI.EMP_NO LIKE '%'|| #{EMP_NO} ||'%'
+            ]]> 
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NAME)">
+            <![CDATA[
+               AND SUI.EMP_NAME LIKE '%'|| #{EMP_NAME} ||'%'
+            ]]>    
+        </if>
+        <![CDATA[    
+            ORDER BY SUI.EMP_NO  
+        ]]>      
+     </select>
+     
+     <!-- 로그 정보 조회 -->				
+	 <select id="SELECT_LOG_INFO" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+	        SELECT SLI.USER_ID
+			     , TO_CHAR(SLI.LOG_DTM, 'YYYYMMDD HH24:MI:SS') AS INS_DATE
+			     , SLI.USER_IP_ADDR
+			     , SLI.LOG_NOTE
+			     , SLI.LOG_OBJ_ID
+			     , SUI.LOGIN_NO 
+			     , SUI.USER_NAME
+			     , SUI.EMP_NO
+			     , SOM.OU_NAME
+			     , MNU.MENU_NAME
+			  FROM SMT_LOG_INFO      SLI
+			     , SMT_MENU          MNU
+			     , SMT_USER_MSTR     SUI
+			     , SMT_OU_MSTR       SOM
+			 WHERE MNU.PAGE_NAME(+) = SLI.LOG_OBJ_ID
+			   AND SUI.USER_ID     = SLI.USER_ID
+			   AND SOM.OU_CODE     = SUI.OU_CODE
+        ]]>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(OU_CODE)">
+        	<![CDATA[
+        	   AND SUI.OU_CODE     = #{OU_CODE}
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(SDATE)">
+        	<![CDATA[
+        	   AND SLI.LOG_DTM     >= TO_DATE(#{SDATE},'RRRR-MM-DD')
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EDATE)">
+            <![CDATA[
+               AND SLI.LOG_DTM     <= TO_DATE(#{EDATE},'RRRR-MM-DD')+0.99999
+            ]]>   
+        </if>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(LOGIN_NO)">
+            <![CDATA[
+               AND SUI.LOGIN_NO    = #{LOGIN_NO} 
+            ]]> 
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(LOG_CODE)">
+            <![CDATA[
+               AND SLI.LOG_K_CD    = #{LOG_CODE} 
+            ]]> 
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(MENU_NAME)">
+            <![CDATA[
+               AND MNU.MENU_NAME LIKE '%'|| #{MENU_NAME} ||'%'
+            ]]>    
+        </if>
+        <![CDATA[    
+            ORDER BY SLI.LOG_DTM  
+        ]]>      
+     </select>
+     
+     <!-- 로그관리 : 로그 종류 조회  -->
+     <select id="SELECT_LOG_KIND" parameterType="java.util.Map" resultType="java.util.Map">
+     	<![CDATA[   
+     		SELECT CC.ITEM_CODE  AS LOG_CODE
+			     , CC.ITEM_NAME  AS LOG_NAME 	
+			  FROM SMT_COMM_CODE  CC
+			 WHERE NVL(CC.ACTIVE_FLAG,'N') = 'Y'
+			   AND CC.GRP_CODE = 'F031' 
+			 ORDER BY CC.ARR_NO, CC.ITEM_CODE
+		]]> 
+     </select>
+     
+	<!-- 법인코드 조회 -->				
+	<select id="SELECT_OU_CODE" parameterType="java.util.Map" resultType="java.util.Map">     
+		<![CDATA[  
+			SELECT SMT_OU_MSTR.OU_CODE  AS CODE
+			     , SMT_OU_MSTR.OU_NAME  AS NAME
+			FROM SMT_OU_MSTR
+			WHERE 1 = 1
+			ORDER BY OU_CODE
+		]]>    
+	</select>
+     
+     <!-- 프로그램관리 : 업무구분 조회 (Serarch)-->
+	 <select id="SELECT_TASK" parameterType="java.util.Map" resultType="java.util.Map" >
+			SELECT
+				MNU.MENU_ID
+				,SMT_GET_MENU_NAME_FUNC(mnu.menu_id,#{GV_LANG}) AS MENU_NAME
+				,MNU.ESH_GBN
+			FROM SMT_MENU  MNU
+			WHERE MNU.ACTIVE_FLAG = 'Y'
+			AND   MNU.LVL in ( 0,1)
+			ORDER BY MNU.ORDER_NO
+	 </select>
+     <!-- 프로그램관리 : 상위메뉴 조회(Search) -->
+	 <select id="SELECT_UP_MENU_S" parameterType="java.util.Map" resultType="java.util.Map" >
+			SELECT
+				 MNU.MENU_ID
+				,SMT_GET_MENU_NAME_FUNC(mnu.menu_id,#{GV_LANG}) AS MENU_NAME
+				,MNU.ESH_GBN
+			FROM SMT_MENU  MNU
+			WHERE MNU.ACTIVE_FLAG = 'Y'
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(MENU_ID)">
+            /*AND   MNU.LVL = 2*/
+            AND   UP_MENU_ID = #{MENU_ID}
+        </if>			
+			ORDER BY MNU.ORDER_NO
+	 </select>     
+	 <!-- 프로그램관리 : 상위메뉴 : 입력 -->
+	 <select id="SELECT_UP_MENU_I" parameterType="java.util.Map" resultType="java.util.Map">
+			SELECT MNU.MENU_ID
+			     ,  '>' || SMT_GET_MENU_NAME_FUNC(MNU.MENU_ID,  #{GV_LANG}) AS MENU_NAME
+			     , MNU.LVL
+			 FROM SMT_MENU MNU
+			WHERE MNU.MENU_ID = #{MENU_ID}
+			UNION ALL
+			SELECT MNU.MENU_ID
+	            , RPAD('-', 2 * (LEVEL),'-') ||'>'|| SMT_GET_MENU_NAME_FUNC(MNU.MENU_ID,  #{GV_LANG}) AS  MENU_NAME
+	            , MNU.LVL
+			FROM SMT_MENU  MNU
+			START WITH MNU.UP_MENU_ID = #{MENU_ID}
+			CONNECT BY MNU.UP_MENU_ID = PRIOR MNU.MENU_ID
+	 </select>  	
+	
+	 <!-- 프로그램관리 : 공통코드 -->
+	 <select id="SELECT_SMT_COMM_CODE1" parameterType="java.util.Map" resultType="java.util.Map">
+			SELECT SCC.ITEM_CODE
+			     , NVL(SMT_GET_LANG_NAME_FUNC(#{GV_OU_CODE},'F010', SCC.ITEM_CODE, #{GV_LANG} ), SCC.ITEM_NAME ) AS ITEM_NAME
+			 FROM SMT_COMM_CODE SCC
+			WHERE SCC.GRP_CODE = #{GRP_CODE} 
+			 and SCC.ACTIVE_FLAG ='Y'
+	 </select> 
+	 <!-- 프로그램관리 : 메뉴 ID sequence  -->
+	 <select id="SELECT_MENU_ID_SEQ" parameterType="java.util.Map" resultType="java.util.Map">
+			SELECT SMT_MENU_SEQ.NEXTVAL SEQ
+			  FROM DUAL
+	 </select>
+	
+	 <!-- 프로그램관리 : 메뉴 다국어  -->
+	 <select id="SELECT_SMT_MENU_LANG" parameterType="java.util.Map" resultType="java.util.Map">
+			SELECT MENU_ID, 
+			          MENU_NAME, 
+			          LANG 
+			 FROM SMT_MENU_LANG SML
+			WHERE MENU_ID = #{MENU_ID}
+	 </select>	
+	 <!-- 프로그램관리 : 메뉴 다국어  insert-->
+     <insert id="INSERT_SMT_MENU_LANG" parameterType="java.util.Map" useGeneratedKeys="false">
+           <![CDATA[ 
+			INSERT INTO SMT_MENU_LANG
+			  (MENU_ID, MENU_NAME, LANG, INS_DATE, INS_USER_ID, UPD_DATE, UPD_USER_ID)
+			VALUES
+			  (#{MENU_ID},
+			   #{MENU_NAME},
+			   #{LANG},
+			   SYSDATE,
+			   #{GV_USER_ID},
+			   SYSDATE,
+			   #{GV_USER_ID})
+		 ]]> 	      
+     </insert>	
+	 <!-- 프로그램관리 : 메뉴 다국어  update-->
+	 <update id="UPDATE_SMT_MENU_LANG" parameterType="java.util.Map">
+			UPDATE SMT_MENU_LANG
+		       SET MENU_NAME   = #{MENU_NAME},
+		           UPD_DATE    = SYSDATE,
+		           UPD_USER_ID = #{GV_USER_ID}
+			 WHERE MENU_ID     = #{MENU_ID} 
+			   AND LANG        = #{LANG}
+	 </update>
+	 <!-- 프로그램관리 : 메뉴 다국어  delete-->
+	 <delete id="DELETE_SMT_MENU_LANG" parameterType="java.util.Map">
+			DELETE SMT_MENU_LANG
+			 WHERE MENU_ID = #{MENU_ID} 
+			   AND LANG = #{LANG}
+	 </delete>	
+					
+	 <!-- 프로그램관리 : Menu 데이타 조회 -->
+	 <select id="SELECT_SMT_MENU" parameterType="java.util.Map" resultType="java.util.Map">
+	        <![CDATA[ 
+			SELECT *
+			FROM (
+					SELECT
+							 mnu.MENU_ID
+							,mnu.UP_MENU_ID
+							,mnu.MENU_TYPE
+							,SMT_GET_COMMON_CODE_NAME_FUNC('F016', mnu.MENU_TYPE, #{GV_LANG} )AS MENU_TYPE_NAME
+							,mnu.MENU_NAME
+							,mnu.MENU_NAME_EN
+							,mnu.MENU_NAME_ZH
+							,mnu.FORM_NAME
+							,mnu.PAGE_NAME
+							,SMT_GET_MENU_NAME_FUNC(mnu.menu_id,#{GV_LANG}) AS  H_MENU_NAME
+							,RPAD('-', 2 * (LEVEL-1),'-') ||'>'|| SMT_GET_MENU_NAME_FUNC(mnu.menu_id, #{GV_LANG}) AS  S_MENU_NAME
+							,REPLACE(SYS_CONNECT_BY_PATH(SMT_GET_MENU_NAME_FUNC(mnu.menu_id, #{GV_LANG}), '>'), '>TOP>', '')  AS  PAGE_LOC
+							,mnu.ESH_GBN
+							,mnu.LVL
+							,mnu.ORDER_NO
+							,mnu.ACTIVE_FLAG
+							,SMT_GET_COMMON_CODE_NAME_FUNC('F010', mnu.ACTIVE_FLAG, #{GV_LANG} )AS  ACTIVE_FLAG_NAME
+					FROM SMT_MENU  mnu
+        ]]> 
+
+					<if test="@com.oms.MyBatisUtil@isEmpty(UP_MENU_ID)">
+					START WITH mnu.UP_MENU_ID = #{MENU_ID}
+					</if>
+
+					<if test="@com.oms.MyBatisUtil@isNotEmpty(UP_MENU_ID)">
+					START WITH mnu.UP_MENU_ID = #{UP_MENU_ID}
+					</if>
+
+					CONNECT BY mnu.UP_MENU_ID = PRIOR mnu.MENU_ID
+					ORDER SIBLINGS BY mnu.ORDER_NO, mnu.MENU_ID
+				)
+	 </select> 
+	
+	 <!-- 프로그램관리 : Menu Insert-->
+     <insert id="INSERT_SMT_MENU" parameterType="java.util.Map" useGeneratedKeys="false">
+      <![CDATA[ 
+			INSERT INTO SMT_MENU
+			  (MENU_ID,
+			   MENU_NAME,
+			   UP_MENU_ID,
+			   MENU_TYPE,
+			   FORM_NAME,
+			   PAGE_NAME,
+			   PAGE_LOC,
+			   ESH_GBN,
+			   ORDER_NO,
+			   LVL,
+			   ACTIVE_FLAG,
+			   INS_DATE,
+			   INS_USER_ID,
+			   UPD_DATE,
+			   UPD_USER_ID)
+			VALUES
+			  (#{MENU_ID},
+			   #{MENU_NAME},
+			   #{UP_MENU_ID},
+			   #{MENU_TYPE},
+			   #{FORM_NAME},
+			   #{PAGE_NAME},
+			   #{PAGE_LOC},
+			   #{ESH_GBN},
+			   #{ORDER_NO},
+			   #{LVL},
+			   #{ACTIVE_FLAG},
+			   SYSDATE,
+			   #{GV_USER_ID},
+			   SYSDATE,
+			   #{GV_USER_ID})    
+		 ]]> 	     
+     </insert>	
+     
+	<!-- 프로그램관리 : Menu update-->
+     <update id="UPDATE_SMT_MENU" parameterType="java.util.Map" >
+		   UPDATE SMT_MENU
+		      SET MENU_ID          = #{MENU_ID},
+		          MENU_NAME        = #{MENU_NAME},
+		          UP_MENU_ID       = #{UP_MENU_ID},
+		          MENU_TYPE        = #{MENU_TYPE},
+		          FORM_NAME        = #{FORM_NAME},
+		          PAGE_NAME        = #{PAGE_NAME},
+		          PAGE_LOC         = #{PAGE_LOC},
+		          ESH_GBN          = #{ESH_GBN},
+		          ORDER_NO         = #{ORDER_NO},
+		          LVL              = #{LVL},
+		          ACTIVE_FLAG      = #{ACTIVE_FLAG},
+		          UPD_DATE         = SYSDATE,
+		          UPD_USER_ID      = #{GV_USER_ID}
+		    WHERE MENU_ID          = #{MENU_ID}     
+     </update>		
+
+	<!-- 프로그램관리 : Menu  delete-->
+	<delete id="DELETE_SMT_MENU" parameterType="java.util.Map">
+			DELETE SMT_MENU
+			 WHERE MENU_ID = #{MENU_ID} 
+	</delete>	
+	
+	<!-- ROLL그룹 : ROLL그룹 등록 -->
+	<select id="SELECT_SMT_OU_MSTR_LIST" parameterType="java.util.Map" resultType="java.util.Map">
+			SELECT SOM.OU_CODE AS CODE,
+			       SOM.OU_NAME AS NAME
+			 FROM SMT_OU_MSTR SOM
+	        <if test="@com.oms.MyBatisUtil@isNotEmpty(UP_MENU_ID)">			 
+			 WHERE SOM.OU_CODE = #{OU_CODE}   
+			</if>			 
+	</select>
+	
+	<select id="SELECT_AUTH_LEVEL" parameterType="java.util.Map" resultType="java.util.Map">
+			SELECT OU_CODE 
+			      ,AUTH_CODE
+			      ,AUTH_NAME
+			      ,UP_AUTH_CODE
+			      ,AUTH_LEVEL
+			      ,LEVEL AS "LEVEL"
+			FROM  SMT_AUTH
+		 WHERE	OU_CODE = #{OU_CODE}  
+			START WITH   UP_AUTH_CODE = 'ROOT'
+			CONNECT BY   PRIOR AUTH_CODE = UP_AUTH_CODE
+			ORDER SIBLINGS BY AUTH_CODE
+	</select>
+
+	<select id="SELECT_SMT_AUTH" parameterType="java.util.Map" resultType="java.util.Map">
+			SELECT OU_CODE 
+			    , AUTH_CODE
+				, AUTH_NAME
+				, AUTH_LEVEL
+				, UP_AUTH_CODE
+				, ORDER_NO
+				, ACTIVE_FLAG
+			FROM	 SMT_AUTH
+			WHERE	OU_CODE = #{OU_CODE}	
+			AND UP_AUTH_CODE = #{AUTH_CODE} 
+			ORDER BY ORDER_NO 
+	</select>
+	
+	<select id="SELECT_SMT_AUTH_CNT" parameterType="java.util.Map" resultType="java.util.Map">
+			SELECT COUNT(1) CNT
+			  FROM SMT_AUTH
+			 WHERE OU_CODE = #{OU_CODE}
+			   AND AUTH_CODE = #{AUTH_CODE} 
+	</select>
+
+	<insert id="INSERT_SMT_AUTH" parameterType="java.util.Map" useGeneratedKeys="false">
+		INSERT INTO  SMT_AUTH
+				(
+				 OU_CODE  
+				,AUTH_CODE
+				,AUTH_NAME
+				,AUTH_LEVEL
+				,UP_AUTH_CODE
+				,ORDER_NO
+				,ACTIVE_FLAG
+				,INS_DATE
+				,INS_USER_ID
+				,UPD_DATE
+				,UPD_USER_ID
+		)	VALUES
+		(    
+		         #{OU_CODE}  
+				,#{AUTH_CODE}
+				,#{AUTH_NAME}
+				,#{AUTH_LEVEL}
+				,#{UP_AUTH_CODE}
+				,#{ORDER_NO}
+				,#{ACTIVE_FLAG}
+				,SYSDATE
+				,#{GV_USER_ID}
+				,SYSDATE
+				,#{GV_USER_ID}
+		)
+	</insert>
+	
+	<update id="UPDATE_SMT_AUTH" parameterType="java.util.Map">
+		UPDATE 	 SMT_AUTH
+		SET		AUTH_NAME	= #{AUTH_NAME}
+				,ORDER_NO	 = #{ORDER_NO}
+				,ACTIVE_FLAG  = #{ACTIVE_FLAG}
+				,UPD_DATE      = SYSDATE
+				,UPD_USER_ID  = #{GV_USER_ID}
+			WHERE	OU_CODE = #{OU_CODE}	
+			AND AUTH_CODE = #{AUTH_CODE} 
+	</update>
+
+	<!-- 권한그룹 삭제 -->
+	<delete id="DELETE_SMT_AUTH" parameterType="java.util.Map">
+		DELETE FROM  SMT_AUTH
+			WHERE	OU_CODE = #{OU_CODE}	
+			AND AUTH_CODE = #{AUTH_CODE} 
+	</delete>
+	
+	<!-- 그룹별 정보조회 -->
+	<select id="SELECT_SMT_AUTH_MENU" parameterType="java.util.Map" resultType="java.util.Map">
+	    SELECT 
+	             #{OU_CODE}  AS OU_CODE
+		      ,   mnu.MENU_ID
+		      ,  mnu.MENU_TYPE
+		      ,  SMT_GET_COMMON_CODE_NAME_FUNC('F016', mnu.MENU_TYPE, #{GV_LANG} )AS MENU_TYPE_NAME
+		      ,  mnu.MENU_NAME
+		      ,  #{AUTH_CODE}   AS  AUTH_CODE
+		      ,  NVL(SAM.AT_C,'0')      AS AT_C
+		      ,  NVL(SAM.AT_R,'0')      AS AT_R
+		      ,  NVL(SAM.AT_U,'0')      AS AT_U
+		      ,  NVL(SAM.AT_D,'0')      AS AT_D
+		      ,  NVL(SAM.AT_E,'0')      AS AT_E
+		      ,  NVL(SAM.AT_P,'0')      AS AT_P
+		      ,  NVL(SAM.AT_DEPT,'0')   AS AT_DEPT
+		      ,  NVL(SAM.AT_EMP,'0')    AS AT_EMP
+		      ,  NVL(SAM.AT_PINFO,'0')  AS AT_PINFO
+		      ,  NVL(SAM.AT_USER1,'0')  AS AT_USER1
+		      ,  NVL(SAM.AT_USER2,'0')  AS AT_USER2
+		      ,  NVL(SAM.AT_USER3,'0')  AS AT_USER3
+		      ,  NVL(SAM.AT_USER4,'0')  AS AT_USER4
+		      ,  NVL(SAM.AT_USER5,'0')  AS AT_USER5
+		      ,  NVL(SAM.OU_CODE,'Y')  AS INSERT_FLAG
+	    FROM  (
+
+	    		      WITH tmp(LVL, MENU_ID, MENU_TYPE, MENU_NAME, ORDER_NO) AS
+			           (
+			            SELECT 1 AS LVL
+			                , mnu.MENU_ID
+			                , mnu.MENU_TYPE
+			                , SMT_GET_MENU_NAME_FUNC(mnu.menu_id,#{GV_LANG}) AS  MENU_NAME
+			                , LPAD(NVL(mnu.ORDER_NO,0), 3, '0') AS ORDER_NO
+			            FROM   SMT_MENU  mnu
+			
+		            <if test="@com.oms.MyBatisUtil@isNotEmpty(MENU_ID)">
+		            	WHERE mnu.MENU_ID = #{MENU_ID}
+		            </if>
+
+		            <if test="@com.oms.MyBatisUtil@isEmpty(MENU_ID)">
+		            	WHERE mnu.UP_MENU_ID = (SELECT min(top.menu_id) FROM SMT_MENU top)
+		            </if>
+
+			            UNION ALL
+			            SELECT tmp.LVL + 1 AS LVL
+			                 , mnu.MENU_ID
+			                 , mnu.MENU_TYPE
+			                 , SMT_GET_MENU_NAME_FUNC(mnu.menu_id,#{GV_LANG}) AS  MENU_NAME
+			                 , tmp.ORDER_NO || LPAD(NVL(mnu.ORDER_NO,0), 3, '0')  AS ORDER_NO
+			            FROM   tmp
+			                 , SMT_MENU  mnu
+			            WHERE  mnu.UP_MENU_ID = tmp.MENU_ID
+			            AND    mnu.ACTIVE_FLAG = 'Y'
+			            AND    mnu.LVL &lt;= 5
+			           )
+			        SELECT LVL AS "Level"
+			             , MENU_ID
+			             , MENU_TYPE
+			             , RPAD(' ', 3 * (LVL-1)) || MENU_NAME AS MENU_NAME
+			        FROM   tmp
+			        ORDER BY ORDER_NO
+
+	           ) mnu
+	        LEFT OUTER JOIN SMT_AUTH_MENU   SAM
+	               ON SAM.AUTH_CODE = #{AUTH_CODE} AND SAM.OU_CODE = #{OU_CODE}
+	    			AND 	SAM.MENU_ID = mnu.MENU_ID  		   
+           <if test="@com.oms.MyBatisUtil@isNotEmpty(MENU_NAME)">
+			    WHERE mnu.MENU_NAME like '%'|| #{MENU_NAME} ||'%'
+		  </if>
+	</select>
+
+	<!-- 사용자별 권한 등록 -->
+	<insert id="INSERT_SMT_AUTH_MENU" parameterType="java.util.Map" useGeneratedKeys="false">
+	INSERT INTO SMT_AUTH_MENU (
+	       OU_CODE
+				,AUTH_CODE
+				,MENU_ID
+				,AT_C
+				,AT_R
+				,AT_U
+				,AT_D
+				,AT_E
+				,AT_P
+				,AT_DEPT
+				,AT_EMP
+				,AT_PINFO
+				,AT_USER1
+				,AT_USER2
+				,AT_USER3
+				,AT_USER4
+				,AT_USER5
+				,INS_DATE
+				,INS_USER_ID
+				,UPD_DATE
+				,UPD_USER_ID
+			) VALUES (
+			  #{OU_CODE}
+				,#{AUTH_CODE}
+				,#{MENU_ID}
+				,#{AT_C}
+				,#{AT_R}
+				,#{AT_U}
+				,#{AT_D}
+				,#{AT_E}
+				,#{AT_P}
+				,#{AT_DEPT}
+				,#{AT_EMP}
+				,#{AT_PINFO}
+				,#{AT_USER1}
+				,#{AT_USER2}
+				,#{AT_USER3}
+				,#{AT_USER4}
+				,#{AT_USER5}
+				,SYSDATE
+				,#{GV_USER_ID}
+				,SYSDATE
+				,#{GV_USER_ID}
+			)
+	</insert>
+	<!-- 사용자별 권한 변경 -->
+	<update id="UPDATE_SMT_AUTH_MENU" parameterType="java.util.Map">
+			UPDATE SMT_AUTH_MENU  SAM
+			SET
+	       		AT_C			= #{AT_C}
+	       		,AT_R			= #{AT_R}
+			    ,AT_U		    = #{AT_U}
+			    ,AT_D		    = #{AT_D}
+			    ,AT_E			= #{AT_E}
+			    ,AT_P			= #{AT_P}
+			    ,AT_DEPT		= #{AT_DEPT}
+			    ,AT_EMP			= #{AT_EMP}
+			    ,AT_PINFO		= #{AT_PINFO}
+			    ,AT_USER1		= #{AT_USER1}
+			    ,AT_USER2		= #{AT_USER2}
+			    ,AT_USER3		= #{AT_USER3}
+			    ,AT_USER4		= #{AT_USER4}
+			    ,AT_USER5		= #{AT_USER5}
+			    ,UPD_DATE		= SYSDATE
+			    ,UPD_USER_ID 	= #{GV_USER_ID}
+			WHERE SAM.AUTH_CODE = #{AUTH_CODE}
+	        AND SAM.MENU_ID = #{MENU_ID}
+	        AND  OU_CODE = #{OU_CODE}
+	        
+	</update>
+	
+	<!-- 사용자별 권한 삭제 -->
+		<delete id="DELETE_SMT_AUTH_MENU" parameterType="java.util.Map">
+		DELETE FROM SMT_AUTH_MENU 
+		WHERE 	AUTH_CODE = #{AUTH_CODE}
+		AND     OU_CODE = #{OU_CODE}
+		AND		MENU_ID =#{MENU_ID}
+	</delete>
+	
+	
+	<delete id="DELETE_SMT_AUTH_MENU_ALL" parameterType="java.util.Map">
+		DELETE FROM SMT_AUTH_MENU 
+		WHERE 	AUTH_CODE = #{AUTH_CODE}
+		AND     OU_CODE = #{OU_CODE}
+		AND		MENU_ID IN ( WITH tmp(MENU_ID) AS
+						           (
+						            SELECT  mnu.MENU_ID
+						            FROM   SMT_MENU  mnu
+						
+						            <if test="@com.oms.MyBatisUtil@isNotEmpty(MENU_ID)">
+						            	WHERE mnu.MENU_ID = #{MENU_ID}
+						            </if>
+				
+						            <if test="@com.oms.MyBatisUtil@isEmpty(MENU_ID)">
+						            	WHERE mnu.UP_MENU_ID = (SELECT min(top.menu_id) FROM SMT_MENU top)
+						            </if>
+						            UNION ALL
+						            SELECT mnu.MENU_ID
+						            FROM   tmp
+						                 , SMT_MENU  mnu
+						            WHERE  mnu.UP_MENU_ID = tmp.MENU_ID
+						            AND    mnu.ACTIVE_FLAG = 'Y'
+						            AND    mnu.LVL &lt;= 5
+						           )
+						        SELECT MENU_ID
+						        FROM   tmp
+						        ORDER BY ORDER_NO
+			        )
+           <if test="@com.oms.MyBatisUtil@isNotEmpty(MENU_ID)">
+			AND  SMT_GET_MENU_NAME_FUNC(menu_id,#{GV_LANG}) like '%'|| #{MENU_NAME} ||'%'
+		  </if>			        
+	</delete>	
+	<!-- Level 1 권한조회 -->
+	<select id="SELECT_SMT_AUTH_LEVEL1" parameterType="java.util.Map" resultType="java.util.Map">
+	    SELECT AUTH_CODE 
+				, AUTH_NAME 
+	    FROM  SMT_AUTH
+		WHERE	AUTH_LEVEL = '1' 
+		AND	OU_CODE = NVL(#{OU_CODE},1)	
+		ORDER BY AUTH_CODE
+
+	</select>
+
+	<!-- Level 2 권한조회 -->
+	<select id="SELECT_SMT_AUTH_LEVEL2" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT AUTH_CODE 
+				, AUTH_NAME 
+		FROM	SMT_AUTH
+		WHERE	AUTH_LEVEL = '2' 
+			AND	OU_CODE = NVL(#{OU_CODE},1)	
+			AND UP_AUTH_CODE = #{AUTH_CODE} 
+		ORDER BY AUTH_CODE
+	</select>	
+     <!-- 업무구분 조회 -->
+	 <select id="SELECT_TASK_lEVEL1" parameterType="java.util.Map" resultType="java.util.Map" >
+			SELECT
+				MNU.MENU_ID
+				,SMT_GET_MENU_NAME_FUNC(mnu.menu_id,#{GV_LANG}) AS MENU_NAME
+				,MNU.ESH_GBN
+			FROM SMT_MENU  MNU
+			WHERE MNU.ACTIVE_FLAG = 'Y'
+			AND   MNU.LVL =1
+			ORDER BY MNU.ORDER_NO
+	 </select>	
+     
+     <!-- 사용자 정보 팝업(인사마스터기준) 조회 -->				
+	 <select id="SELECT_USER_MSTR_POP2" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+          SELECT EIM.OU_CODE
+           , SOM.OU_NAME
+           , EIM.EMP_NO    
+           , EIM.EMP_NAME
+           , EIM.DEPT_CODE
+           , DMS.DEPT_NAME
+           , EIM.JIKWI_CODE
+           , SMT_GET_COMMON_CODE_NAME_FUNC('H005',EIM.JIKWI_CODE, #{GV_LANG} ) AS JIKWI_NAME
+        FROM EHR_INSA_MSTR   EIM
+           , SMT_OU_MSTR     SOM
+           , EHR_DEPT_MSTR  DMS
+       WHERE EIM.OU_CODE  = #{OU_CODE}
+	     AND SOM.OU_CODE  = EIM.OU_CODE
+         AND DMS.OU_CODE = EIM.OU_CODE
+		 AND DMS.DEPT_CODE = EIM.DEPT_CODE
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_CODE)">
+        	<![CDATA[
+        	   AND EIM.DEPT_CODE = #{DEPT_CODE}
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_NAME)">
+            <![CDATA[
+               AND DMS.DEPT_NAME LIKE '%'|| #{DEPT_NAME} || '%'
+            ]]>   
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NO)">
+            <![CDATA[
+               AND EIM.EMP_NO LIKE '%'|| #{EMP_NO} ||'%'
+            ]]> 
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NAME)">
+            <![CDATA[
+               AND EIM.EMP_NAME LIKE '%'|| #{EMP_NAME} ||'%'
+            ]]>    
+        </if>
+        <![CDATA[    
+            ORDER BY EIM.EMP_NO  
+        ]]>      
+     </select>	
+     
+          
+    <!-- OU COUNTRY COMBO BOX LIST 조회 -->
+	<select id="SELECT_OU_COUNTRY" parameterType="java.util.Map" resultType="java.util.Map">
+		<![CDATA[         
+			SELECT  ITEM_NAME AS NAME
+				 ,	ITEM_CODE AS CODE
+				 ,  REF_1
+			FROM    SMT_COMM_CODE
+			WHERE   GRP_CODE = 'O001'
+			AND ACTIVE_FLAG = 'Y' 
+			ORDER BY ARR_NO
+		]]>  
+    </select>   
+	
+	<!-- 첨부파일 상세정보조회 -->
+	<select id="SELECT_SMT_ATCH_FILE" parameterType="java.util.Map" resultType="java.util.Map">    
+        <![CDATA[    
+            SELECT ATT_FILE_ID
+			     , ATT_ID
+			     , ATT_SEQ_NUM
+			     , ATTFILE_NM
+			     , SAVEFILE_NM
+			     , FILE_SIZE
+			     , ROUND(FILE_SIZE / 1024 , 1)||'KB' FILE_SIZE_KB
+			     , SUBFOLDER
+			     , FILE_GUBUN
+			     , REF_NAME
+			     , REF_ID
+			     , SUBFOLDER||SAVEFILE_NM AS FILE_PATH
+			  FROM SMT_ATCH_FILE  
+			 WHERE DEL_DATE IS NULL
+        ]]> 
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ATT_FILE_ID_LIST)">
+            <![CDATA[
+               AND ATT_FILE_ID IN (#{ATT_FILE_ID_LIST})
+            ]]>
+        </if> 
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ATT_FILE_ID)">
+            <![CDATA[
+               AND ATT_FILE_ID = #{ATT_FILE_ID}
+            ]]>
+        </if>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ATT_ID)">
+            <![CDATA[
+               AND ATT_ID = #{ATT_ID}
+            ]]>
+        </if>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(REF_ID)">
+            <![CDATA[
+               AND REF_ID = #{REF_ID}
+            ]]>
+        </if>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(FILE_GUBUN)">
+            <![CDATA[
+               AND FILE_GUBUN = #{FILE_GUBUN}
+            ]]>
+        </if>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(REF_NAME)">
+            <![CDATA[
+               AND REF_NAME = #{REF_NAME}
+            ]]>
+        </if>
+        
+        <![CDATA[     
+             ORDER BY ATT_ID, ATT_SEQ_NUM
+        ]]>
+    </select>
+     
+    <!-- 첨부파일  : 첨부파일 PATH 조회 -->
+    <select id="SELECT_ATCH_PATH" parameterType="java.util.Map" resultType="java.util.Map">
+     	<![CDATA[   
+     		SELECT CC.ITEM_CODE  AS CODE
+			     , CC.REF_1      AS REF_1 	
+			  FROM SMT_COMM_CODE  CC
+			 WHERE NVL(CC.ACTIVE_FLAG,'N') = 'Y'
+			   AND CC.GRP_CODE  = 'F032' 
+			   AND CC.ITEM_CODE = #{CODE}
+			 ORDER BY CC.ARR_NO, CC.ITEM_CODE
+		]]> 
+    </select>
+    
+    <!-- 첨부파일  : 첨부파일 데이터생성 -->
+    <insert id="INSERT_SMT_ATCH_FILE" parameterType="java.util.Map" useGeneratedKeys="true">
+        <selectKey keyProperty="ATT_FILE_ID_SEQ" resultType="int" order="BEFORE">
+            SELECT SMT_ATCH_FILE_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        <![CDATA[
+            INSERT INTO SMT_ATCH_FILE
+            ( ATT_FILE_ID
+			, ATT_ID
+			, ATT_SEQ_NUM
+			, ATTFILE_NM
+			, SAVEFILE_NM
+			, FILE_SIZE
+			, SUBFOLDER
+			, FILE_GUBUN
+			, REF_NAME
+			, REF_ID
+			, INS_DATE
+			, INS_USER_ID
+			, UPD_DATE
+			, UPD_USER_ID
+			, DEL_DATE
+			, DEL_USER_ID
+			, OU_CODE			             
+			)
+            VALUES
+            ( #{ATT_FILE_ID_SEQ}
+            , #{ATT_ID}
+            , (SELECT NVL(MAX(ATT_SEQ_NUM),0)+1 FROM SMT_ATCH_FILE WHERE ATT_ID = #{ATT_ID})   
+            , #{ATTFILE_NM}
+            , #{SAVEFILE_NM}
+            , #{FILE_SIZE}
+            , #{SUBFOLDER} 
+            , #{FILE_GUBUN}
+            , #{REF_NAME}
+            , #{REF_ID}
+            , SYSDATE
+            , #{GV_USER_ID}
+            , SYSDATE
+            , #{GV_USER_ID}
+            , NULL
+            , NULL
+            , #{OU_CODE}
+            )
+        ]]>
+    </insert>
+     
+    <!-- 첨부파일  : 첨부파일 데이터 삭제 (DEL_DATE, DEL_USER_ID 마킹) -->
+    <update id="UPDATE_SMT_ATCH_FILE" parameterType="java.util.Map"> 
+	    <![CDATA[
+	        UPDATE SMT_ATCH_FILE
+               SET DEL_DATE = SYSDATE
+                 , DEL_USER_ID = #{GV_USER_ID}                      
+             WHERE ATT_ID = #{ATT_ID}
+               AND ATTFILE_NM = #{ATTFILE_NM}
+	    ]]>
+    </update> 
+    
+    <!-- 첨부파일  : 첨부파일 데이터 삭제 (DEL_DATE, DEL_USER_ID 마킹) -->
+    <delete id="DELETE_SMT_ATCH_FILE" parameterType="java.util.Map"> 
+	    <![CDATA[
+	        UPDATE SMT_ATCH_FILE
+               SET DEL_DATE = SYSDATE
+                 , DEL_USER_ID = #{GV_USER_ID}                      
+             WHERE ATT_ID = #{ATT_ID}
+               AND ATTFILE_NM = #{ATTFILE_NM}
+	    ]]>
+    </delete>
+    
+    <!-- 시스템  : 내메뉴 등록 -->
+    <select id="INSERT_MY_MENU_INFO"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+	    <![CDATA[      
+	        CALL SMT_MYMENU_ADD_PROC( #{GV_USER_ID}, #{MENU_ID} )
+	    ]]>
+    </select>
+    
+    <!-- 시스템  : 내메뉴 수정 -->
+    <update id="UPDATE_MY_MENU_INFO" parameterType="java.util.Map"> 
+            UPDATE SMT_USER_MENU_INFO
+            SET MENU_ORDER = #{SORT_ORDER}
+            WHERE USER_ID = #{GV_USER_ID} 
+            AND MENU_ID = #{LEFT_MENU_KEY}            
+    </update>
+    
+    <!-- 시스템  : 내메뉴 삭제 -->
+    <delete id="DELETE_MY_MENU_INFO" parameterType="java.util.Map">    
+            DELETE FROM SMT_USER_MENU_INFO
+             WHERE USER_ID = #{GV_USER_ID}
+               AND MENU_ID = #{MENU_ID}
+    </delete>
+    
+    <!-- 시스템  : 로그인 사용자 정보 -->
+    <select id="SELECT_LOGIN_INFO" parameterType="java.util.Map" resultType="java.util.Map">    
+        <![CDATA[
+            SELECT UMT.USER_ID
+				 , UMT.LOGIN_NO   AS LGI_ID
+	             , UMT.USER_NAME
+	             , UMT.OU_CODE
+	             , SMT_GET_OU_NAME_FUNC(UMT.OU_CODE, #{GV_LANG}) AS OU_NAME
+	             , UMT.AT_OU
+	             , UMT.EMP_NO
+	             , UMT.VENDOR_CODE
+	             , NULL  AS VENDOR_NAME
+	             , UMT.USER_TYPE
+	             , NVL(UMT.E_COMMERCE_YN,'N') AS E_COMMERCE_YN 
+				 , NVL(UMT.PERSONAL_INFO_YN,'N') AS PERSONAL_INFO_YN
+				 , NVL(UMT.INFO_SECURIT_YN,'N') AS INFO_SECURIT_YN
+				 , NVL(UMT.FIRST_PWD_CHANGE,'N') AS FIRST_PWD_CHANGE
+	             , TO_CHAR(UMT.ST_DATE,'RRRR-MM-DD') AS ST_DATE
+	             , TO_CHAR(UMT.ED_DATE,'RRRR-MM-DD') AS ED_DATE
+	             , UMT.EMAIL_ADDR           AS EMAIL_ADDR
+	             , UMT.BIZ_DIV
+	             , (SELECT CC.ITEM_NAME
+	                  FROM SMT_COMM_CODE  CC
+	                 WHERE CC.GRP_CODE = 'F035'
+	                   AND NVL(CC.ACTIVE_FLAG,'N') = 'Y'
+	                   AND CC.ITEM_CODE = 'RD_PATH') AS REPORT_WEB_HTML
+	             , (SELECT CC.ITEM_NAME
+	                  FROM SMT_COMM_CODE  CC
+	                 WHERE CC.GRP_CODE = 'F035'
+	                   AND NVL(CC.ACTIVE_FLAG,'N') = 'Y'
+	                   AND CC.ITEM_CODE = 'MID')     AS REPORT_MID
+	             , NULL PW_OLD
+	             , NULL PW_NEW	
+	             , EIM.EMP_NAME       AS EMP_NAME
+	             , EIM.DEPT_CODE      AS DEPT_CODE
+	             , EIM.JIKWI_CODE     AS JIKWI_CODE
+	             , EIM.JIKCHAK_CODE   AS JIKCHAK_CODE
+	             , EIM.JIKJONG_CODE   AS JIKJONG_CODE
+	             , EDM.DEPT_NAME      AS DEPT_NAME
+	             , HS_HRM.SMT_GET_CODE_NAME_FUNC('H005',EIM.JIKWI_CODE,#{GV_LANG})   AS JIKWI_NAME 
+	             , HS_HRM.SMT_GET_CODE_NAME_FUNC('H006',EIM.JIKCHAK_CODE,#{GV_LANG}) AS JIKCHAK_NAME 
+	             , HS_HRM.SMT_GET_CODE_NAME_FUNC('H007',EIM.JIKJONG_CODE,#{GV_LANG}) AS JIKJONG_NAME 
+	          FROM SMT_USER_MSTR  UMT
+                  ,HS_HRM.EHR_INSA_MSTR EIM
+                  ,HS_HRM.EHR_DEPT_MSTR EDM
+	         WHERE TRUNC(SYSDATE) BETWEEN NVL(UMT.ST_DATE,SYSDATE)
+	                                  AND NVL(UMT.ED_DATE,SYSDATE)
+	           AND UMT.LOGIN_NO  = UPPER(#{LGI_ID})
+	           AND UMT.OU_CODE   = #{OU_CODE}
+               AND UMT.OU_CODE   = EIM.OU_CODE(+)
+               AND UMT.EMP_NO    = EIM.EMP_NO(+)
+               AND EIM.OU_CODE   = EDM.OU_CODE(+)
+               AND EIM.DEPT_CODE = EDM.DEPT_CODE(+)
+        ]]>
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(USER_ID)">
+            <![CDATA[
+               AND UMT.USER_ID = #{USER_ID}
+            ]]>
+        </if>
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(IN_SQL_USER_ID)">
+            <![CDATA[
+        	   AND UMT.USER_ID IN ( ${IN_SQL_USER_ID} )
+        	]]>
+        </if>        
+        
+    </select>
+    
+    <!-- 시스템  : 로그인 패스워드 정보 CHECK -->
+    <select id="SELECT_LOGIN_PWD_INFO" parameterType="java.util.Map" resultType="java.util.Map">    
+        SELECT DECODE( UM.PASSWORD , #{TRANCE_OLD_PW} 
+                          , (
+                            CASE WHEN #{TRANCE_NEW_PW} = UM.PRE_PWD THEN                            
+                                    'S'
+                                 WHEN #{TRANCE_NEW_PW} = UM.PRE_PRE_PWD THEN
+                                    'S'
+                            ELSE
+                                'Y'
+                            END          
+                          )
+                          , 'N'
+               ) RESULT           
+        FROM SMT_USER_MSTR UM
+        WHERE USER_ID = #{USER_ID}
+    </select>
+    
+    <!-- 시스템  : 로그 정보 등록 -->
+    <update id="INSERT_SMT_LOG_INFO" parameterType="java.util.Map" >    
+            INSERT INTO SMT_LOG_INFO(
+                OU_CODE , LOG_K_CD , LOG_DTM 
+                , USER_ID , LOG_OBJ_ID , LOG_NOTE
+                , USER_IP_ADDR 
+            )VALUES(
+                #{GV_OU_CODE} , #{LOG_K_CD} , SYSDATE 
+                , #{GV_USER_ID} , #{LOG_OBJ_ID, jdbcType=VARCHAR} , #{LOG_NOTE}
+                , #{USER_IP_ADDR} 
+            )
+    </update>
+    
+    <!-- 시스템  : SMT SEQ INFO 시퀀스 정보 조회 -->
+    <select id="SELECT_SMT_SEQ_INFO" parameterType="java.util.Map" resultType="java.util.Map">       
+        <![CDATA[
+             SELECT SMT_GET_SEQUENCE_FUNC(#{SEQ_SCN_CD} , #{CRTN_VAL}) AS CRTN_SEQ_VAL
+             FROM DUAL      
+        ]]>       
+    </select>
+    
+    <!-- 시스템  : 로그인 사용자가 해당권한 체크 -->
+    <select id="SELECT_AUTH_YN" parameterType="java.util.Map" resultType="java.util.Map">       
+        <![CDATA[
+            SELECT CASE WHEN COUNT(*) > 0 THEN 'Y'
+                        ELSE 'N'
+                   END AUTH_YN
+              FROM SMT_USER_AUTH
+             WHERE USER_ID = #{GV_USER_ID}
+               AND AUTH_CODE IN (${AUTH_G_ID})
+        ]]>       
+    </select>
+    
+    <!-- 시스템  : 라벨  다국어(META) 정보 조회 -->
+    <select id="SELECT_LABEL_LANG_INFO" parameterType="java.util.Map" resultType="java.util.Map">       
+            SELECT OBJ_CD , SUB_OBJ_CD, OBJ_SCN_CD , LANG_SCN_CD 
+                 , NVL(LANG_DISPLAY ,  SMT_GET_LANG_NAME_FUNC (OBJ_SCN_CD , 'KO' , OBJ_CD , SUB_OBJ_CD)) LANG_DISPLAY
+                 , INS_DATE , INS_USER_ID 
+                 , UPD_DATE , UPD_USER_ID                    
+              FROM SMT_LANG_INFO
+             WHERE 1 = 1                           
+               AND OBJ_SCN_CD IN ('LABEL')
+               AND LANG_SCN_CD = #{GV_LANG}                                            
+    </select>
+    
+    <!-- 시스템  : 메시지  다국어(META) 정보 조회 -->
+    <select id="SELECT_MSG_LANG_INFO" parameterType="java.util.Map" resultType="java.util.Map">       
+            SELECT MSG_CODE
+			     , LANG_CODE
+			     , NVL(MSG_NAME,SMT_GET_MSG_LANG_NAME_FUNC(MSG_CODE,LANG_CODE)) LANG_DISPLAY
+			  FROM SMT_USER_MSG
+             WHERE 1 = 1                           
+               AND LANG_CODE = #{GV_LANG}                                            
+    </select>
+    
+    <!-- 시스템  : 사용자 권한 및 프로그램 권한 정보 (메뉴 구성용)-->
+    <select id="SELECT_GDS_AUTH_MENU" parameterType="java.util.Map" resultType="java.util.Map">       
+            SELECT MENU_ID
+			     , OU_CODE
+			     , UP_MENU_ID
+			     , MENU_PATH
+			     , ORDER_NO
+			     , SMT_GET_MENU_NAME_FUNC(MENU_ID, #{GV_LANG}) AS MENU_NM
+			     , SUBSTR(SYS_CONNECT_BY_PATH(SMT_GET_MENU_NAME_FUNC(MENU_ID, #{GV_LANG}), ' > ') , 4) AS MENU_NAVIGATOR
+			     , AT_C
+			     , AT_R
+			     , AT_U
+			     , AT_D
+			     , AT_E
+			     , AT_P
+			     , AT_DEPT
+			     , AT_EMP
+			     , AT_PINFO
+			     , AT_USER1
+			     , AT_USER2
+			     , AT_USER3
+			     , AT_USER4
+			     , AT_USER5  
+			     , LVL - 2  AS MENU_LEVEL
+			     , CASE WHEN LEVEL > 1 THEN 
+			            SUBSTR(SUBSTR(SYS_CONNECT_BY_PATH(MENU_ID,','),2)
+			                          , 0 ,  INSTR( SUBSTR(SYS_CONNECT_BY_PATH(MENU_ID,','),2) , ',')-1)
+			       END  AS MENU_ONE_LEVEL_ID
+			     , LVL  AS LEFT_MENU_IMAGE_LEVEL
+			     , LVL  AS LEFT_MENU_IMAGE_SELECT  
+			  FROM (SELECT MENU_ID
+			             , OU_CODE
+			             , UP_MENU_ID
+			             , MENU_PATH 
+			             , ORDER_NO
+			             , LVL 
+			             , MAX(AT_C) AS AT_C
+			             , MAX(AT_R) AS AT_R 
+			             , MAX(AT_U) AS AT_U 
+			             , MAX(AT_D) AS AT_D 
+			             , MAX(AT_E) AS AT_E 
+			             , MAX(AT_P) AS AT_P 
+			             , MAX(AT_DEPT) AS AT_DEPT 
+			             , MAX(AT_EMP) AS AT_EMP 
+			             , MAX(AT_PINFO) AS AT_PINFO 
+			             , MAX(AT_USER1) AS AT_USER1 
+			             , MAX(AT_USER2) AS AT_USER2 
+			             , MAX(AT_USER3) AS AT_USER3 
+			             , MAX(AT_USER4) AS AT_USER4 
+			             , MAX(AT_USER5) AS AT_USER5 
+			          FROM (SELECT B.MENU_ID
+			                     , B.OU_CODE
+			                     , A.UP_MENU_ID
+			                     , A.FORM_NAME   AS MENU_PATH
+			                     , A.ORDER_NO
+			                     , A.LVL
+			                     , NVL(B.AT_C,'0')      AS AT_C
+			                     , NVL(B.AT_R,'0')      AS AT_R
+			                     , NVL(B.AT_U,'0')      AS AT_U
+			                     , NVL(B.AT_D,'0')      AS AT_D
+			                     , NVL(B.AT_E,'0')      AS AT_E
+			                     , NVL(B.AT_P,'0')      AS AT_P
+			                     , NVL(B.AT_DEPT,'0')   AS AT_DEPT
+			                     , NVL(B.AT_EMP,'0')    AS AT_EMP
+			                     , NVL(B.AT_PINFO,'0')  AS AT_PINFO
+			                     , NVL(B.AT_USER1,'0')  AS AT_USER1
+			                     , NVL(B.AT_USER2,'0')  AS AT_USER2
+			                     , NVL(B.AT_USER3,'0')  AS AT_USER3
+			                     , NVL(B.AT_USER4,'0')  AS AT_USER4
+			                     , NVL(B.AT_USER5,'0')  AS AT_USER5 
+			                  FROM SMT_MENU  A
+			                     , SMT_AUTH_MENU   B
+			                 WHERE A.MENU_ID = B.MENU_ID
+			                   AND B.OU_CODE = #{GV_OU_CODE}
+			                   AND NVL(A.ACTIVE_FLAG,'N') = 'Y'
+			                   AND B.AUTH_CODE IN (SELECT SA.AUTH_CODE
+			                                         FROM SMT_AUTH      SA
+			                                            , SMT_USER_AUTH SUA
+			                                        WHERE SA.AUTH_CODE = SUA.AUTH_CODE
+			                                          AND NVL(SA.ACTIVE_FLAG,'N') = 'Y'
+			                                          AND SA.OU_CODE  = #{GV_OU_CODE}
+			                                          AND SUA.USER_ID = #{GV_USER_ID}) 
+			               )
+			         GROUP BY MENU_ID
+			                , OU_CODE
+			                , UP_MENU_ID
+			                , MENU_PATH 
+			                , ORDER_NO
+			                , LVL
+			       )
+			 WHERE AT_R = 1
+			 START WITH UP_MENU_ID = 0
+			 CONNECT BY PRIOR MENU_ID = UP_MENU_ID
+			 ORDER SIBLINGS BY NVL(ORDER_NO,9999)
+    </select>
+    
+    <!-- 시스템  : 내메뉴 정보 기준 - 사용자 권한 및 프로그램 권한 정보 (내메뉴 구성용)-->
+    <select id="SELECT_MY_MENU_INFO" parameterType="java.util.Map" resultType="java.util.Map">       
+            SELECT *
+			  FROM (
+			        SELECT REA.* , REB.MENU_ORDER AS SORT_ORDER
+			                , (SELECT ORDER_NO
+			                   FROM SMT_MENU
+			                   WHERE MENU_ID = MASTER_MENU_ID) AS MASTER_MENU_ORDER
+			        FROM(
+			             SELECT *          
+			                FROM(
+			                    SELECT MENU_ID
+			                         , OU_CODE
+			                         , UP_MENU_ID
+			                         , MENU_PATH
+			                         , ORDER_NO
+			                         , SMT_GET_MENU_NAME_FUNC(MENU_ID, 'KO') AS MENU_NM
+			                         , SUBSTR(SYS_CONNECT_BY_PATH(SMT_GET_MENU_NAME_FUNC(MENU_ID, 'KO'), ' > ') , 4) AS MENU_NAVIGATOR
+			                         , AT_C
+			                         , AT_R
+			                         , AT_U
+			                         , AT_D
+			                         , AT_E
+			                         , AT_P
+			                         , AT_DEPT
+			                         , AT_EMP
+			                         , AT_PINFO
+			                         , AT_USER1
+			                         , AT_USER2
+			                         , AT_USER3
+			                         , AT_USER4
+			                         , AT_USER5  
+			                         , LVL - 1  AS MENU_LEVEL
+			                         , UP_MENU_ID AS MASTER_MENU_ID
+			                         , CASE WHEN LEVEL > 1 THEN 
+			                                SUBSTR( SUBSTR(SYS_CONNECT_BY_PATH(MENU_ID,','),2)
+			                                               , 0 ,  INSTR( SUBSTR(SYS_CONNECT_BY_PATH(MENU_ID,','),2) , ',')-1 )
+			                           END  AS MENU_ONE_LEVEL_ID
+			                         , LVL  AS LEFT_MENU_IMAGE_LEVEL
+			                         , LVL  AS LEFT_MENU_IMAGE_SELECT  
+			                      FROM (SELECT MENU_ID
+			                                 , OU_CODE
+			                                 , UP_MENU_ID
+			                                 , MENU_PATH 
+			                                 , ORDER_NO
+			                                 , LVL 
+			                                 , MAX(AT_C) AS AT_C
+			                                 , MAX(AT_R) AS AT_R 
+			                                 , MAX(AT_U) AS AT_U 
+			                                 , MAX(AT_D) AS AT_D 
+			                                 , MAX(AT_E) AS AT_E 
+			                                 , MAX(AT_P) AS AT_P 
+			                                 , MAX(AT_DEPT) AS AT_DEPT 
+			                                 , MAX(AT_EMP) AS AT_EMP 
+			                                 , MAX(AT_PINFO) AS AT_PINFO 
+			                                 , MAX(AT_USER1) AS AT_USER1 
+			                                 , MAX(AT_USER2) AS AT_USER2 
+			                                 , MAX(AT_USER3) AS AT_USER3 
+			                                 , MAX(AT_USER4) AS AT_USER4 
+			                                 , MAX(AT_USER5) AS AT_USER5 
+			                              FROM (SELECT B.MENU_ID
+			                                         , B.OU_CODE
+			                                         , A.UP_MENU_ID
+			                                         , A.FORM_NAME   AS MENU_PATH
+			                                         , A.ORDER_NO
+			                                         , A.LVL
+			                                         , NVL(B.AT_C,'0')      AS AT_C
+			                                         , NVL(B.AT_R,'0')      AS AT_R
+			                                         , NVL(B.AT_U,'0')      AS AT_U
+			                                         , NVL(B.AT_D,'0')      AS AT_D
+			                                         , NVL(B.AT_E,'0')      AS AT_E
+			                                         , NVL(B.AT_P,'0')      AS AT_P
+			                                         , NVL(B.AT_DEPT,'0')   AS AT_DEPT
+			                                         , NVL(B.AT_EMP,'0')    AS AT_EMP
+			                                         , NVL(B.AT_PINFO,'0')  AS AT_PINFO
+			                                         , NVL(B.AT_USER1,'0')  AS AT_USER1
+			                                         , NVL(B.AT_USER2,'0')  AS AT_USER2
+			                                         , NVL(B.AT_USER3,'0')  AS AT_USER3
+			                                         , NVL(B.AT_USER4,'0')  AS AT_USER4
+			                                         , NVL(B.AT_USER5,'0')  AS AT_USER5 
+			                                      FROM SMT_MENU  A
+			                                         , SMT_AUTH_MENU   B
+			                                     WHERE A.MENU_ID = B.MENU_ID
+			                                       AND B.OU_CODE = #{GV_OU_CODE}
+			                                       AND NVL(A.ACTIVE_FLAG,'N') = 'Y'
+			                                       AND B.AUTH_CODE IN (SELECT SA.AUTH_CODE
+			                                                             FROM SMT_AUTH      SA
+			                                                                , SMT_USER_AUTH SUA
+			                                                            WHERE SA.AUTH_CODE = SUA.AUTH_CODE
+			                                                              AND NVL(SA.ACTIVE_FLAG,'N') = 'Y'
+			                                                              AND SA.OU_CODE = #{GV_OU_CODE}
+			                                                              AND SUA.USER_ID = #{GV_USER_ID}) 
+			                                   )
+			                             GROUP BY MENU_ID
+			                                    , OU_CODE
+			                                    , UP_MENU_ID
+			                                    , MENU_PATH 
+			                                    , ORDER_NO
+			                                    , LVL
+			                           )
+			                     WHERE AT_R = 1
+			                     START WITH UP_MENU_ID = 0
+			                     CONNECT BY PRIOR MENU_ID = UP_MENU_ID
+			                     ORDER SIBLINGS BY NVL(ORDER_NO,9999) 
+			                )
+			                WHERE MENU_ID IN(
+			                    SELECT DISTINCT MENU_ID
+			                    FROM SMT_MENU
+			                    START WITH MENU_ID IN (SELECT MENU_ID FROM SMT_USER_MENU_INFO WHERE USER_ID = #{GV_USER_ID})      
+			                    CONNECT BY PRIOR UP_MENU_ID = MENU_ID
+			                )  
+			        ) REA , (SELECT * FROM SMT_USER_MENU_INFO WHERE USER_ID =  #{GV_USER_ID} )  REB 
+			        WHERE REA.MENU_ID = REB.MENU_ID(+)
+			        AND (MENU_LEVEL = 0 OR MENU_LEVEL = 1 OR REA.MENU_ID = REB.MENU_ID)             
+			 )
+			 /**ORDER BY MASTER_MENU_ORDER , NVL(SORT_ORDER,-1)*/
+    </select>
+    
+    <!-- Intro 화면 : 금년 RFQ 등록 현황 Select --> 
+    <select id="SELECT_RFQ_STAT" parameterType="java.util.Map" resultType="java.util.Map" >      
+        <![CDATA[
+	        SELECT RF.RFQ_CODE
+			     , SC.CUSTOMER_NAME
+			     , RF.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', RF.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , RF.PRODUCT_NAME_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O008', RF.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+			     , SMT_GET_USER_NAME_FUNC(RF.OU_CODE, RF.CHARGE_USER_ID) AS RFQ_CHARGE_NAME  
+			  FROM OMS_RFQ        RF
+			     , SMT_CUSTOMER   SC
+			 WHERE RF.OU_CODE     = SC.OU_CODE
+			   AND RF.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND RF.OU_CODE     = #{OU_CODE}
+			   AND RF.RFQ_DATE    >= TO_DATE(TO_CHAR(SYSDATE,'YYYY') ||'0101','YYYYMMDD')
+			 ORDER BY RF.RFQ_CODE, SC.CUSTOMER_NAME
+		]]> 
+    </select>
+    
+    <!-- Intro 화면 : 금년 PJT 진행현황 Select --> 
+    <select id="SELECT_PJT_STAT" parameterType="java.util.Map" resultType="java.util.Map" >      
+        <![CDATA[
+            SELECT ACT_STATUS_NAME
+			     , SUM(TARGET) TARGET
+			     , SUM(NON_TARGET) NON_TARGET
+			     , SUM(TOTAL) TOTAL
+			  FROM (
+			       SELECT P.ACT_STATUS_NAME
+			            , CASE 
+			              WHEN P.IMPORTANCE_CODE = 'T01' THEN 1
+			              ELSE  0 END AS TARGET
+			            , CASE
+			              WHEN P.IMPORTANCE_CODE != 'T01' THEN 1
+			              ELSE  0  END AS NON_TARGET
+			            , 1 AS TOTAL
+			         FROM OMS_PROJECT_V P
+			        WHERE P.OU_CODE = #{OU_CODE}
+			          AND P.REGISTER_YEAR = TO_CHAR(SYSDATE, 'YYYY')
+			        ) P
+			 GROUP BY ACT_STATUS_NAME
+		]]> 
+    </select>
+    
+    <!-- Intro 화면 : 나의 프로젝트 현황 Select --> 
+    <select id="SELECT_MY_PJT_STAT" parameterType="java.util.Map" resultType="java.util.Map" >      
+        <![CDATA[
+        	SELECT OP.PROJECT_CODE
+        	     , OP.RFQ_CODE
+			     , SC.CUSTOMER_NAME
+			     , OP.CAR_TYPE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+			     , SC.NATION_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O005', SC.NATION_CODE, #{GV_LANG}) AS NATION_CODE_NAME
+			     , OP.REGISTER_YEAR
+			     , OP.IMPORTANCE_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O017', OP.IMPORTANCE_CODE, #{GV_LANG}) AS IMPORTANCE_NAME
+			     , OP.ACT_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O015', OP.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+			     , OP.DETAIL_STATUS_CODE
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+			  FROM OMS_PROJECT     OP
+			     , SMT_CUSTOMER    SC 
+			 WHERE OP.OU_CODE     = SC.OU_CODE
+			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID    
+			   AND OP.DETAIL_STATUS_CODE != 'D10'
+			   AND OP.OU_CODE     = #{OU_CODE}
+			   AND OP.INS_USER_ID = #{USER_ID} 
+			   AND OP.REGISTER_YEAR = TO_CHAR(SYSDATE, 'YYYY')
+			 ORDER BY OP.PROJECT_CODE, SC.CUSTOMER_NAME
+		]]> 
+    </select>
+    
+    <!-- Intro 화면 : PSO 진행 요약 (상태) Select --> 
+    <select id="SELECT_PSO_PLAN_STAT" parameterType="java.util.Map" resultType="java.util.Map" >      
+        <![CDATA[
+            SELECT X.OU_CODE                          AS OU_CODE
+			     , X.LINE_STAT                        AS LINE_STAT
+			     , DECODE(X.LINE_STAT,'G','정상','지연') AS GUBUN
+			     , SUM(DECODE(X.GRADE,'A',1,0))       AS G1
+			     , SUM(DECODE(X.GRADE,'B',1,0))       AS G2
+			     , SUM(DECODE(X.GRADE,'C',1,0))       AS G3
+			     , SUM(DECODE(X.GRADE,'APQP',1,0))    AS GAPQP
+			     , COUNT(*)                           AS G_CNT
+			  FROM (
+			        SELECT DH.OU_CODE
+			             , DECODE(NVL(RB.APQP_YN,'N'),'Y','APQP',RB.GRADE) AS GRADE
+			             , DECODE(NVL(DL.PSO_DOCU_LINE_STAT,'N'),'D','D','G') AS LINE_STAT
+			          FROM OMS_PSO_PROJECT_DOCU         DH
+			             , OMS_PSO_PROJECT_DOCU_LINE    DL
+			             , OMS_PSO_PROJECT_R_BOARD      RB
+			         WHERE DH.OU_CODE = DL.OU_CODE
+			           AND DH.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			           AND DH.OU_CODE     = RB.OU_CODE
+			           AND DH.R_BOARD_ID  = RB.R_BOARD_ID
+			           AND DH.OU_CODE     = #{OU_CODE}
+			           AND DL.MAKE_PLAN_DATE IS NOT NULL 
+			           AND NVL(DH.PSO_DOCU_STATUS,'N') = 'Y'
+			           AND TO_CHAR(DL.MAKE_PLAN_DATE,'YYYY') = TO_CHAR(SYSDATE,'YYYY')
+			       )  X
+			 GROUP BY X.OU_CODE
+			        , X.LINE_STAT
+		]]> 
+    </select>
+    
+    <!-- Intro 화면 : 팀별 진행율 (PSO 진행 프로젝트 기준) Select --> 
+    <select id="SELECT_PSO_DEPT_STAT" parameterType="java.util.Map" resultType="java.util.Map" >      
+        <![CDATA[
+            SELECT XX.OU_CODE
+			     , XX.PSO_DEPT_CODE
+			     , XX.PSO_DEPT_NAME
+			     , XX.TARGET_CNT
+			     , XX.D_PLAN_CNT
+			     , XX.G_PLAN_CNT
+			     , ROUND(XX.G_PLAN_CNT / DECODE(XX.T_PLAN_CNT,0,1,XX.T_PLAN_CNT),4)*100 AS G_PLAN_RATE
+			     , XX.D_COMP_CNT
+			     , XX.G_COMP_CNT
+			     , ROUND(XX.G_COMP_CNT / DECODE(XX.T_COMP_CNT,0,1,XX.T_COMP_CNT),4)*100 AS G_COMP_RATE
+			  FROM (        
+			        SELECT X.OU_CODE                          AS OU_CODE
+			             , X.PSO_DEPT_CODE                    AS PSO_DEPT_CODE
+			             , X.PSO_DEPT_NAME                    AS PSO_DEPT_NAME
+			             , COUNT(*)                           AS TARGET_CNT
+			             , SUM(DECODE(X.EXE_STAT,'A',1,0))    AS G_COMP_CNT
+			             , SUM(DECODE(X.EXE_STAT,'B',1,0))    AS D_COMP_CNT
+			             , SUM(DECODE(X.EXE_STAT,'A',1,'B',1,0))  AS T_COMP_CNT
+			             , SUM(DECODE(X.EXE_STAT,'C',1,0))    AS G_PLAN_CNT
+			             , SUM(DECODE(X.EXE_STAT,'D',1,0))    AS D_PLAN_CNT
+			             , SUM(DECODE(X.EXE_STAT,'C',1,'D',1,0))  AS T_PLAN_CNT
+			          FROM (
+			                SELECT DH.OU_CODE
+			                     , DL.PSO_DEPT_CODE
+			                     , DL.PSO_DEPT_NAME
+			                     , CASE 
+			                       WHEN NVL(DL.PSO_DOCU_LINE_STAT,'N') = 'Y' AND (DL.MAKE_PLAN_DATE >= DL.MAKE_COMP_DATE) THEN 'A'
+			                       WHEN NVL(DL.PSO_DOCU_LINE_STAT,'N') = 'Y' AND (DL.MAKE_PLAN_DATE <  DL.MAKE_COMP_DATE) THEN 'B'
+			                       WHEN NVL(DL.PSO_DOCU_LINE_STAT,'N') IN ('W','N') AND (DL.MAKE_COMP_DATE IS NULL) THEN 'C'
+			                       WHEN NVL(DL.PSO_DOCU_LINE_STAT,'N') = 'D' AND (DL.MAKE_COMP_DATE IS NULL) THEN 'D'
+			                       ELSE 'E' END EXE_STAT
+			                  FROM OMS_PSO_PROJECT_DOCU         DH
+			                     , OMS_PSO_PROJECT_DOCU_LINE    DL
+			                 WHERE DH.OU_CODE     = DL.OU_CODE
+			                   AND DH.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			                   AND DH.OU_CODE     = #{OU_CODE}
+			                   AND NVL(DH.PSO_DOCU_STATUS,'N') = 'Y'
+			                   AND TO_CHAR(DL.MAKE_PLAN_DATE,'YYYY') = TO_CHAR(SYSDATE,'YYYY')
+			               )  X
+			         GROUP BY X.OU_CODE
+			                , X.PSO_DEPT_CODE
+			                , X.PSO_DEPT_NAME  
+			       )  XX
+		]]> 
+    </select>
+    
+    <!-- Intro 화면 : 나의 PSO 진행 현황 (요약) Select --> 
+    <select id="SELECT_PSO_MY_STAT_SUMMARY" parameterType="java.util.Map" resultType="java.util.Map" >      
+        <![CDATA[
+            SELECT X.OU_CODE                          AS OU_CODE
+			     , X.CHG_USER_ID                      AS CHG_USER_ID
+			     , X.CHG_USER_NAME                    AS CHG_USER_NAME
+			     , COUNT(*)                           AS TARGET_CNT
+			     , SUM(DECODE(X.EXE_STAT,'C',1,'D',1,0))  AS T_PLAN_CNT
+			     , SUM(DECODE(X.EXE_STAT,'D',1,0))    AS D_PLAN_CNT
+			     , SUM(DECODE(X.EXE_STAT,'C',1,0))    AS G_PLAN_CNT
+			     , SUM(DECODE(X.EXE_STAT,'A',1,'B',1,0))  AS T_COMP_CNT
+			     , SUM(DECODE(X.EXE_STAT,'B',1,0))    AS D_COMP_CNT
+			     , SUM(DECODE(X.EXE_STAT,'A',1,0))    AS G_COMP_CNT
+			  FROM (
+			        SELECT DH.OU_CODE
+			             , DL.CHG_USER_ID
+			             , DL.CHG_USER_NAME
+			             , CASE 
+			               WHEN NVL(DL.PSO_DOCU_LINE_STAT,'N') = 'Y' AND (DL.MAKE_PLAN_DATE >= DL.MAKE_COMP_DATE) THEN 'A'
+			               WHEN NVL(DL.PSO_DOCU_LINE_STAT,'N') = 'Y' AND (DL.MAKE_PLAN_DATE <  DL.MAKE_COMP_DATE) THEN 'B'
+			               WHEN NVL(DL.PSO_DOCU_LINE_STAT,'N') IN ('W','N') AND (DL.MAKE_COMP_DATE IS NULL) THEN 'C'
+			               WHEN NVL(DL.PSO_DOCU_LINE_STAT,'N') = 'D' AND (DL.MAKE_COMP_DATE IS NULL) THEN 'D'
+			               ELSE 'E' END EXE_STAT
+			          FROM OMS_PSO_PROJECT_DOCU         DH
+			             , OMS_PSO_PROJECT_DOCU_LINE    DL
+			         WHERE DH.OU_CODE = DL.OU_CODE
+			           AND DH.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			           AND DL.MAKE_PLAN_DATE IS NOT NULL 
+			           AND NVL(DH.PSO_DOCU_STATUS,'N') = 'Y'
+			           AND TO_CHAR(DL.MAKE_PLAN_DATE,'YYYY') = TO_CHAR(SYSDATE,'YYYY')
+			           AND DH.OU_CODE     = #{OU_CODE}
+			           AND DL.CHG_USER_ID = #{USER_ID}
+			       )  X
+			 GROUP BY X.OU_CODE
+			        , X.CHG_USER_ID
+			        , X.CHG_USER_NAME
+		]]> 
+    </select>
+    
+    <!-- Intro 화면 : 나의 PSO 진행 현황  Select --> 
+    <select id="SELECT_PSO_MY_STAT" parameterType="java.util.Map" resultType="java.util.Map" >      
+        <![CDATA[
+            SELECT DH.OU_CODE
+			     , PM.PROJECT_CODE
+			     , DH.PSO_DOCU_ID
+			     , DL.PSO_DOC_STEP
+			     , SMT_GET_CODE_NAME_FUNC('P003',DL.PSO_DOC_STEP,'KO') AS DOC_STEP_NAME
+			     , DL.PSO_DOCU_LINE_STAT
+			     , SMT_GET_CODE_NAME_FUNC('P009',DL.PSO_DOCU_LINE_STAT,'KO') AS DOCU_LINE_STAT_NAME
+			     , COUNT(*)  AS CNT
+			  FROM OMS_PSO_PROJECT_DOCU         DH
+			     , OMS_PSO_PROJECT_DOCU_LINE    DL
+			     , OMS_PSO_PROJECT_MSTR         PM
+			 WHERE DH.OU_CODE = DL.OU_CODE
+			   AND DH.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			   AND DH.OU_CODE = PM.OU_CODE
+			   AND DH.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND DL.MAKE_PLAN_DATE IS NOT NULL 
+			   AND NVL(DH.PSO_DOCU_STATUS,'N') = 'Y'
+			   AND TO_CHAR(DL.MAKE_PLAN_DATE,'YYYY') = TO_CHAR(SYSDATE,'YYYY')
+			   AND DH.OU_CODE     = #{OU_CODE}
+			   AND DL.CHG_USER_ID = #{USER_ID}
+			 GROUP BY DH.OU_CODE
+			        , PM.PROJECT_CODE
+			        , DH.PSO_DOCU_ID
+			        , DL.PSO_DOC_STEP
+			        , DL.PSO_DOCU_LINE_STAT
+			 ORDER BY DH.OU_CODE, PM.PROJECT_CODE, DL.PSO_DOC_STEP, DL.PSO_DOCU_LINE_STAT
+		]]> 
+    </select>
+    
+    <!-- 법인정보 조회 -->				
+	<select id="SELECT_SMT_OU_MSTR" parameterType="java.util.Map" resultType="java.util.Map">
+	<![CDATA[
+	SELECT
+	     SMT_OU_MSTR.OU_CODE                                         AS OU_CODE             /* 시스템법인코드 */
+	    ,SMT_OU_MSTR.OU_USER_CODE                                    AS OU_USER_CODE        /* 사용자법인코드 */
+	    ,SMT_OU_MSTR.OU_NAME                                         AS OU_NAME             /* 법인명 */
+	    ,SMT_OU_MSTR.OU_NAME_EN                                      AS OU_NAME_EN          /* 법인명(영) */
+	    ,SMT_OU_MSTR.OU_NAME_ZH                                      AS OU_NAME_ZH          /* 법인명(중) */
+	    ,SMT_OU_MSTR.OU_KIND_CODE                                    AS OU_KIND_CODE        /* 법인/개인구분 */
+	    ,SMT_OU_MSTR.OU_OWN_NO                                       AS OU_OWN_NO           /* 법인등록번호 */
+	    ,SMT_OU_MSTR.OU_TEL_NO                                       AS OU_TEL_NO           /* 전화번호 */
+	    ,SMT_OU_MSTR.OU_FAX_NO                                       AS OU_FAX_NO           /* fax번호 */
+	    ,SMT_OU_MSTR.POST_CODE                                       AS POST_CODE           /* 우편번호 */
+	    ,SMT_OU_MSTR.OU_ADDR1                                        AS OU_ADDR1            /* 주소1 */
+	    ,SMT_OU_MSTR.OU_ADDR2                                        AS OU_ADDR2            /* 주소2 */
+	    ,SMT_OU_MSTR.OU_ADDR_ENG1                                    AS OU_ADDR_ENG1        /* 주소1(영문) */
+	    ,SMT_OU_MSTR.OU_ADDR_ENG2                                    AS OU_ADDR_ENG2        /* 주소2(영문) */
+	    ,SMT_OU_MSTR.REPRE_NAME                                      AS REPRE_NAME          /* 대표자명 */
+	    ,SMT_OU_MSTR.REPRE_NAME_EN                                   AS REPRE_NAME_EN       /* 대표자명 */
+	    ,SMT_SSN_PKG.GET_SSN_FUNC(SMT_OU_MSTR.REPRE_NO, 1)           AS REPRE_NO            /* 대표자주민번호 */
+	    ,SMT_OU_MSTR.OU_AMT                                          AS OU_AMT              /* 자본금 */
+	    ,SMT_OU_MSTR.OU_TYPE_CODE                                    AS OU_TYPE_CODE        /* 법인구분 */
+	    ,SMT_OU_MSTR.CLASS_TYPE_CODE                                 AS CLASS_TYPE_CODE     /* 법인규모 */
+	    ,SMT_OU_MSTR.EMP_CNT                                         AS EMP_CNT             /* 직원수 */
+	    ,SMT_OU_MSTR.LOCATION_TYPE_CODE                              AS LOCATION_TYPE_CODE  /* 지방소재구분 */
+	    ,SMT_OU_MSTR.FOREIGN_YN                                      AS FOREIGN_YN          /* 외국인구분 */
+	    ,SMT_OU_MSTR.TAX_REPRE_NAME                                  AS TAX_REPRE_NAME      /* 주민납세자명 */
+	    ,TO_CHAR(SMT_OU_MSTR.OU_ESTABLISH_DATE,'YYYYMMDD')           AS OU_ESTABLISH_DATE   /* 설립일 */
+	    ,TO_CHAR(SMT_OU_MSTR.OU_OPEN_DATE,'YYYYMMDD')                AS OU_OPEN_DATE        /* 개업일 */
+	    ,TO_CHAR(SMT_OU_MSTR.OU_CLOSE_DATE,'YYYYMMDD')               AS OU_CLOSE_DATE       /* 폐업일 */
+	    ,SMT_OU_MSTR.PERIOD_MM                                       AS PERIOD_MM           /* 결산월 */
+	    ,TO_CHAR(SMT_OU_MSTR.PERIOD_ST_DATE,'YYYYMMDD')              AS PERIOD_ST_DATE      /* 회계기간시작일 */
+	    ,TO_CHAR(SMT_OU_MSTR.PERIOD_ED_DATE,'YYYYMMDD')              AS PERIOD_ED_DATE      /* 회계기간종료일 */
+	    ,TO_CHAR(SMT_OU_MSTR.INS_DATE,'YYYYMMDD')                    AS INS_DATE            /* 생성일시 */
+	    ,SMT_OU_MSTR.INS_USER_ID                                     AS INS_USER_ID         /* 생성자 */
+	    ,TO_CHAR(SMT_OU_MSTR.UPD_DATE,'YYYYMMDD')                    AS UPD_DATE            /* 최종수정일시 */
+	    ,SMT_OU_MSTR.UPD_USER_ID                                     AS UPD_USER_ID         /* 최종수정자 */
+	    ,SMT_OU_MSTR.EMP_NO_GUBUN                                    AS EMP_NO_GUBUN        /* 사번구분 */
+	    ,CASE 
+	        WHEN (SELECT COUNT(*) FROM SMT_ATCH_FILE WHERE REF_NAME = #{OU_CODE} AND DEL_DATE IS NULL) > 0 THEN 'Y'
+	        ELSE 'N'
+	     END AS JIKIN_YN                                                                    /* 직인첨부여부 */
+	FROM SMT_OU_MSTR
+	WHERE 1 = 1
+	    AND OU_CODE      = #{OU_CODE}             /* 시스템법인코드 */
+	]]>
+	</select>
+	
+	<!-- 법인정보 등록 -->
+	<insert id="INSERT_SMT_OU_MSTR" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+	INSERT INTO SMT_OU_MSTR(
+	     OU_CODE             /* 시스템법인코드 */
+	    ,OU_USER_CODE        /* 사용자법인코드 */
+	    ,OU_NAME             /* 법인명 */
+	    ,OU_NAME_EN          /* 법인명(영) */
+	    ,OU_NAME_ZH          /* 법인명(중) */
+	    ,OU_KIND_CODE        /* 법인/개인구분 */
+	    ,OU_OWN_NO           /* 법인등록번호 */
+	    ,OU_TEL_NO           /* 전화번호 */
+	    ,OU_FAX_NO           /* fax번호 */
+	    ,POST_CODE           /* 우편번호 */
+	    ,OU_ADDR1            /* 주소1 */
+	    ,OU_ADDR2            /* 주소2 */
+	    ,OU_ADDR_ENG1        /* 주소1(영문) */
+	    ,OU_ADDR_ENG2        /* 주소2(영문) */
+	    ,REPRE_NAME          /* 대표자명 */
+	    ,REPRE_NAME_EN       /* 대표자명 */	    
+	    ,REPRE_NO            /* 대표자주민번호 */
+	    ,OU_AMT              /* 자본금 */
+	    ,OU_TYPE_CODE        /* 법인구분 */
+	    ,CLASS_TYPE_CODE     /* 법인규모 */
+	    ,EMP_CNT             /* 직원수 */
+	    ,LOCATION_TYPE_CODE  /* 지방소재구분 */
+	    ,FOREIGN_YN          /* 외국인구분 */
+	    ,TAX_REPRE_NAME      /* 주민납세자명 */
+	    ,OU_ESTABLISH_DATE   /* 설립일 */
+	    ,OU_OPEN_DATE        /* 개업일 */
+	    ,OU_CLOSE_DATE       /* 폐업일 */
+	    ,PERIOD_MM           /* 결산월 */
+	    ,PERIOD_ST_DATE      /* 회계기간시작일 */
+	    ,PERIOD_ED_DATE      /* 회계기간종료일 */
+	    ,INS_DATE            /* 생성일시 */
+	    ,INS_USER_ID         /* 생성자 */
+	    ,UPD_DATE            /* 최종수정일시 */
+	    ,UPD_USER_ID         /* 최종수정자 */
+	    ,EMP_NO_GUBUN        /* 사번구분 */
+	)
+	VALUES(
+	     #{OU_CODE}                                /* 시스템법인코드 */
+	    ,#{OU_USER_CODE}                           /* 사용자법인코드 */
+	    ,#{OU_NAME}                                /* 법인명 */
+	    ,#{OU_NAME_EN}                             /* 법인명(영) */
+	    ,#{OU_NAME_ZH}                             /* 법인명(중) */
+	    ,#{OU_KIND_CODE}                           /* 법인/개인구분 */
+	    ,#{OU_OWN_NO}                              /* 법인등록번호 */
+	    ,#{OU_TEL_NO}                              /* 전화번호 */
+	    ,#{OU_FAX_NO}                              /* fax번호 */
+	    ,#{POST_CODE}                              /* 우편번호 */
+	    ,#{OU_ADDR1}                               /* 주소1 */
+	    ,#{OU_ADDR2}                               /* 주소2 */
+	    ,#{OU_ADDR_ENG1}                           /* 주소1(영문) */
+	    ,#{OU_ADDR_ENG2}                           /* 주소2(영문) */
+	    ,#{REPRE_NAME}                             /* 대표자명 */
+	    ,#{REPRE_NAME_EN}                          /* 대표자명 */
+	    ,SMT_SSN_PKG.ENCRYPT_FUNC(#{REPRE_NO})     /* 대표자주민번호 */
+	    ,#{OU_AMT}                                 /* 자본금 */
+	    ,#{OU_TYPE_CODE}                           /* 법인구분 */
+	    ,#{CLASS_TYPE_CODE}                        /* 법인규모 */
+	    ,#{EMP_CNT}                                /* 직원수 */
+	    ,#{LOCATION_TYPE_CODE}                     /* 지방소재구분 */
+	    ,#{FOREIGN_YN}                             /* 외국인구분 */
+	    ,#{TAX_REPRE_NAME}                         /* 주민납세자명 */
+	    ,TO_DATE(#{OU_ESTABLISH_DATE},'YYYYMMDD')  /* 설립일 */
+	    ,TO_DATE(#{OU_OPEN_DATE},'YYYYMMDD')       /* 개업일 */
+	    ,TO_DATE(#{OU_CLOSE_DATE},'YYYYMMDD')      /* 폐업일 */
+	    ,#{PERIOD_MM}                              /* 결산월 */
+	    ,TO_DATE(#{PERIOD_ST_DATE},'YYYYMMDD')     /* 회계기간시작일 */
+	    ,TO_DATE(#{PERIOD_ED_DATE},'YYYYMMDD')     /* 회계기간종료일 */
+	    ,SYSDATE                                   /* 생성일시 */
+	    ,#{GV_USER_ID}                             /* 생성자 */
+	    ,SYSDATE                                   /* 최종수정일시 */
+	    ,#{GV_USER_ID}                             /* 최종수정자 */
+	    ,#{EMP_NO_GUBUN}                           /* 사번구분 */
+	)
+	]]>
+	</insert>
+
+	<!-- 법인정보 수정 -->
+	<update id="UPDATE_SMT_OU_MSTR" parameterType="java.util.Map">
+	UPDATE SMT_OU_MSTR SET
+	     OU_CODE              = #{OU_CODE}                                /* 시스템법인코드 */
+	    ,OU_USER_CODE         = #{OU_USER_CODE}                           /* 사용자법인코드 */
+	    ,OU_NAME              = #{OU_NAME}                                /* 법인명 */
+	    ,OU_NAME_EN           = #{OU_NAME_EN}                             /* 법인명(영) */
+	    ,OU_NAME_ZH           = #{OU_NAME_ZH}                             /* 법인명(중) */
+	    ,OU_KIND_CODE         = #{OU_KIND_CODE}                           /* 법인/개인구분 */
+	    ,OU_OWN_NO            = #{OU_OWN_NO}                              /* 법인등록번호 */
+	    ,OU_TEL_NO            = #{OU_TEL_NO}                              /* 전화번호 */
+	    ,OU_FAX_NO            = #{OU_FAX_NO}                              /* fax번호 */
+	    ,POST_CODE            = #{POST_CODE}                              /* 우편번호 */
+	    ,OU_ADDR1             = #{OU_ADDR1}                               /* 주소1 */
+	    ,OU_ADDR2             = #{OU_ADDR2}                               /* 주소2 */
+	    ,OU_ADDR_ENG1         = #{OU_ADDR_ENG1}                           /* 주소1(영문) */
+	    ,OU_ADDR_ENG2         = #{OU_ADDR_ENG2}                           /* 주소2(영문) */
+	    ,REPRE_NAME           = #{REPRE_NAME}                             /* 대표자명 */
+	    ,REPRE_NAME_EN        = #{REPRE_NAME_EN}                          /* 대표자명 */
+	    ,REPRE_NO             = SMT_SSN_PKG.ENCRYPT_FUNC(#{REPRE_NO})     /* 대표자주민번호 */
+	    ,OU_AMT               = #{OU_AMT}                                 /* 자본금 */
+	    ,OU_TYPE_CODE         = #{OU_TYPE_CODE}                           /* 법인구분 */
+	    ,CLASS_TYPE_CODE      = #{CLASS_TYPE_CODE}                        /* 법인규모 */
+	    ,EMP_CNT              = #{EMP_CNT}                                /* 직원수 */
+	    ,LOCATION_TYPE_CODE   = #{LOCATION_TYPE_CODE}                     /* 지방소재구분 */
+	    ,FOREIGN_YN           = #{FOREIGN_YN}                             /* 외국인구분 */
+	    ,TAX_REPRE_NAME       = #{TAX_REPRE_NAME}                         /* 주민납세자명 */
+	    ,OU_ESTABLISH_DATE    = TO_DATE(#{OU_ESTABLISH_DATE},'YYYYMMDD')  /* 설립일 */
+	    ,OU_OPEN_DATE         = TO_DATE(#{OU_OPEN_DATE},'YYYYMMDD')       /* 개업일 */
+	    ,OU_CLOSE_DATE        = TO_DATE(#{OU_CLOSE_DATE},'YYYYMMDD')      /* 폐업일 */
+	    ,PERIOD_MM            = #{PERIOD_MM}                              /* 결산월 */
+	    ,PERIOD_ST_DATE       = TO_DATE(#{PERIOD_ST_DATE},'YYYYMMDD')     /* 회계기간시작일 */
+	    ,PERIOD_ED_DATE       = TO_DATE(#{PERIOD_ED_DATE},'YYYYMMDD')     /* 회계기간종료일 */
+	    ,UPD_DATE             = SYSDATE                                   /* 최종수정일시 */
+	    ,UPD_USER_ID          = #{GV_USER_ID}                             /* 최종수정자 */
+	    ,EMP_NO_GUBUN          = #{EMP_NO_GUBUN}                          /* 사번구분 */	    
+	WHERE 1 = 1
+	    AND OU_CODE      = #{OU_CODE}             /* 시스템법인코드 */
+	</update>
+     
+	<!-- 법인정보 삭제 -->
+	<delete id="DELETE_SMT_OU_MSTR" parameterType="java.util.Map">
+	DELETE FROM SMT_OU_MSTR
+	WHERE 1 = 1
+	    AND OU_CODE      = #{OU_CODE}             /* 시스템법인코드 */
+	</delete>     
+
+	<!-- 사업장정보 조회 -->
+	<select id="SELECT_SMT_SITE_MSTR" parameterType="java.util.Map" resultType="java.util.Map">
+	<![CDATA[
+	SELECT
+	     SMT_SITE_MSTR.SITE_CODE                                     AS SITE_CODE           /* 사업장코드 */
+	    ,SMT_SITE_MSTR.OU_NUM                                        AS OU_NUM              /* 사업자번호 */
+	    ,SMT_SITE_MSTR.OU_BIZ_TYPE                                   AS OU_BIZ_TYPE         /* 업종 */
+	    ,SMT_SITE_MSTR.OU_BIZ_CLASS                                  AS OU_BIZ_CLASS        /* 업태 */
+	    ,SMT_SITE_MSTR.TAX_GOVERN_CODE                               AS TAX_GOVERN_CODE     /* 관할세무서 */
+	    ,SMT_SITE_MSTR.OU_CODE                                       AS OU_CODE             /* 법인코드 */
+	    ,SMT_SITE_MSTR.SITE_NAME                                     AS SITE_NAME           /* 사업장, 또는 근무지역 명 */
+	    ,SMT_SITE_MSTR.SITE_TEL1                                     AS SITE_TEL1           /* 전화번호 */
+	    ,SMT_SITE_MSTR.SITE_TEL2                                     AS SITE_TEL2           /* fax번호 */
+	    ,SMT_SITE_MSTR.POST_CODE                                     AS POST_CODE           /* 우편번호 */
+	    ,SMT_SITE_MSTR.SITE_ADDR1                                    AS SITE_ADDR1          /* 주소1 */
+	    ,SMT_SITE_MSTR.SITE_ADDR2                                    AS SITE_ADDR2          /* 주소2 */
+	    ,TO_CHAR(SMT_SITE_MSTR.SITE_ST_DATE,'YYYYMMDD')              AS SITE_ST_DATE        /* 시작일 */
+	    ,TO_CHAR(SMT_SITE_MSTR.SITE_ED_DATE,'YYYYMMDD')              AS SITE_ED_DATE        /* 종료일 */
+	    ,SMT_SITE_MSTR.REMARK                                        AS REMARK              /* 비고 */
+	    ,TO_CHAR(SMT_SITE_MSTR.INS_DATE,'YYYYMMDD')                  AS INS_DATE            /* 생성일시 */
+	    ,SMT_SITE_MSTR.INS_USER_ID                                   AS INS_USER_ID         /* 생성자 */
+	    ,TO_CHAR(SMT_SITE_MSTR.UPD_DATE,'YYYYMMDD')                  AS UPD_DATE            /* 최종수정일시 */
+	    ,SMT_SITE_MSTR.UPD_USER_ID                                   AS UPD_USER_ID         /* 최종수정자 */
+		,(SELECT OU_NAME FROM SMT_OU_MSTR where OU_CODE = SMT_SITE_MSTR.OU_CODE and rownum = 1)                      AS "OU_NAME"             /* 법인명 */
+		,SMT_SITE_MSTR.ADV_DEF_TYPE                                  AS ADV_DEF_TYPE        /* 선후불구분 */
+	FROM SMT_SITE_MSTR
+	WHERE 1 = 1
+		AND OU_CODE    = #{OU_CODE}           /* 법인코드 */
+	ORDER BY SITE_CODE
+	]]>
+	</select>
+     
+	<!-- 사업장정보 등록 -->
+	<insert id="INSERT_SMT_SITE_MSTR" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+	INSERT INTO SMT_SITE_MSTR(
+	     SITE_CODE           /* 사업장코드 */
+	    ,OU_NUM              /* 사업자번호 */
+	    ,OU_BIZ_TYPE         /* 업종 */
+	    ,OU_BIZ_CLASS        /* 업태 */
+	    ,TAX_GOVERN_CODE     /* 관할세무서 */
+	    ,OU_CODE             /* 법인코드 */
+	    ,SITE_NAME           /* 사업장, 또는 근무지역 명 */
+	    ,SITE_TEL1           /* 전화번호 */
+	    ,SITE_TEL2           /* fax번호 */
+	    ,POST_CODE           /* 우편번호 */
+	    ,SITE_ADDR1          /* 주소1 */
+	    ,SITE_ADDR2          /* 주소2 */
+	    ,SITE_ST_DATE        /* 시작일 */
+	    ,SITE_ED_DATE        /* 종료일 */
+	    ,REMARK              /* 비고 */
+	    ,INS_DATE            /* 생성일시 */
+	    ,INS_USER_ID         /* 생성자 */
+	    ,UPD_DATE            /* 최종수정일시 */
+	    ,UPD_USER_ID         /* 최종수정자 */
+	    ,ADV_DEF_TYPE        /* 선후불구분 */
+	)
+	VALUES(
+	     #{SITE_CODE}                              /* 사업장코드 */
+	    ,#{OU_NUM}                                 /* 사업자번호 */
+	    ,#{OU_BIZ_TYPE}                            /* 업종 */
+	    ,#{OU_BIZ_CLASS}                           /* 업태 */
+	    ,#{TAX_GOVERN_CODE}                        /* 관할세무서 */
+	    ,#{OU_CODE}                                /* 법인코드 */
+	    ,#{SITE_NAME}                              /* 사업장, 또는 근무지역 명 */
+	    ,#{SITE_TEL1}                              /* 전화번호 */
+	    ,#{SITE_TEL2}                              /* fax번호 */
+	    ,#{POST_CODE}                              /* 우편번호 */
+	    ,#{SITE_ADDR1}                             /* 주소1 */
+	    ,#{SITE_ADDR2}                             /* 주소2 */
+	    ,TO_DATE(#{SITE_ST_DATE},'YYYYMMDD')       /* 시작일 */
+	    ,TO_DATE(#{SITE_ED_DATE},'YYYYMMDD')       /* 종료일 */
+	    ,#{REMARK}                                 /* 비고 */
+	    ,SYSDATE                                   /* 생성일시 */
+	    ,#{GV_USER_ID}                             /* 생성자 */
+	    ,SYSDATE                                   /* 최종수정일시 */
+	    ,#{GV_USER_ID}                             /* 최종수정자 */
+	    ,#{ADV_DEF_TYPE}                           /* 선후불구분 */
+	)
+	]]>
+	</insert>
+          
+	<!-- 사업장정보 수정 -->
+	<update id="UPDATE_SMT_SITE_MSTR" parameterType="java.util.Map">
+	UPDATE SMT_SITE_MSTR SET
+	     SITE_CODE            = #{SITE_CODE}                              /* 사업장코드 */
+	    ,OU_NUM               = #{OU_NUM}                                 /* 사업자번호 */
+	    ,OU_BIZ_TYPE          = #{OU_BIZ_TYPE}                            /* 업종 */
+	    ,OU_BIZ_CLASS         = #{OU_BIZ_CLASS}                           /* 업태 */
+	    ,TAX_GOVERN_CODE      = #{TAX_GOVERN_CODE}                        /* 관할세무서 */
+	    ,OU_CODE              = #{OU_CODE}                                /* 법인코드 */
+	    ,SITE_NAME            = #{SITE_NAME}                              /* 사업장, 또는 근무지역 명 */
+	    ,SITE_TEL1            = #{SITE_TEL1}                              /* 전화번호 */
+	    ,SITE_TEL2            = #{SITE_TEL2}                              /* fax번호 */
+	    ,POST_CODE            = #{POST_CODE}                              /* 우편번호 */
+	    ,SITE_ADDR1           = #{SITE_ADDR1}                             /* 주소1 */
+	    ,SITE_ADDR2           = #{SITE_ADDR2}                             /* 주소2 */
+	    ,SITE_ST_DATE         = TO_DATE(#{SITE_ST_DATE},'YYYYMMDD')       /* 시작일 */
+	    ,SITE_ED_DATE         = TO_DATE(#{SITE_ED_DATE},'YYYYMMDD')       /* 종료일 */
+	    ,REMARK               = #{REMARK}                                 /* 비고 */
+	    ,UPD_DATE             = SYSDATE                                   /* 최종수정일시 */
+	    ,UPD_USER_ID          = #{GV_USER_ID}                             /* 최종수정자 */
+	    ,ADV_DEF_TYPE         = #{ADV_DEF_TYPE}                           /* 선후불구분 */
+	WHERE 1 = 1
+	    AND SITE_CODE    = #{SITE_CODE}           /* 사업장코드 */
+	</update> 
+     
+	<!-- 사업장정보 삭제 -->
+	<delete id="DELETE_SMT_SITE_MSTR" parameterType="java.util.Map">
+	DELETE FROM SMT_SITE_MSTR
+	WHERE 1 = 1
+	    AND SITE_CODE    = #{SITE_CODE}           /* 사업장코드 */
+	</delete>
+
+	<!-- 사업장정보 삭제 (특정 법인 전체) -->
+	<delete id="DELETE_SMT_SITE_MSTRn" parameterType="java.util.Map"> 
+	DELETE FROM SMT_SITE_MSTR
+	WHERE 1 = 1
+		AND OU_CODE    = #{OU_CODE}
+	</delete>
+     
+	<!-- 사용자메세지정보 조회 -->
+	<select id="SELECT_SMT_USER_MSG" parameterType="java.util.Map" resultType="java.util.Map">
+	<![CDATA[
+	SELECT
+	     SMT_USER_MSG.LANG_CODE                                      AS "LANG_CODE"           /* 사용언어(국가코드) */
+	    ,SMT_USER_MSG.MSG_CODE                                       AS "MSG_CODE"            /* 코드 */
+	    ,SMT_USER_MSG.MSG_NAME                                       AS "MSG_NAME"            /* 메세지명 */
+	    ,TO_CHAR(SMT_USER_MSG.INS_DATE,'YYYYMMDD')                   AS "INS_DATE"            /* 생성일시 */
+	    ,SMT_USER_MSG.INS_USER_ID                                    AS "INS_USER_ID"         /* 생성자 */
+	    ,TO_CHAR(SMT_USER_MSG.UPD_DATE,'YYYYMMDD')                   AS "UPD_DATE"            /* 최종수정일시 */
+	    ,SMT_USER_MSG.UPD_USER_ID                                    AS "UPD_USER_ID"         /* 최종수정자 */
+	FROM SMT_USER_MSG
+	WHERE 1 = 1
+	]]>
+		<if test="@com.oms.MyBatisUtil@isNotEmpty( LANG_CODE )">
+		<![CDATA[ 
+		AND LANG_CODE LIKE '%'|| #{LANG_CODE} || '%'
+		]]>  
+		</if>
+		<if test="@com.oms.MyBatisUtil@isNotEmpty( MSG_CODE )">
+		 <![CDATA[ 
+		AND MSG_CODE LIKE '%'|| #{MSG_CODE} || '%'
+		]]>
+		</if>
+		<if test="@com.oms.MyBatisUtil@isNotEmpty( MSG_NAME )">
+		 <![CDATA[ 
+		AND MSG_NAME LIKE '%'|| #{MSG_NAME} || '%'
+		]]>
+		</if>
+	ORDER BY MSG_CODE
+	</select>
+
+	<!-- 사용자메세지정보 등록 -->
+	<insert id="INSERT_SMT_USER_MSG" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+	INSERT INTO SMT_USER_MSG(
+	     LANG_CODE           /* 사용언어(국가코드) */
+	    ,MSG_CODE            /* 코드 */
+	    ,MSG_NAME            /* 메세지명 */
+	    ,INS_DATE            /* 생성일시 */
+	    ,INS_USER_ID         /* 생성자 */
+	    ,UPD_DATE            /* 최종수정일시 */
+	    ,UPD_USER_ID         /* 최종수정자 */
+	)
+	VALUES(
+	     #{LANG_CODE}        /* 사용언어(국가코드) */
+	    ,#{MSG_CODE}         /* 코드 */
+	    ,#{MSG_NAME}         /* 메세지명 */
+	    ,SYSDATE             /* 생성일시 */
+	    ,-1                  /* 생성자 */
+	    ,SYSDATE             /* 최종수정일시 */
+	    ,-1                  /* 최종수정자 */
+	)
+	]]>
+	</insert>
+
+	<!-- 사용자메세지정보 수정 -->
+	<update id="UPDATE_SMT_USER_MSG" parameterType="java.util.Map">
+	UPDATE SMT_USER_MSG SET
+	     LANG_CODE            = #{LANG_CODE}      /* 사용언어(국가코드) */
+	    ,MSG_CODE             = #{MSG_CODE}       /* 코드 */
+	    ,MSG_NAME             = #{MSG_NAME}       /* 메세지명 */
+	    ,UPD_DATE             = SYSDATE           /* 최종수정일시 */
+	    ,UPD_USER_ID          = -1                /* 최종수정자 */
+	WHERE 1 = 1
+	    AND LANG_CODE    = #{LANG_CODE}           /* 사용언어(국가코드) */
+	    AND MSG_CODE     = #{MSG_CODE}            /* 코드 */
+	</update>
+	
+	<!-- 사용자메세지정보 삭제 -->
+	<delete id="DELETE_SMT_USER_MSG" parameterType="java.util.Map">
+	DELETE FROM SMT_USER_MSG
+	WHERE 1 = 1
+	    AND LANG_CODE    = #{LANG_CODE}           /* 사용언어(국가코드) */
+	    AND MSG_CODE     = #{MSG_CODE}            /* 코드 */
+	</delete>
+	
+	<!-- 사용자 사업장정보 조회 -->
+	<select id="SELECT_SMT_USER_SITE_V" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT US.SITE_CODE CODE
+			 , US.SITE_NAME NAME
+		  FROM SMT_USER_SITE_V US
+		 WHERE 1 = 1
+		   AND OU_CODE = #{OU_CODE} /* 법인코드 */
+		   AND USER_ID = #{USER_ID}
+		 ORDER BY SITE_CODE
+	</select>
+	
+	<!-- 공지사항 : 로그인 페이지 공지사항 조회 -->				
+	<select id="SELECT_SMT_NOTICE_LIST" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT BOARD_ID
+			     , BOARD_NO
+			     , LVL
+			     , P_BOARD_NO
+			     , CASE WHEN TOP_DISPLAY_YN = 'Y' THEN '○ [상위] ' || TITLE
+			       ELSE '○ '||TITLE END TITLE
+			     , WRITER
+			     , INS_DATE
+			     , I_COUNT
+			     , R_COUNT
+			     , C_COUNT
+			     , ATTATCH_ID
+			     , CATEGORY
+			     , ITEM_TYPE
+			     , INS_USER_ID
+			     , ATTCH_FLAG
+			  FROM SMT_BOARDS_V
+			 WHERE BOARD_ID = #{BOARD_ID}
+	    ]]>
+        <if test='CNT_LIMIT.equals("Y")'>
+            <![CDATA[
+			   AND ROWNUM   < 11
+			]]>
+		</if>
+		<![CDATA[
+			 START WITH LVL = 1
+			   AND BOARD_ID = #{BOARD_ID}
+			 CONNECT BY P_BOARD_NO = PRIOR BOARD_NO        
+			 ORDER SIBLINGS BY NVL(TOP_DISPLAY_YN,'N')DESC, BOARD_NO DESC
+        ]]>
+    </select>
+    
+    <!-- 첨부미리보기 : 미리보기폴더SET -->				
+	<select id="SELECT_VIEW_SERVER_SET" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT (SELECT CC.ITEM_NAME
+			          FROM SMT_COMM_CODE  CC
+			         WHERE CC.GRP_CODE = 'F041'
+			           AND NVL(CC.ACTIVE_FLAG,'N') = 'Y'
+			           AND CC.ITEM_CODE = 'VIEW_URL') AS VIEW_SERVER_URL
+			     , (SELECT CC.ITEM_NAME
+			          FROM SMT_COMM_CODE  CC
+			         WHERE CC.GRP_CODE = 'F041'
+			           AND NVL(CC.ACTIVE_FLAG,'N') = 'Y'
+			           AND CC.ITEM_CODE = 'CONV_TYPE') AS VIEW_CONVERT_TYPE
+			  FROM DUAL 
+        ]]>
+    </select>
+    
+    <!-- 각종동의 : 각종동의내용 SET -->				
+	<select id="SELECT_AGREE_CONTENT_SET" parameterType="java.util.Map" resultMap="SMTAgreeClobMap">     
+	 	<![CDATA[
+	 		SELECT CONTENT
+			  FROM SMT_USER_AGREE
+			 WHERE AGREE_ID = #{AGREE_ID} 
+			   AND LANG = #{GV_LANG}
+        ]]>
+    </select>
+     
+    <!-- 사용자 정보 수정 : 전자상거래 동의-->
+    <update id="UPDATE_AGREE_ECOMMERCE" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE SMT_USER_MSTR
+               SET E_COMMERCE_YN = #{E_COMMERCE_YN}
+                 , UPD_DATE = SYSDATE
+                 , UPD_USER_ID = #{GV_USER_ID}
+             WHERE USER_ID = #{USER_ID}  
+        ]]> 
+    </update>
+    
+    <!-- 사용자 정보 수정 : 개인정보 동의-->
+    <update id="UPDATE_AGREE_PERSON_INFO" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE SMT_USER_MSTR
+               SET PERSONAL_INFO_YN = #{PERSONAL_INFO_YN}
+                 , UPD_DATE = SYSDATE
+                 , UPD_USER_ID = #{GV_USER_ID}
+             WHERE USER_ID = #{USER_ID}  
+        ]]> 
+    </update>
+    
+    <!-- 사용자 정보 수정 : 정보보안서약서 동의-->
+    <update id="UPDATE_AGREE_SECURIT_INFO" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE SMT_USER_MSTR
+               SET INFO_SECURIT_YN = #{INFO_SECURIT_YN}
+                 , UPD_DATE = SYSDATE
+                 , UPD_USER_ID = #{GV_USER_ID}
+             WHERE USER_ID = #{USER_ID}  
+        ]]> 
+    </update>
+    
+    <!-- 공지사항 POPUP: 로그인 페이지 팝업공지사항 조회 -->				
+	<select id="SELECT_SMT_POPUP_NOTICE_LIST" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT SP.BOARD_NO 
+			     , SP.TITLE
+			     , SP.ATTATCH_ID
+			     , DECODE(NVL(SMT_GET_ATTFILE_ID_FUNC(SP.OU_CODE,'POPUP',SP.ATTATCH_ID,NULL),'N'),'N','N','Y') AS ATTCH_FLAG
+			     , SP.CATEGORY
+			     , SP.ITEM_TYPE
+			     , TO_CHAR(SP.EFFECTIVE_START_DATE ,'RRRRMMDD') AS EFFECTIVE_START_DATE
+			     , TO_CHAR(SP.EFFECTIVE_END_DATE ,'RRRRMMDD')   AS EFFECTIVE_END_DATE
+			  FROM SMT_POPUP   SP 
+			 WHERE SP.OU_CODE = #{GV_OU_CODE}
+			   AND TRUNC(SYSDATE) BETWEEN SP.EFFECTIVE_START_DATE AND SP.EFFECTIVE_END_DATE
+			 ORDER BY SP.BOARD_NO DESC, SP.EFFECTIVE_START_DATE DESC
+        ]]>
+    </select>
+    
+    <!-- 공지사항 POPUP: 팝업공지사항 조회 -->
+	<select id="SELECT_SMT_POPUP_NOTICE" parameterType="java.util.Map"  resultMap="SMTPopupBoardClobMap">     			                             
+		<![CDATA[	
+			SELECT SP.BOARD_NO
+			     , SP.TITLE
+			     , SP.CONTENT
+			     , SP.ATTATCH_ID
+			     , DECODE(NVL(SMT_GET_ATTFILE_ID_FUNC(SP.OU_CODE,'POPUP',SP.BOARD_NO,NULL),'N'),'N','N','Y') AS ATTCH_FLAG
+			     , SP.CATEGORY
+			     , SP.ITEM_TYPE
+			     , TO_CHAR(SP.EFFECTIVE_START_DATE ,'RRRRMMDD') AS EFFECTIVE_START_DATE
+			     , TO_CHAR(SP.EFFECTIVE_END_DATE ,'RRRRMMDD')   AS EFFECTIVE_END_DATE
+			  FROM SMT_POPUP  SP
+			 WHERE SP.OU_CODE  = #{GV_OU_CODE}
+			   AND SP.BOARD_NO = #{BOARD_NO}
+        ]]>			     
+    </select>
+    
+    <!-- 공지사항 POPUP: 첨부파일 조회 -->
+	<select id="SELECT_SMT_POPUP_ATTACH" parameterType="java.util.Map"  resultType="java.util.Map"> 
+		<![CDATA[    			                             
+            SELECT SA.ATTFILE_NM
+              FROM SMT_ATCH_FILE SA
+             WHERE SA.FILE_GUBUN = 'POPUP'
+               AND SA.DEL_DATE IS NULL
+               AND SA.REF_ID = #{BOARD_NO}			        
+    	]]>
+    </select>  
+        
+</mapper>

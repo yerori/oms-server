@@ -1,0 +1,819 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmsCommonMapper">
+    
+    <!-- 법인코드 조회 -->
+	<select id="SELECT_CODE_OU" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+			SELECT
+			     OU_CODE                      AS CODE
+			    ,SMT_GET_OU_NAME_FUNC(OU_CODE,#{GV_LANG})   AS NAME
+			FROM SMT_OU_MSTR
+			WHERE 1 = 1
+			ORDER BY OU_CODE          
+		]]>    
+    </select>
+
+    <!-- 사업장코드 조회 -->				
+	<select id="SELECT_CODE_SITE" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+			SELECT
+			     SITE_CODE                    AS CODE
+			    ,SITE_NAME                    AS NAME
+			FROM SMT_SITE_MSTR
+			WHERE 1 = 1
+				AND OU_CODE              = #{OU_CODE}             /* 법인코드 */			
+			ORDER BY SITE_CODE          
+		]]>    
+    </select>
+    
+    <!-- 사용자 사업장정보 조회 -->
+	<select id="SELECT_USER_SITE_CODE" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT US.SITE_CODE CODE
+			 , US.SITE_NAME NAME
+		  FROM SMT_USER_SITE_V US
+		 WHERE 1 = 1
+		   AND OU_CODE = #{OU_CODE} /* 법인코드 */
+		   AND USER_ID = #{USER_ID}
+		 ORDER BY SITE_CODE
+	</select>
+	
+    <!-- 공통코드정보 조회 -->
+	<select id="SELECT_CODE" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT
+			 A.ITEM_CODE AS ITEM_CODE        /* 코드 */
+			,SMT_GET_CODE_NAME_FUNC(#{GRP_CODE}, A.ITEM_CODE, #{GV_LANG}) AS ITEM_NAME /* 코드명 */
+			,A.ARR_NO
+		FROM SMT_COMM_CODE A
+		WHERE 1 = 1
+		AND A.GRP_CODE             = #{GRP_CODE}            /* 그룹코드 */		
+		AND A.ACTIVE_FLAG          = 'Y'                    /* 사용여부 */
+		<if test='NOT_IN.equals("F015")'>                   /* 제외 아이템 */
+			AND A.ITEM_CODE NOT IN ('1', '2', '6')
+		</if>
+		ORDER BY A.ARR_NO
+	</select>
+	 
+    <!-- 공통코드 조회 --> 
+    <select id="SELECT_COMM_CODE" parameterType="java.util.Map" resultType="java.util.Map">
+     	<![CDATA[   
+     		SELECT CC.ITEM_CODE  AS CODE
+			     , SMT_GET_CODE_NAME_FUNC(CC.GRP_CODE,CC.ITEM_CODE,#{GV_LANG})  AS NAME 	
+			  FROM SMT_COMM_CODE  CC
+			 WHERE 1=1
+			   AND CC.GRP_CODE = #{GRP_CODE}
+        ]]>
+	    <if test='ACTIVE_FLAG.equals("Y")'>
+			   AND NVL(CC.ACTIVE_FLAG,'N') = 'Y'
+	    </if>
+	    <![CDATA[
+	         ORDER BY CC.ARR_NO, CC.ITEM_CODE
+	    ]]>
+    </select>
+     
+    <!-- 부서 조회1 -->	
+	<select id="SELECT_EHR_DEPT_POP" parameterType="java.util.Map" resultType="java.util.Map">
+		<![CDATA[
+        WITH tmp(LVL, OU_CODE, DEPT_CODE, DEPT_NAME, SITE_NAME, UP_DEPT_CODE, DEPT_ST_DATE, DEPT_ED_DATE, EXPIRE_FLAG, ORDER_SEQ, DEPT_TYPE) AS
+           (
+            SELECT 1 AS LVL
+                 , DMV.OU_CODE
+                 , DMV.DEPT_CODE
+                 , DMV.DEPT_NAME
+                 , (SELECT SITE_NAME FROM HRM.SMT_SITE_MSTR WHERE SITE_CODE = DMV.SITE_CODE AND ROWNUM = 1) AS SITE_NAME
+                 , DMV.UP_DEPT_CODE
+                 , to_char(DMV.DEPT_ST_DATE, 'RRRR-MM-DD') AS DEPT_ST_DATE
+                 , to_char(DMV.DEPT_ED_DATE, 'RRRR-MM-DD') AS DEPT_ED_DATE
+                 , CASE WHEN (DMV.DEPT_ST_DATE > TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD')
+                                 or  DMV.DEPT_ED_DATE < TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD'))
+                          THEN 'Y' ELSE 'N' END as EXPIRE_FLAG
+                 , LPAD(NVL(DMV.DISP_SEQ,0), 3, '0') AS ORDER_SEQ
+                 , HRM.SMT_GET_COMMON_CODE_NAME_FUNC('H049',DMV.DEPT_TYPE,#{GV_LANG}) AS DEPT_TYPE        /* 조직 유형 코드명  JJL ADD*/
+            FROM   HS_HRM.EHR_DEPT_MSTR_HIST_V  DMV
+            WHERE  DMV.OU_CODE = #{OU_CODE}
+            AND    DMV.DEPT_CODE = '00000'
+            UNION ALL
+            SELECT tmp.LVL + 1 AS LVL
+                 , DMV.OU_CODE
+                 , DMV.DEPT_CODE
+                 , DMV.DEPT_NAME
+                 , (SELECT SITE_NAME FROM HRM.SMT_SITE_MSTR WHERE SITE_CODE = DMV.SITE_CODE AND ROWNUM = 1) AS SITE_NAME
+                 , DMV.UP_DEPT_CODE
+                 , to_char(DMV.DEPT_ST_DATE, 'RRRR-MM-DD') AS DEPT_ST_DATE
+                 , to_char(DMV.DEPT_ED_DATE, 'RRRR-MM-DD') AS DEPT_ED_DATE
+                 , CASE WHEN (DMV.DEPT_ST_DATE > TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD')
+                                 or  DMV.DEPT_ED_DATE < TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD'))
+                          THEN 'Y' ELSE 'N' END as EXPIRE_FLAG
+                 , tmp.ORDER_SEQ || LPAD(NVL(DMV.DISP_SEQ,0), 3, '0')  AS ORDER_SEQ
+				 , HRM.SMT_GET_COMMON_CODE_NAME_FUNC('H049',DMV.DEPT_TYPE,#{GV_LANG}) AS DEPT_TYPE        /* 조직 유형 코드명  JJL ADD*/                 
+            FROM   tmp
+                 , HS_HRM.EHR_DEPT_MSTR_HIST_V  DMV
+            WHERE  DMV.OU_CODE      = tmp.OU_CODE
+            AND    DMV.UP_DEPT_CODE = tmp.DEPT_CODE
+            AND    DMV.APPLY_ST_DATE  <= TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD')
+            AND   (DMV.APPLY_ED_DATE >= TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD') OR  DMV.APPLY_ED_DATE IS NULL)
+            AND    tmp.LVL < 10
+            ]]>
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( SITE_CODE )">
+			 <![CDATA[ 
+			AND DMV.SITE_CODE LIKE '%'|| #{SITE_CODE} || '%'
+			]]>
+			</if>
+           )
+		<![CDATA[ 
+        SELECT LVL AS "LEVEL"
+             , OU_CODE
+             , DEPT_CODE
+             , DEPT_NAME
+             , SITE_NAME
+             , UP_DEPT_CODE
+             , DEPT_ST_DATE
+             , DEPT_ED_DATE
+             , EXPIRE_FLAG
+             , ORDER_SEQ
+             , DEPT_TYPE /* JJL ADD */  
+        FROM   tmp t
+       WHERE 1=1  
+       		]]>
+
+        <if test='MODE.equals("I")'> 
+        <![CDATA[ 
+        AND    t.DEPT_ST_DATE  <= TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD')
+        AND   (t.DEPT_ED_DATE >= TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD') OR  t.DEPT_ED_DATE IS NULL)
+        ]]>
+        </if>
+        
+        <![CDATA[ 
+        UNION ALL
+
+        SELECT 1            AS "LEVEL"
+             , #{OU_CODE}  AS OU_CODE
+             , 'NEWD'      AS DEPT_CODE
+             , 'Not Assigned Dept'   AS DEPT_NAME
+             , NULL         AS SITE_NAME
+             , NULL         AS UP_DEPT_CODE
+             , '2000-01-01' AS DEPT_ST_DATE
+             , NULL         AS DEPT_ED_DATE
+             , 'N'          AS EXPIRE_FLAG
+             , '8888'     AS ORDER_SEQ
+             , NULL       AS DEPT_TYPE /* JJL ADD */
+        FROM   dual
+
+        UNION ALL
+
+        SELECT 2         AS "LEVEL"
+             , DMS.OU_CODE
+             , DMS.DEPT_CODE
+             , DMS.DEPT_NAME
+             , NULL      AS SITE_NAME
+             , 'NEWD'   AS UP_DEPT_CODE
+             , to_char(DMS.DEPT_ST_DATE, 'RRRR-MM-DD') AS DEPT_ST_DATE
+             , to_char(DMS.DEPT_ED_DATE, 'RRRR-MM-DD') AS DEPT_ED_DATE
+             , 'N'       AS EXPIRE_FLAG
+             , '9999'     AS ORDER_SEQ
+             , NULL       AS DEPT_TYPE /* JJL ADD */             
+        FROM   HS_HRM.EHR_DEPT_MSTR  DMS
+        WHERE  DMS.OU_CODE = #{OU_CODE}
+        AND    DMS.DEPT_ST_DATE  <= TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD')
+        AND   (DMS.DEPT_ED_DATE >= TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD') OR  DMS.DEPT_ED_DATE IS NULL)
+        AND    DMS.DEPT_CODE NOT IN (
+            SELECT DHS.DEPT_CODE
+            FROM   HS_HRM.EHR_DEPT_HIERARCHY  DHS
+            WHERE DHS.OU_CODE = #{OU_CODE})
+
+        ORDER BY ORDER_SEQ, DEPT_CODE
+		]]>
+	</select>
+	
+	<!-- 부서 조회2 -->
+	<select id="SELECT_EHR_DEPT_POP2" parameterType="java.util.Map" resultType="java.util.Map">
+		<![CDATA[
+            SELECT 1 AS "LEVEL"
+                 , DMV.OU_CODE
+                 , DMV.DEPT_CODE
+                 , DMV.DEPT_NAME
+                 , (SELECT SITE_NAME FROM SMT_SITE_MSTR WHERE SITE_CODE = DMV.SITE_CODE AND ROWNUM = 1) AS SITE_NAME
+                 , NULL AS UP_DEPT_CODE
+                 , to_char(DMV.DEPT_ST_DATE, 'RRRR-MM-DD') AS DEPT_ST_DATE
+                 , to_char(DMV.DEPT_ED_DATE, 'RRRR-MM-DD') AS DEPT_ED_DATE
+                 , CASE WHEN (DMV.DEPT_ST_DATE > TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD')
+                                 or  DMV.DEPT_ED_DATE < TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD'))
+                          THEN 'Y' 
+                          ELSE 'N' 
+                   END as EXPIRE_FLAG
+				 , SMT_GET_COMMON_CODE_NAME_FUNC('H049',DMV.DEPT_TYPE,#{GV_LANG}) AS DEPT_TYPE        /* 조직 유형 코드명  JJL ADD*/                 
+            FROM EHR_DEPT_MSTR_HIST_V  DMV
+            WHERE  1 = 1
+            AND    DMV.APPLY_ST_DATE  <= TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD')
+            AND   (DMV.APPLY_ED_DATE >= TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD') OR  DMV.APPLY_ED_DATE IS NULL)
+        ]]>
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( DEPT_NAME )">
+			<![CDATA[ 
+			AND DMV.DEPT_NAME LIKE '%'|| #{DEPT_NAME} || '%'
+			]]>  
+			</if>
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( DEPT_CODE )">
+			 <![CDATA[ 
+			AND DMV.DEPT_CODE LIKE '%'|| #{DEPT_CODE} || '%'
+			]]>
+			</if>
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( SITE_CODE )">
+			 <![CDATA[ 
+			AND DMV.SITE_CODE LIKE '%'|| #{SITE_CODE} || '%'
+			]]>
+			</if>
+	        <if test='MODE.equals("I")'> 
+	        <![CDATA[ 
+	        AND    DMV.DEPT_ST_DATE  <= TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD')
+	        AND   (DMV.DEPT_ED_DATE >= TO_DATE(#{BASE_DATE}, 'RRRR-MM-DD') OR  DMV.DEPT_ED_DATE IS NULL)
+	        ]]>
+	        </if>
+	</select>
+    
+    <!-- 사용자 정보 팝업(인사마스터기준) 조회 -->				
+	<select id="SELECT_USER_MSTR_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+          SELECT EIM.OU_CODE
+	           , SOM.OU_NAME
+	           , EIM.EMP_NO    
+	           , EIM.EMP_NAME
+	           , EIM.DEPT_CODE
+	           , DMS.DEPT_NAME
+	           , EIM.JIKWI_CODE
+	           , EIM.JIKCHAK_CODE
+	           , HS_HRM.SMT_GET_COMMON_CODE_NAME_FUNC('H005',EIM.JIKWI_CODE, #{GV_LANG} ) AS JIKWI_NAME
+	           , HS_HRM.SMT_GET_COMMON_CODE_NAME_FUNC('H006',EIM.JIKCHAK_CODE, #{GV_LANG} ) AS JIKCHAK_NAME
+	           , EIM.EMAIL_ADDR
+	           , EIM.RETR_DATE
+	           , CASE 
+	           		WHEN NVL(EIM.RETR_DATE,TO_DATE('99991231','YYYYMMDD')) < SYSDATE THEN 'Y'
+	           		ELSE 'N'
+	             END AS RETR_YN           
+	        FROM HS_HRM.EHR_INSA_MSTR   EIM
+	           , SMT_OU_MSTR         SOM
+	           , HS_HRM.EHR_DEPT_MSTR   DMS
+	       WHERE EIM.OU_CODE  = #{OU_CODE}
+		     AND SOM.OU_CODE  = EIM.OU_CODE
+	         AND DMS.OU_CODE(+) = EIM.OU_CODE
+			 AND DMS.DEPT_CODE(+) = EIM.DEPT_CODE
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_CODE)">
+        	<![CDATA[
+        	   AND EIM.DEPT_CODE = #{DEPT_CODE}
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_NAME)">
+            <![CDATA[
+               AND DMS.DEPT_NAME LIKE '%'|| #{DEPT_NAME} || '%'
+            ]]>   
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NO)">
+            <![CDATA[
+               AND EIM.EMP_NO LIKE '%'|| #{EMP_NO} ||'%'
+            ]]> 
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NAME)">
+            <![CDATA[
+               AND EIM.EMP_NAME LIKE '%'|| #{EMP_NAME} ||'%'
+            ]]>    
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMPLOYMENT_FLAG)">
+            <![CDATA[
+               AND CASE WHEN NVL(EIM.RETR_DATE,TO_DATE('99991231','YYYYMMDD')) < SYSDATE THEN 'N' ELSE 'Y' END = #{EMPLOYMENT_FLAG}
+             	
+            ]]>    
+        </if>        
+        <![CDATA[    
+            ORDER BY EIM.DEPT_CODE, EIM.EMP_NO  
+        ]]>      
+    </select>
+    
+    <!-- 사용자 정보 팝업(인사마스터&USER_MSTR기준) 조회 -->				
+	<select id="SELECT_USER_INSA_MSTR_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+		<![CDATA[  
+		   WITH
+		       t_dept_info AS (
+		       	   SELECT  edh.ou_code
+		           ,       edh.dept_code
+		           ,       edm.dept_name
+		           ,       ROWNUM  dept_order_by
+		           FROM    hs_hrm.ehr_dept_hierarchy  edh
+		           ,       hs_hrm.ehr_dept_mstr       edm
+		           WHERE   1=1
+		           AND     edm.ou_code = edh.ou_code
+		           AND     edm.dept_code = edh.dept_code
+		           AND     TRUNC(SYSDATE) BETWEEN edm.dept_st_date AND edm.dept_ed_date
+		           START WITH 1=1
+		           AND     edh.ou_code = #{OU_CODE}
+		           AND     TRUNC(SYSDATE) BETWEEN edh.dept_st_date AND edh.dept_ed_date
+		           AND     edh.up_dept_code = '00000'
+		           CONNECT BY 1=1
+		           AND     edh.ou_code = PRIOR edh.ou_code
+		           AND     edh.up_dept_code = PRIOR edh.dept_code
+		           AND     TRUNC(SYSDATE) BETWEEN edh.dept_st_date AND edh.dept_ed_date
+		           ORDER SIBLINGS BY 
+		           		edh.disp_seq
+		           ,       edh.dept_code )
+		        ,   t_user_info AS (
+		        	SELECT  ou_code
+		        	,       emp_no
+		        	,       MAX(login_no)   login_no
+		        	,       MAX(emp_name)  KEEP(dense_rank FIRST ORDER BY idx)  emp_name
+		        	,       MAX(dept_code) KEEP(dense_rank FIRST ORDER BY idx)  dept_code
+		        	,       MAX(dept_name) KEEP(dense_rank FIRST ORDER BY idx)  dept_name
+		        	,       MAX(jikwi_code) jikwi_code
+		        	,       MAX(user_id)    user_id
+		        	,       NVL(MAX(email_addr) KEEP(dense_rank LAST ORDER BY idx)
+		            ,		MAX(email_addr) KEEP(dense_rank FIRST ORDER BY idx))    email_addr
+		        	,       MAX(join_date)  join_date
+		        	,       MAX(retr_date)  retr_date
+		        	,       MAX(st_date)    st_date
+		        	,       MAX(ed_date)    ed_date
+		        	,       MIN(idx)        idx
+		        	FROM    (
+		            	SELECT  eim.ou_code
+		                ,       eim.emp_no
+		                ,       NULL            login_no
+		                ,       eim.emp_name
+		                ,       eim.dept_code
+		                ,       edm.dept_name
+		                ,       eim.jikwi_code
+		                ,       NULL            user_id
+		                ,       eim.email_addr
+		                ,       eim.join_date
+		                ,       eim.retr_date
+		                ,       NULL            st_date
+		                ,       NULL            ed_date
+		                ,       1                   idx
+		                FROM    HS_HRM.EHR_INSA_MSTR    eim
+		                ,       HS_HRM.EHR_DEPT_MSTR    edm
+		                WHERE   eim.ou_code     = #{OU_CODE}
+		                AND     edm.ou_code     = eim.ou_code
+		                AND     edm.dept_code   = eim.dept_code
+		                UNION ALL
+		                SELECT  um.ou_code
+		                ,       NVL(um.emp_no, um.login_no) emp_no
+		                ,       um.login_no         login_no
+		                ,       um.user_name        emp_name
+		                ,       um.ou_country_code  dept_code
+		                ,       cc.item_name        dept_name
+		                ,       NULL                jikwi_code
+		                ,       um.user_id          user_id
+		                ,       um.email_addr
+		                ,       NULL                join_date
+		                ,       NULL                retr_date
+		                ,       um.st_date
+		                ,       um.ed_date
+		                ,       2                   idx
+		                FROM    SMT_USER_MSTR   UM
+		                ,       SMT_COMM_CODE   CC
+		                WHERE   um.ou_code      = #{OU_CODE}
+		                AND     um.user_id      > 2
+		                AND     cc.grp_code     = 'O001'
+		                AND     cc.item_code    = um.ou_country_code 
+		             )
+		        	 GROUP BY ou_code, emp_no 
+		        	 )
+				SELECT  u.ou_code
+				, 		SMT_GET_OU_NAME_FUNC(u.ou_code, #{GV_LANG}) AS OU_NAME
+				,       emp_no
+				,       login_no
+				,       emp_name
+				,       u.dept_code
+				,       u.dept_name
+				,       jikwi_code
+				,       HS_HRM.SMT_GET_COMMON_CODE_NAME_FUNC('H005',JIKWI_CODE, #{GV_LANG}) AS jikwi_name
+				,       user_id
+				,       email_addr
+				,       join_date
+				,       retr_date
+				,       st_date
+				,       ed_date
+				FROM    t_user_info u
+				,       t_dept_info d
+				WHERE   u.ou_code = d.ou_code(+)
+				AND     u.dept_code = d.dept_code(+)
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_CODE)">
+        	<![CDATA[
+        	   AND u.dept_code = #{DEPT_CODE}
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_NAME)">
+            <![CDATA[
+               AND u.dept_name LIKE '%'|| #{DEPT_NAME} || '%'
+            ]]>   
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NO)">
+            <![CDATA[
+               AND emp_no LIKE '%'|| #{EMP_NO} ||'%'
+            ]]> 
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NAME)">
+            <![CDATA[
+               AND emp_name LIKE '%'|| #{EMP_NAME} ||'%'
+            ]]>    
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMPLOYMENT_FLAG)">
+		    <![CDATA[
+		       AND (#{EMPLOYMENT_FLAG} = 'N'
+		       	  OR (#{EMPLOYMENT_FLAG} = 'Y' AND NVL(retr_date-1, TRUNC(SYSDATE)) >= TRUNC(SYSDATE))
+		       )
+		    ]]>
+		</if>
+        <![CDATA[    
+            ORDER BY dept_order_by NULLS LAST
+				   , DECODE(login_no, NULL, 1, 0)
+				   , u.idx DESC
+				   , dept_code
+				   , to_number(jikwi_code)
+				   , emp_no
+        ]]> 
+	 	<!--  
+	 	<![CDATA[  
+          SELECT EIM.OU_CODE
+	           , SOM.OU_NAME
+	           , EIM.EMP_NO    
+	           , EIM.EMP_NAME
+	           , EIM.DEPT_CODE
+	           , DMS.DEPT_NAME
+	           , EIM.JIKWI_CODE
+	           , HS_HRM.SMT_GET_COMMON_CODE_NAME_FUNC('H005',EIM.JIKWI_CODE, {GV_LANG} ) AS JIKWI_NAME
+	           , SUR.USER_ID
+	           , SUR.EMAIL_ADDR
+	           , EIM.RETR_DATE
+	           , CASE 
+	           		WHEN NVL(EIM.RETR_DATE,TO_DATE('99991231','YYYYMMDD')) < SYSDATE THEN 'Y'
+	           		ELSE 'N'
+	             END AS RETR_YN           
+	        FROM HS_HRM.EHR_INSA_MSTR   EIM
+	           , SMT_OU_MSTR         SOM
+	           , HS_HRM.EHR_DEPT_MSTR   DMS
+	           , SMT_USER_MSTR       SUR
+	       WHERE EIM.OU_CODE  = {OU_CODE}
+		     AND SOM.OU_CODE  = EIM.OU_CODE
+	         AND DMS.OU_CODE(+) = EIM.OU_CODE
+			 AND DMS.DEPT_CODE(+) = EIM.DEPT_CODE
+			 AND EIM.OU_CODE  = SUR.OU_CODE
+             AND EIM.EMP_NO   = SUR.EMP_NO
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_CODE)">
+        	<![CDATA[
+        	   AND EIM.DEPT_CODE = {DEPT_CODE}
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_NAME)">
+            <![CDATA[
+               AND DMS.DEPT_NAME LIKE '%'|| {DEPT_NAME} || '%'
+            ]]>   
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NO)">
+            <![CDATA[
+               AND EIM.EMP_NO LIKE '%'|| {EMP_NO} ||'%'
+            ]]> 
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NAME)">
+            <![CDATA[
+               AND EIM.EMP_NAME LIKE '%'|| {EMP_NAME} ||'%'
+            ]]>    
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(EMPLOYMENT_FLAG)">
+            <![CDATA[
+               AND CASE WHEN NVL(EIM.RETR_DATE,TO_DATE('99991231','YYYYMMDD')) < SYSDATE THEN 'N' ELSE 'Y' END = {EMPLOYMENT_FLAG}
+            ]]>    
+        </if>        
+        <![CDATA[    
+            ORDER BY EIM.EMP_NO  
+        ]]>   // HRM(EHR_INSA_MSTR)에서 ORM(SMT_USER_MSTR)로 주테이블 변경  Edited by. yelee
+        -->   
+    </select>
+     
+ 	<!-- 부서 조회_일반 -->
+	<select id="SELECT_EHR_DEPT_POP3" parameterType="java.util.Map" resultType="java.util.Map">
+		<![CDATA[
+		      SELECT DMS.OU_CODE
+		             , DMS.DEPT_CODE
+		             , DMS.DEPT_NAME
+		             , DMS.SITE_CODE
+		             , SM.SITE_NAME  AS SITE_NAME
+		             , SMT_GET_COMMON_CODE_NAME_FUNC('H049',DMS.DEPT_TYPE,#{GV_LANG}) AS DEPT_TYPE
+		             , to_char(DMS.DEPT_ST_DATE, 'RRRR-MM-DD') AS DEPT_ST_DATE
+		             , to_char(DMS.DEPT_ED_DATE, 'RRRR-MM-DD') AS DEPT_ED_DATE        
+		        FROM HS_HRM.EHR_DEPT_MSTR  DMS
+		           , SMT_SITE_MSTR SM
+		        WHERE  DMS.OU_CODE = 'H01'
+		         AND SM.SITE_CODE = DMS.SITE_CODE
+		         AND SM.OU_CODE = DMS.OU_CODE
+        ]]>
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( DEPT_NAME )">
+			<![CDATA[ 
+			AND DMS.DEPT_NAME LIKE '%'|| #{DEPT_NAME} || '%'
+			]]>  
+			</if>
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( DEPT_CODE )">
+			 <![CDATA[ 
+			AND DMS.DEPT_CODE LIKE '%'|| #{DEPT_CODE} || '%'
+			]]>
+			</if>
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( SITE_CODE )">
+			 <![CDATA[ 
+			AND DMS.SITE_CODE LIKE '%'|| #{SITE_CODE} || '%'
+			]]>
+			</if>
+	        <if test='MODE.equals("I")'> 
+	        <![CDATA[ 
+	        AND    DMS.DEPT_ST_DATE  <= SYSDATE
+	        AND   (DMS.DEPT_ED_DATE >= SYSDATE OR  DMS.DEPT_ED_DATE IS NULL)
+	        ]]>
+	        </if>
+	</select>    
+     <!-- 사용자 정보 팝업(인사마스터기준) 조회 -->				
+	 <select id="SELECT_USER_HRMSTR_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+            WITH
+                t_dept_info
+                    (   ou_code
+                    ,   t_level
+                    ,   t_code
+                    ,   t_name
+                    ,   t_path
+                    ,   t_type
+                    ,   jikwi_code
+                    ,   jikchak_code
+                    ) AS (
+                    SELECT  m.ou_code
+                    ,       LEVEL-1   dept_level
+                    ,       m.dept_code
+                    ,       m.dept_name    dept_name
+                    ,       sys_connect_by_path(m.dept_code, '|')   order_path
+                    ,       'DEPT'  t_type
+                    ,       NULL    jikwi_code
+                    ,       NULL    jikchak_code
+                    FROM    ehr_dept_hierarchy   h
+                    ,       ehr_dept_mstr        m
+                    WHERE   m.dept_code = h.dept_code
+                    AND     SYSDATE BETWEEN m.dept_st_date AND m.dept_ed_date
+                    START WITH 1=1
+                    AND     m.ou_code = #{OU_CODE}
+                    AND     m.dept_code = '00000'
+                    CONNECT BY h.up_dept_code = PRIOR m.dept_code
+                    UNION ALL
+                    SELECT  e.ou_code
+                    ,       t.t_level + 1
+                    ,       e.emp_no
+                    ,       e.emp_name
+                    ,       t.t_path
+                    ,       'EMP'   t_type
+                    ,       e.jikwi_code
+                    ,       e.jikchak_code
+                    FROM    t_dept_info             t
+                    ,       ehr_insa_mstr    e
+                    WHERE   e.dept_code = t.t_code
+                    AND     SYSDATE BETWEEN e.join_date AND NVL(e.retr_date, to_date(5373484, 'J'))
+                     )
+            SELECT  t.t_level
+            ,       t.ou_code
+            ,       t.t_code    as emp_no
+            ,       t.t_name    as emp_name
+            ,       s.ou_name
+            ,       SMT_GET_COMMON_CODE_NAME_FUNC('H006',t.jikchak_code, 'KO' ) AS JIKCHAK_NAME
+            ,       SMT_GET_COMMON_CODE_NAME_FUNC('H005',t.jikwi_code, 'KO' ) AS JIKWI_NAME
+            ,       t.t_type
+            FROM    t_dept_info             t
+            ,       smt_ou_mstr      s
+            WHERE   t.t_level > 0
+            AND     s.ou_code = t.ou_code
+            ORDER BY t.t_path
+            ,       t.t_level
+            ,       t.jikwi_code
+            ,       t.t_name  
+        ]]>      
+     </select>
+     
+    <!-- 업체 정보 팝업 조회 -->				
+	<select id="SELECT_SUPPLIER_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT SS.VENDOR_CODE
+			     , SS.VENDOR_NAME
+			     , SS.TAX_REG_NUMBER
+			     , SS.BIZ_TYPE
+			     , SMT_GET_CODE_NAME_FUNC('P005',SS.BIZ_TYPE,#{GV_LANG}) AS BIZ_TYPE_NAME
+			     , SS.VENDOR_TYPE
+			     , SMT_GET_CODE_NAME_FUNC('P002',SS.VENDOR_TYPE,#{GV_LANG}) AS VENDOR_TYPE_NAME
+			     , NVL(SS.EMAIL_ADDR,SS.CHARGE_EMAIL_ADDR) AS EMAIL_ADDR
+			  FROM SMT_SUPPLIER  SS
+			 WHERE SS.OU_CODE = #{OU_CODE}
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(VENDOR_CODE)">
+        	<![CDATA[
+        	   AND SS.VENDOR_CODE = #{VENDOR_CODE}
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(VENDOR_NAME)">
+            <![CDATA[
+               AND SS.VENDOR_NAME LIKE '%'|| #{VENDOR_NAME} || '%'
+            ]]>   
+        </if>
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(BIZ_TYPE)">
+            <![CDATA[
+               AND SS.BIZ_TYPE = #{BIZ_TYPE}
+            ]]> 
+        </if>
+            
+     	<if test='SYS_USE_FLAG.equals("Y")'>
+     		<![CDATA[ 
+               AND EXISTS (SELECT 1
+			                 FROM SMT_USER_MSTR  UM
+			                WHERE UM.VENDOR_CODE = SS.VENDOR_CODE
+			                  AND UM.OU_CODE     = SS.OU_CODE)
+            ]]>			                   
+        </if>
+            
+        <![CDATA[    
+            ORDER BY SS.VENDOR_NAME  
+        ]]>      
+    </select>
+     
+    <!-- 품목 조회 -->
+	<select id="SELECT_ITEM_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+			SELECT
+			     ITEM_CODE                    
+			    ,ITEM_NAME
+			    ,DECS      AS ITEM_SIZE
+           FROM FMS_MM_ITEM_INFO_V II
+			WHERE 1 = 1
+ 		  	  <if test="@com.oms.MyBatisUtil@isNotEmpty( ITEM_NAME )">
+			 <![CDATA[ 
+			     AND ITEM_NAME like  '%' || #{ITEM_NAME}  || '%'
+			]]>
+			 </if> 
+ 		  	  <if test="@com.oms.MyBatisUtil@isNotEmpty( ITEM_CODE )">
+			 <![CDATA[ 
+			     AND ITEM_CODE like  '%' || #{ITEM_CODE}  || '%'
+			]]>
+			 </if>			
+			
+			ORDER BY ITEM_CODE          
+  
+    </select>    
+    
+    <!-- 업체 담당자 정보 팝업 조회 -->				
+	<select id="SELECT_SUPPLIER_CHG_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT -111      AS VENDOR_CODE
+			     , NULL      AS VENDOR_NAME
+			     , -111      AS VENDOR_CHG_INFO_ID
+			     , NULL      AS CHG_DEPT_CODE
+			     , '담당자 없음' AS CHG_NAME
+			     , NULL      AS CHG_JIKGUB
+			     , NULL      AS CHG_EMAIL_ADDR
+			  FROM DUAL
+			 UNION ALL
+			SELECT SS.VENDOR_CODE
+			     , SS.VENDOR_NAME
+			     , SC.VENDOR_CHG_INFO_ID
+			     , SC.CHG_DEPT_CODE
+			     , SC.CHG_NAME
+			     , SC.CHG_JIKGUB
+			     , SC.CHG_EMAIL_ADDR
+			  FROM SMT_SUPPLIER           SS
+			     , SMT_SUPPLIER_CHG_INFO  SC
+			 WHERE SS.OU_CODE = #{OU_CODE}
+			   AND SS.VENDOR_CODE = SC.VENDOR_CODE
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(VENDOR_CODE)">
+        	<![CDATA[
+        	   AND SS.VENDOR_CODE = #{VENDOR_CODE}
+        	]]>  
+        </if>  
+            
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(VENDOR_NAME)">
+            <![CDATA[
+               AND SS.VENDOR_NAME LIKE '%'|| #{VENDOR_NAME} || '%'
+            ]]>   
+        </if>
+            
+        <![CDATA[    
+            ORDER BY VENDOR_CODE, VENDOR_CHG_INFO_ID  
+        ]]>      
+    </select>
+    
+    <!-- 효성 담당자 정보 팝업 조회 -->				
+	<select id="SELECT_CHARGE_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT -111      AS USER_ID
+			     , NULL      AS BIZ_DIV
+                 , NULL      AS EMP_NO 
+			     , NULL      AS BIZ_DIV_NAME
+			     , '담당자 없음' AS USER_NAME
+			     , NULL      AS EMAIL_ADDR
+			  FROM DUAL
+			 UNION ALL
+			SELECT SM.USER_ID
+			     , SM.BIZ_DIV
+            	 , NVL(EMP_NO, LOGIN_NO) AS EMP_NO 
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P012',SM.BIZ_DIV, 'KO') AS BIZ_DIV_NAME
+			     , SM.USER_NAME
+			     , SM.EMAIL_ADDR
+			  FROM SMT_USER_MSTR     SM
+			 WHERE SM.OU_CODE = #{OU_CODE}
+        ]]>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(USER_NAME)">
+        	<![CDATA[
+        	   AND SM.USER_NAME LIKE '%'||#{USER_NAME} || '%'
+        	]]>  
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(BIZ_DIV)">
+        	<![CDATA[
+        	   AND SM.BIZ_DIV = #{BIZ_DIV}
+        	]]>
+        </if>
+        <![CDATA[    
+            ORDER BY USER_ID, USER_NAME 
+        ]]>    
+        <!-- // EMP_NO가 없다면, LOGIN_NO으로 대체하기 위해 수정 by. yelee  
+        <![CDATA[
+	 		SELECT -111      AS USER_ID
+			     , NULL      AS BIZ_DIV
+                 , NULL      AS EMP_NO 
+			     , NULL      AS BIZ_DIV_NAME
+			     , '담당자 없음' AS USER_NAME
+			     , NULL      AS EMAIL_ADDR
+			  FROM DUAL
+			 UNION ALL
+			SELECT SM.USER_ID
+			     , SM.BIZ_DIV
+            	 , EMP_NO 
+			     , SMT_GET_COMMON_CODE_NAME_FUNC('P012',SM.BIZ_DIV, 'KO') AS BIZ_DIV_NAME
+			     , SM.USER_NAME
+			     , SM.EMAIL_ADDR
+			  FROM SMT_USER_MSTR     SM
+			 WHERE SM.OU_CODE = {OU_CODE}
+        ]]>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(USER_NAME)">
+        	<![CDATA[
+        	   AND SM.USER_NAME LIKE '%'||{USER_NAME} || '%'
+        	]]>  
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(BIZ_DIV)">
+        	<![CDATA[
+        	   AND SM.BIZ_DIV = {BIZ_DIV}
+        	]]>
+        </if>
+        <![CDATA[    
+            ORDER BY USER_ID, USER_NAME 
+        ]]>     -->  
+    </select>
+    
+    <!-- 고객 정보 팝업 조회 -->				
+	<select id="SELECT_CUSTOMER_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+			SELECT OU_CODE
+			      ,CUSTOMER_ID
+			      ,CUSTOMER_NAME
+			      ,CUSTOMER_GROUP AS CUSTOMER_GROUP_ID
+			      ,SMT_GET_CODE_NAME_FUNC('O014',SC.CUSTOMER_GROUP,#{GV_LANG}) AS CUSTOMER_GROUP_NAME
+			      ,DIV_IN_OUT
+			      ,ERP_CUSTOMER_ID
+			      ,ERP_CUSTOMER_NAME
+			      ,TAX_REG_NUMBER
+			      ,NATION_CODE
+			      ,SMT_GET_CODE_NAME_FUNC('O005',SC.NATION_CODE,#{GV_LANG}) AS NATION_NAME
+			      ,USABLE_YN
+			  FROM SMT_CUSTOMER SC
+			 WHERE SC.OU_CODE = #{OU_CODE}
+			   AND SC.USABLE_YN ='Y'  
+        ]]>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND UPPER(SC.CUSTOMER_NAME) LIKE '%'|| UPPER(#{CUSTOMER_NAME}) || '%'
+        	]]>  
+        </if>     
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_GROUP)">
+        	<![CDATA[
+        	   AND UPPER(SMT_GET_CODE_NAME_FUNC('O014',SC.CUSTOMER_GROUP,#{GV_LANG})) LIKE '%'|| UPPER(#{CUSTOMER_GROUP}) || '%'
+        	]]>  
+        </if>        
+        <![CDATA[    
+             ORDER BY CUSTOMER_ID, CUSTOMER_NAME 
+        ]]>      
+    </select>  
+         
+</mapper>

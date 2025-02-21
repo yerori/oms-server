@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BoardMapper">
+
+<resultMap id="smtBoardClobMap" type="java.util.Map">
+<result property="CONTENT" column="CONTENT" jdbcType="CLOB" javaType="java.lang.String"/> 
+</resultMap>
+    
+    <!-- Board LIST 조회 -->
+	<select id="SELECT_SMT_BOARDS_LIST" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+			SELECT BOARD_ID
+			      ,BOARD_NO
+			      ,LVL
+			      ,P_BOARD_NO
+			      ,CASE WHEN TOP_DISPLAY_YN = 'Y' THEN '[상위] ' || TITLE
+                   ELSE TITLE END TITLE
+			      ,WRITER
+			      ,INS_DATE
+			      ,I_COUNT
+			      ,R_COUNT
+			      ,C_COUNT
+			      ,ATTATCH_ID
+			      ,CATEGORY
+			      ,ITEM_TYPE
+			      ,INS_USER_ID
+			      ,ATTCH_FLAG
+			FROM SMT_BOARDS_V
+			WHERE BOARD_ID = #{BOARD_ID}
+			  AND INS_DATE BETWEEN #{FROM_DATE}  AND #{TO_DATE}
+		    ]]>  
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( WRITER )">
+			 <![CDATA[ 
+			  AND WRITER  like  '%' || #{WRITER} || '%'
+			]]>
+			</if>	
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( TITLE )">
+			 <![CDATA[ 
+			  AND TITLE like  '%' || #{TITLE}  || '%'
+			]]>
+			</if>				   			
+			 START WITH LVL=1
+               AND BOARD_ID = #{BOARD_ID}
+             CONNECT BY P_BOARD_NO = PRIOR BOARD_NO        
+             ORDER SIBLINGS BY NVL(TOP_DISPLAY_YN,'N')  DESC,BOARD_NO DESC
+    
+    </select>
+    
+     <!-- Board I_COUNT Update-->    
+     <update id="UPDATE_SMT_BOARDS_I_COUNT" parameterType="java.util.Map">    
+            UPDATE SMT_BOARDS
+               set I_COUNT = I_COUNT +1
+			WHERE BOARD_ID = #{BOARD_ID} 
+			  AND BOARD_NO = #{BOARD_NO}       
+     </update>    
+    
+    <!-- Board 조회 -->
+	<select id="SELECT_SMT_BOARDS" parameterType="java.util.Map"  resultMap="smtBoardClobMap">     			                             
+			SELECT BOARD_ID
+			      ,BOARD_NO
+			      ,LVL
+			      ,P_BOARD_NO
+			      ,TITLE
+			      ,WRITER
+			      ,CONTENT
+			      ,INS_DATE
+			      ,I_COUNT
+			      ,R_COUNT
+			      ,C_COUNT
+			      ,ATTATCH_ID
+			      ,CATEGORY
+			      ,ITEM_TYPE
+			      ,INS_USER_ID
+			      ,ATTCH_FLAG
+			      ,TOP_DISPLAY_YN
+			FROM SMT_BOARDS_V
+			WHERE BOARD_ID = #{BOARD_ID}  
+			  AND BOARD_NO = #{BOARD_NO}
+			        
+    </select>
+    <!-- BOARD_INFO 조회 -->
+	<select id="SELECT_BOARD_INFO" parameterType="java.util.Map" resultType="java.util.Map">      
+			SELECT MENU_ID
+			      ,MENU_NAME
+			      ,FORM_NAME
+			      ,PAGE_NAME
+			      ,CC.ITEM_CODE BOARD_ID
+			      ,CC.ITEM_NAME BOARD_NAME
+				  ,CC.REF_1     REPLY_FLAG      
+			FROM SMT_MENU SM
+			    ,SMT_COMM_CODE CC
+			WHERE SM.MENU_ID = #{MENU_ID}
+			  AND CC.GRP_CODE = 'F039'
+			  AND CC.ITEM_CODE  = SUBSTR( SM.PAGE_NAME, INSTR(SM.PAGE_NAME,'=')+1 )
+
+			        
+    </select>  
+    
+    <!-- Board 첨부파일 조회 -->
+	<select id="SELECT_SMT_BOARDS_ATTACH" parameterType="java.util.Map"  resultMap="smtBoardClobMap">     			                             
+         SELECT SA.ATTFILE_NM
+           FROM SMT_ATCH_FILE SA
+         WHERE SA.FILE_GUBUN = 'BOARD'
+           AND  DEL_DATE IS NULL
+           AND SA.REF_NAME = #{BOARD_NO}			        
+    </select>  
+    
+    <!-- Board NO 가져오기  -->
+	<select id="SELECT_BOARD_NO" parameterType="java.util.Map"  resultMap="smtBoardClobMap">     			                             
+			SELECT SMT_BOARD_SEQ.NEXTVAL AS BOARD_NO
+			FROM DUAL		        
+    </select>  
+    
+     <!-- Board insert-->
+    <insert id="INSERT_SMT_BOARDS" parameterType="java.util.Map" useGeneratedKeys="false">
+  
+        <![CDATA[
+			INSERT INTO SMT_BOARDS
+			      (BOARD_ID
+			      ,BOARD_NO
+			      ,LVL
+			      ,P_BOARD_NO
+			      ,TITLE
+			      ,CONTENT
+			      ,I_COUNT
+			      ,R_COUNT
+			      ,C_COUNT
+			      ,ATTATCH_ID
+			      ,CATEGORY
+			      ,ITEM_TYPE
+			      ,TOP_DISPLAY_YN
+			      ,INS_DATE
+			      ,INS_USER_ID
+			      ,UPD_DATE
+			      ,UPD_USER_ID)
+			VALUES
+			      (#{BOARD_ID}
+			      ,#{BOARD_NO}
+			      ,#{LVL}
+			      ,#{P_BOARD_NO}
+			      ,#{TITLE}
+			      ,#{CONTENT}
+			      ,0
+			      ,0
+			      ,0
+			      ,#{ATTATCH_ID}
+			      ,#{CATEGORY}
+			      ,#{ITEM_TYPE}
+			      ,#{TOP_DISPLAY_YN}
+				  ,SYSDATE
+				  ,#{GV_USER_ID}
+				  ,SYSDATE
+			      ,#{GV_USER_ID} )
+		        ]]>
+    </insert>    
+  
+    <!-- Board Update-->    
+     <update id="UPDATE_SMT_BOARDS" parameterType="java.util.Map">    
+        <![CDATA[
+			 UPDATE SMT_BOARDS
+				SET TITLE       = #{TITLE}
+				   ,CONTENT     = #{CONTENT}
+				   ,I_COUNT     = #{I_COUNT}
+				   ,R_COUNT     = #{R_COUNT}
+				   ,C_COUNT     = #{C_COUNT}
+				   ,ATTATCH_ID  = #{ATTATCH_ID}
+				   ,CATEGORY    = #{CATEGORY}
+				   ,ITEM_TYPE   = #{ITEM_TYPE}
+				   ,TOP_DISPLAY_YN = #{TOP_DISPLAY_YN}
+				   ,UPD_DATE    = SYSDATE
+				   ,UPD_USER_ID = #{GV_USER_ID}
+			  WHERE BOARD_ID = #{BOARD_ID}
+				AND BOARD_NO = #{BOARD_NO}
+        ]]>    
+           
+     </update>  
+     
+    <!-- Board 삭제-->
+    <delete id="DELETE_Board" parameterType="java.util.Map">    
+				DELETE SMT_BOARDS
+			     WHERE BOARD_ID = #{BOARD_ID}
+				   AND BOARD_NO = #{BOARD_NO}
+    </delete>     
+    
+    <!-- POPUP LIST 조회 -->
+	<select id="SELECT_SMT_POPUP_LIST" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[  
+			SELECT OU_CODE
+			      ,BOARD_NO
+			      ,TITLE 
+			      ,WRITER
+			      ,INS_DATE
+			      ,ATTATCH_ID
+			      ,CATEGORY
+			      ,ITEM_TYPE
+			      ,INS_USER_ID
+			      ,ATTCH_FLAG
+			      ,EFFECTIVE_START_DATE
+			      ,EFFECTIVE_END_DATE
+			FROM SMT_POPUP_V
+			WHERE OU_CODE = #{GV_OU_CODE}
+			  AND INS_DATE BETWEEN #{FROM_DATE}  AND #{TO_DATE}
+		    ]]>  
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( WRITER )">
+			 <![CDATA[ 
+			  AND WRITER  like  '%' || #{WRITER} || '%'
+			]]>
+			</if>	
+			<if test="@com.oms.MyBatisUtil@isNotEmpty( TITLE )">
+			 <![CDATA[ 
+			  AND TITLE like  '%' || #{TITLE}  || '%'
+			]]>
+			</if>				   			     
+             ORDER BY BOARD_NO DESC
+    
+    </select>     
+     <!-- POPUP insert-->
+    <insert id="INSERT_SMT_POPUP" parameterType="java.util.Map" useGeneratedKeys="false">
+  
+        <![CDATA[
+			INSERT INTO SMT_POPUP
+			      (OU_CODE
+			      ,BOARD_NO
+			      ,TITLE
+			      ,CONTENT
+			      ,ATTATCH_ID
+			      ,CATEGORY
+			      ,ITEM_TYPE
+			      ,INS_DATE
+			      ,INS_USER_ID
+			      ,UPD_DATE
+			      ,UPD_USER_ID
+			      ,EFFECTIVE_START_DATE
+			      ,EFFECTIVE_END_DATE)
+			VALUES
+			      (#{OU_CODE}
+			      ,#{BOARD_NO}
+			      ,#{TITLE}
+			      ,#{CONTENT}
+			      ,#{ATTATCH_ID}
+			      ,#{CATEGORY}
+			      ,#{ITEM_TYPE}
+			      ,SYSDATE
+			      ,#{GV_USER_ID}
+			      ,SYSDATE
+			      ,#{GV_USER_ID}
+			      ,TO_DATE(#{EFFECTIVE_START_DATE},'RRRRMMDD')
+			      ,TO_DATE(#{EFFECTIVE_END_DATE},'RRRRMMDD')  )
+		        ]]>
+    </insert>     
+    <!-- POPUP Update-->    
+     <update id="UPDATE_SMT_POPUP" parameterType="java.util.Map">    
+        <![CDATA[
+			 UPDATE SMT_POPUP
+				SET TITLE                = #{TITLE}
+				   ,CONTENT              = #{CONTENT}
+				   ,ATTATCH_ID           = #{ATTATCH_ID}
+				   ,CATEGORY             = #{CATEGORY}
+				   ,ITEM_TYPE            = #{ITEM_TYPE}
+				   ,EFFECTIVE_START_DATE = TO_DATE(#{EFFECTIVE_START_DATE},'RRRRMMDD')
+				   ,EFFECTIVE_END_DATE   = TO_DATE(#{EFFECTIVE_END_DATE},'RRRRMMDD')
+				   ,UPD_DATE    = SYSDATE
+				   ,UPD_USER_ID = #{GV_USER_ID}
+			  WHERE OU_CODE = #{OU_CODE}
+				AND BOARD_NO = #{BOARD_NO}
+        ]]>    
+           
+     </update>      
+    <!-- POPUP NO 가져오기  -->
+	<select id="SELECT_POPUP_NO" parameterType="java.util.Map"  resultMap="smtBoardClobMap">     			                             
+			SELECT SMT_POPUP_SEQ.NEXTVAL AS BOARD_NO
+			FROM DUAL		        
+    </select>    
+    <!-- POPUP 삭제-->
+    <delete id="DELETE_POPUP" parameterType="java.util.Map">    
+				DELETE SMT_POPUP
+			     WHERE OU_CODE = #{OU_CODE}
+				   AND BOARD_NO = #{BOARD_NO}
+    </delete>    
+    <!-- POPUP 조회 -->
+	<select id="SELECT_SMT_POPUP" parameterType="java.util.Map"  resultMap="smtBoardClobMap">     			                             
+			SELECT OU_CODE
+			      ,BOARD_NO
+			      ,TITLE 
+			      ,WRITER
+			      ,CONTENT
+			      ,INS_DATE
+			      ,ATTATCH_ID
+			      ,CATEGORY
+			      ,ITEM_TYPE
+			      ,INS_USER_ID
+			      ,ATTCH_FLAG
+			      ,EFFECTIVE_START_DATE
+			      ,EFFECTIVE_END_DATE
+			FROM SMT_POPUP_V
+			WHERE OU_CODE = #{GV_OU_CODE}
+		      AND BOARD_NO = #{BOARD_NO}
+			        
+    </select>    
+    
+    <!-- POPUP 첨부파일 조회 -->
+	<select id="SELECT_SMT_POPUP_ATTACH" parameterType="java.util.Map"  resultMap="smtBoardClobMap">     			                             
+         SELECT SA.ATTFILE_NM
+           FROM SMT_ATCH_FILE SA
+         WHERE SA.FILE_GUBUN = 'POPUP'
+           AND  DEL_DATE IS NULL
+           AND SA.REF_ID = #{BOARD_NO}			        
+    </select> 
+            
+</mapper>

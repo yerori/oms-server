@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmsAuthMapper">
+   <!-- 임시 데이타  DELETE -->
+    <select id="DELETE_GEN_KEY_TEMP" statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">
+    	<![CDATA[
+ 		    CALL OMS_GEN_CLEAR_PROC(
+             	#{GV_USER_ID} 
+         	)
+         ]]> 
+    </select>
+    
+    
+    <!-- 임시 데이타 INSERT -->
+    <insert id="INSERT_GEN_KEY_TEMP" parameterType="java.util.Map" useGeneratedKeys="false">
+		INSERT INTO OMS_TRANSFER_KEY_TEMP 
+			( user_id
+			, ou_code
+			, start_date  
+			, charge_user_id
+			, charge_emp_no
+			, transfer_type
+			, ins_date
+			, key_str1
+			, key_str2
+			, key_str3
+			, key_str4 )
+		SELECT 
+			   #{GV_USER_ID}
+			 , #{OU_CODE}
+			 , COALESCE(#{RFQ_START_DATE}, #{START_DATE})
+			 , COALESCE(#{RFQ_CHARGE_USER_ID}, #{PROJECT_CREATOR_ID}, #{PSO_CHARGE_USER_ID}, #{PM_CHG_USER_ID})
+			 , #{PSO_CHARGE_EMP_NO}
+			 , CASE 
+			 	WHEN #{RFQ_CHARGE_USER_ID} IS NOT NULL THEN 'RFQ'
+			 	WHEN #{PROJECT_CREATOR_ID} IS NOT NULL THEN 'PROJECT'
+			 	WHEN #{PSO_CHARGE_USER_ID} IS NOT NULL OR #{PSO_CHARGE_EMP_NO} IS NOT NULL THEN 'PSO_DOCU_LINE'
+			 	WHEN #{PM_CHG_USER_ID} IS NOT NULL THEN 'PM'
+			 	ELSE 'UNKNOWN'
+			   END 
+			 , SYSDATE
+			 , #{RFQ_CODE}
+			 , #{PROJECT_CODE}
+			 , #{PSO_DOCU_LINE_ID}
+			 , #{PSO_PROJECT_ID}
+		FROM DUAL
+		WHERE #{CHK_FLAG} = 'Y'
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_CHK_FLAG)">
+	      	<![CDATA[
+		  		AND #{PSO_CHK_FLAG} = 'Y'
+	      	]]>
+      	</if>
+      	<if test="@com.oms.MyBatisUtil@isNotEmpty(FILTER_FLAG)">
+	      	<![CDATA[
+		  		AND #{FILTER_FLAG} = 'Y'
+	      	]]>
+      	</if>
+      	
+		  AND NOT EXISTS ( 
+		  		SELECT 1 
+		  		FROM OMS_TRANSFER_KEY_TEMP 
+		  		WHERE 1=1
+		  		AND USER_ID = #{GV_USER_ID}
+		  		AND CASE 
+					 	WHEN #{RFQ_CHARGE_USER_ID} IS NOT NULL THEN 'RFQ'
+					 	WHEN #{PROJECT_CREATOR_ID} IS NOT NULL THEN 'PROJECT'
+					 	WHEN #{PSO_CHARGE_USER_ID} IS NOT NULL THEN 'PSO_DOCU_LINE'
+					 	WHEN #{PM_CHG_USER_ID} IS NOT NULL THEN 'PM'
+			   		END = transfer_type 
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CHARGE_USER_ID)">
+	      	<![CDATA[
+		  		AND #{RFQ_CODE} = key_str1
+	      	]]>
+      	</if>
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CREATOR_NAME)">
+	      	<![CDATA[
+		  		AND #{PROJECT_CODE} = key_str2
+	      	]]>
+      	</if>
+      	<if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DOCU_LINE_ID)">
+	      	<![CDATA[
+		  		AND #{PSO_DOCU_LINE_ID} = key_str3
+	      	]]>
+      	</if>
+ 		<if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_PROJECT_ID)">
+	      	<![CDATA[
+		  		AND #{PSO_PROJECT_ID} = key_str4
+	      	]]>
+      	</if>
+      	)
+	
+    </insert>  	
+	
+</mapper>

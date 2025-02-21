@@ -1,0 +1,762 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmeAnalysisMapper">
+    <!-- 환율버전 조회 -->
+	<select id="SELECT_EXCHANGE" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT EXG_ID CODE 
+		      ,EXG_NAME NAME
+		 FROM OMS_EXCHANGE_RATE_HEADER RH
+		WHERE OU_CODE = #{OU_CODE}		  
+		 AND  STD_YEAR =  #{BASE_YEAR}            
+		 ORDER BY EXG_NAME 
+    </select>   
+
+
+    <!-- Frozen 버전 조회 -->
+	<select id="SELECT_FROZEN_VERSION" parameterType="java.util.Map" resultType="java.util.Map">     
+          SELECT ofe.event_version
+                ,ofe.remark
+                ,ofe.event_id
+          FROM   hs_oms.oms_frozen_event_t ofe
+          WHERE  ofe.ou_code        = #{OU_CODE}
+          AND    ofe.base_year      = #{BASE_YEAR} 
+          ORDER BY ofe.event_version 
+    </select>   
+
+
+    <!--month 조회 -->
+	<select id="SELECT_MONTH" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT #{BASE_YEAR}||'.01' AS M1
+		      ,#{BASE_YEAR}||'.02' AS M2
+		      ,#{BASE_YEAR}||'.03' AS M3
+		      ,#{BASE_YEAR}||'.04' AS M4
+		      ,#{BASE_YEAR}||'.05' AS M5
+		      ,#{BASE_YEAR}||'.06' AS M6
+		      ,#{BASE_YEAR}||'.07' AS M7
+		      ,#{BASE_YEAR}||'.08' AS M8
+		      ,#{BASE_YEAR}||'.09' AS M9
+		      ,#{BASE_YEAR}||'.10' AS M10
+		      ,#{BASE_YEAR}||'.11' AS M11
+		      ,#{BASE_YEAR}||'.12' AS M12
+		      ,#{BASE_YEAR}   AS Y0
+		      ,#{BASE_YEAR}+1 AS Y1
+		      ,#{BASE_YEAR}+2 AS Y2
+		      ,#{BASE_YEAR}+3 AS Y3
+		      ,#{BASE_YEAR}+4 AS Y4
+		      ,#{BASE_YEAR}+5 AS Y5
+		      ,#{BASE_YEAR}+6 AS Y6
+		      ,#{BASE_YEAR}+7 AS Y7
+		      ,#{BASE_YEAR}+8 AS Y8
+		      ,#{BASE_YEAR}+9 AS Y9
+		      ,#{BASE_YEAR}+10 AS Y10
+		      ,#{BASE_YEAR}+11 AS Y11
+		      ,#{BASE_YEAR}+12 AS Y12
+		      ,#{BASE_YEAR}+13 AS Y13
+		      ,#{BASE_YEAR}+14 AS Y14
+		      ,#{BASE_YEAR}+15 AS Y15
+		  FROM DUAL
+    </select> 	
+     <!--중장기계획 정보 조회 -->
+	<select id="SELECT_INFO" parameterType="java.util.Map" resultType="java.util.Map">     
+	<![CDATA[	
+		  SELECT PRA.OU_CODE
+		        ,PRA.PROJECT_CODE
+		        ,PRA.PROJECT_VERSION
+		        ,PRA.CAR_TYPE_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', PRA.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+		        ,PRA.REGISTER_YEAR
+		        ,PRA.IMPORTANCE_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O017', PRA.IMPORTANCE_CODE, #{GV_LANG}) AS IMPORTANCE_NAME
+		        ,PRA.ACT_STATUS_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O015', PRA.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+		        ,PRA.DETAIL_STATUS_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O016', PRA.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+		        ,PRA.OU_COUNTRY_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O001', PRA.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+		        ,PRA.SOP
+		        ,PRA.EOP
+		        ,PRA.DOMESTIC_EXPORT_CODE
+		        ,PRA.ROLLING_YN
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O003', PRA.DOMESTIC_EXPORT_CODE, #{GV_LANG}) AS DOMESTIC_EXPORT_NAME
+		        ,PRA.RFQ_RESPONSE_ID
+		        ,PRA.RFQ_RESPONSE_NAME
+		        ,PRA.TARGET_YEAR
+		        ,PRA.CUSTOMER_ID
+		        ,PRA.CUSTOMER_NAME
+		        ,PRA.CUSTOMER_GROUP
+                ,SMT_GET_COMMON_CODE_NAME_FUNC('O014', PRA.CUSTOMER_GROUP, #{GV_LANG}) AS CUSTOMER_GROUP_NAME
+		        ,PRA.ERP_CUSTOMER_ID
+		        ,PRA.ERP_CUSTOMER_NAME
+		        ,PRA.CUSTOMER_NATION_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O005', PRA.CUSTOMER_NATION_CODE,  #{GV_LANG}) AS CUSTOMER_NATION_NAME
+		        ,PRA.OEM
+		        ,PRA.PRODUCT_GROUP_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O007', PRA.PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+		        ,PRA.PRODUCT_NAME_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O008', PRA.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+		        ,PRA.PRODUCT_MODEL_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O010', PRA.PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+		        ,PRA.ITEM_NAME
+		        ,PRA.ERP_ITEM_NO
+		        ,PRA.BUSINESS_GROUP_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O013', PRA.BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+		        ,PRA.PRODUCT_PKG_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O012', PRA.PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+		        ,PRA.REMARK
+                ,PRA.CUSTOMER_AREA
+                ,PRA.SALES_TYPE_CODE
+                ,SMT_GET_COMMON_CODE_NAME_FUNC('O022', PRA.SALES_TYPE_CODE, 'KO') AS SALES_TYPE_NAME
+		        ,PRA.PRODUCTION_AREA_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O002', PRA.PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+		        ,PRA.CURRENCY_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('F018', PRA.CURRENCY_CODE, #{GV_LANG}) AS CURRENCY_NAME
+		        ,PRA.RFQ_CODE
+		        ,PRA.ORG_PROJECT_CODE
+		        ,PRA.LATEST_YN
+		        ,PRA.PROJECT_PRODUCT_ID
+	            ,LPH.INCOTERMS_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O019', LPH.INCOTERMS_CODE, #{GV_LANG}) AS INCOTERMS_NAME
+	            ,LPH.INCOTERMS_DETAIL
+	            ,LP.BASE_YEAR
+	            ,CASE WHEN LP.BASE_YEAR = LP.PLAN_YEAR THEN LP.PLAN_YEAR||'-' ||LP.PLAN_MONTH 
+	                  ELSE  LP.PLAN_YEAR  END AS PLAN_YYYYMM
+	            ,LP.PLAN_VERSION
+	            ,LP.QTY
+	            ,LP.UNIT_PRICE
+	            ,LP.QTY * LP.UNIT_PRICE AS AMT
+	            ,LP.QTY * LP.UNIT_PRICE  * 2      AS AMT_EX 
+	       FROM OMS_LONG_PLAN LP                                                                                                    
+	           ,OMS_PROJECT_PRODUCT_ALL_V PRA 
+	           ,OMS_LONG_PLAN_HEADER_V LPH                         
+	      WHERE LP.BASE_YEAR  =#{BASE_YEAR}
+	        AND LP.OU_CODE    =#{OU_CODE}
+		    AND OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                    PRA.OU_CODE,
+                                                    PRA.PROJECT_CODE) !='N'
+	        AND LP.PROJECT_PRODUCT_ID = PRA.PROJECT_PRODUCT_ID
+	        AND LPH.PROJECT_PRODUCT_ID = PRA.PROJECT_PRODUCT_ID
+	        AND LPH.BASE_YEAR = LP.BASE_YEAR
+	     
+	]]>		        
+        <if test="@com.oms.MyBatisUtil@isEmpty(PROJECT_VERSION)">
+            AND PRA.LATEST_YN = 'Y' --최신 버젼   
+        </if>  		        
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_GROUP)">
+        	<![CDATA[
+        	   AND PRA.CUSTOMER_GROUP = #{CUSTOMER_GROUP} 
+        	]]>  
+        </if>  	        
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_GROUP_CODE)">
+        	<![CDATA[
+        	   AND PRA.PRODUCT_GROUP_CODE = #{PRODUCT_GROUP_CODE} 
+        	]]>  
+        </if>      
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ROLLING_YN)">
+        	<![CDATA[
+        	   AND PRA.ROLLING_YN = #{ROLLING_YN} 
+        	]]>  
+        </if>         
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(IMPORTANCE_CODE)">
+        	<![CDATA[
+        	   AND PRA.IMPORTANCE_CODE = #{IMPORTANCE_CODE} 
+        	]]>  
+        </if>         
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(IMPORTANCE_CODE)">
+        	<![CDATA[
+        	   AND PRA.IMPORTANCE_CODE = #{IMPORTANCE_CODE} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
+        	<![CDATA[
+        	   AND PRA.ACT_STATUS_CODE = #{ACT_STATUS_CODE} 
+        	]]>  
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DETAIL_STATUS_CODE)">
+        	<![CDATA[
+        	   AND PRA.DETAIL_STATUS_CODE = #{DETAIL_STATUS_CODE} 
+        	]]>  
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NATION_CODE)">
+        	<![CDATA[
+        	   AND PRA.CUSTOMER_NATION_CODE = #{CUSTOMER_NATION_CODE} 
+        	]]>  
+        </if>  
+	        
+	      ORDER BY TO_NUMBER (SUBSTR( PRA.PROJECT_CODE,LENGTH(PRA.PROJECT_CODE)-2) ) 
+			      ,CASE WHEN LP.BASE_YEAR = LP.PLAN_YEAR THEN LP.PLAN_YEAR ||LP.PLAN_MONTH 
+			                  ELSE  LP.PLAN_YEAR  END
+		
+    </select> 
+     <!--중장기계획 정보 분석조회 -->
+	<select id="SELECT_LONG_PLAN_ANALYSIS" parameterType="java.util.Map" resultType="java.util.Map">     
+	<![CDATA[	
+		  SELECT PRA.OU_CODE
+		        ,PRA.PROJECT_CODE
+		        ,PRA.PROJECT_VERSION
+		        ,PRA.CAR_TYPE_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', PRA.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+		        ,PRA.REGISTER_YEAR
+		        ,PRA.IMPORTANCE_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O017', PRA.IMPORTANCE_CODE, #{GV_LANG}) AS IMPORTANCE_NAME
+		        ,PRA.ACT_STATUS_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O015', PRA.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+		        ,PRA.DETAIL_STATUS_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O016', PRA.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+		        ,PRA.OU_COUNTRY_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O001', PRA.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+		        ,PRA.SOP
+		        ,PRA.EOP
+		        ,PRA.DOMESTIC_EXPORT_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O003', PRA.DOMESTIC_EXPORT_CODE, #{GV_LANG}) AS DOMESTIC_EXPORT_NAME
+		        ,PRA.RFQ_RESPONSE_ID
+		        ,PRA.RFQ_RESPONSE_NAME
+		        ,PRA.TARGET_YEAR
+		        ,PRA.CUSTOMER_ID
+		        ,PRA.CUSTOMER_NAME
+		        ,PRA.CUSTOMER_GROUP
+                ,SMT_GET_COMMON_CODE_NAME_FUNC('O014', PRA.CUSTOMER_GROUP, #{GV_LANG}) AS CUSTOMER_GROUP_NAME
+		        ,PRA.ERP_CUSTOMER_ID
+		        ,PRA.ERP_CUSTOMER_NAME
+		        ,PRA.CUSTOMER_NATION_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O005', PRA.CUSTOMER_NATION_CODE,  #{GV_LANG}) AS CUSTOMER_NATION_NAME
+		        ,PRA.OEM
+		        ,PRA.PRODUCT_GROUP_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O007', PRA.PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+		        ,PRA.PRODUCT_NAME_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O008', PRA.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+		        ,PRA.PRODUCT_MODEL_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O010', PRA.PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+		        ,PRA.ITEM_NAME
+		        ,PRA.ERP_ITEM_NO
+		        ,PRA.BUSINESS_GROUP_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O013', PRA.BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+		        ,PRA.PRODUCT_PKG_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O012', PRA.PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+		        ,PRA.REMARK
+                ,PRA.CUSTOMER_AREA
+                ,PRA.SALES_TYPE_CODE
+                ,SMT_GET_COMMON_CODE_NAME_FUNC('O022', PRA.SALES_TYPE_CODE, 'KO') AS SALES_TYPE_NAME
+		        ,PRA.PRODUCTION_AREA_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O002', PRA.PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+		        ,LP.CURRENCY_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('F018', LP.CURRENCY_CODE, #{GV_LANG}) AS CURRENCY_NAME
+		        ,PRA.RFQ_CODE
+		        ,PRA.ORG_PROJECT_CODE
+		        ,PRA.LATEST_YN
+		        ,PRA.PROJECT_PRODUCT_ID
+	            ,LPH.INCOTERMS_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O019', LPH.INCOTERMS_CODE, #{GV_LANG}) AS INCOTERMS_NAME
+	            ,LPH.INCOTERMS_DETAIL
+	            ,LP.PLAN_VERSION
+	            ,LP.BASE_YEAR
+	            ,LP.LATEST_YN AS PLAN_LATEST_YN
+	            ,SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW') EXCHANGE
+	            ,M1_QTY
+	            ,M2_QTY
+	            ,M3_QTY
+	            ,M4_QTY
+	            ,M5_QTY
+	            ,M6_QTY
+	            ,M7_QTY
+	            ,M8_QTY
+	            ,M9_QTY
+	            ,M10_QTY
+	            ,M11_QTY
+	            ,M12_QTY
+	            ,Y1_QTY
+	            ,Y2_QTY
+	            ,Y3_QTY
+	            ,Y4_QTY
+	            ,Y5_QTY
+	            ,Y6_QTY
+	            ,Y7_QTY
+	            ,Y8_QTY
+	            ,Y9_QTY
+	            ,Y10_QTY
+	            ,Y11_QTY
+	            ,Y12_QTY
+	            ,Y13_QTY
+	            ,Y14_QTY
+	            ,M1_UNIT_PRICE
+	            ,M2_UNIT_PRICE
+	            ,M3_UNIT_PRICE
+	            ,M4_UNIT_PRICE
+	            ,M5_UNIT_PRICE
+	            ,M6_UNIT_PRICE
+	            ,M7_UNIT_PRICE
+	            ,M8_UNIT_PRICE
+	            ,M9_UNIT_PRICE
+	            ,M10_UNIT_PRICE
+	            ,M11_UNIT_PRICE
+	            ,M12_UNIT_PRICE
+	            ,Y1_UNIT_PRICE
+	            ,Y2_UNIT_PRICE
+	            ,Y3_UNIT_PRICE
+	            ,Y4_UNIT_PRICE
+	            ,Y5_UNIT_PRICE
+	            ,Y6_UNIT_PRICE
+	            ,Y7_UNIT_PRICE
+	            ,Y8_UNIT_PRICE
+	            ,Y9_UNIT_PRICE
+	            ,Y10_UNIT_PRICE
+	            ,Y11_UNIT_PRICE
+	            ,Y12_UNIT_PRICE
+	            ,Y13_UNIT_PRICE
+	            ,Y14_UNIT_PRICE
+	            ,TO_CHAR(M1_AMT, 'FM999999999999.00') M1_AMT
+	            ,TO_CHAR(M2_AMT, 'FM999999999999.00') M2_AMT
+	            ,TO_CHAR(M3_AMT, 'FM999999999999.00') M3_AMT
+	            ,TO_CHAR(M4_AMT, 'FM999999999999.00') M4_AMT
+	            ,TO_CHAR(M5_AMT, 'FM999999999999.00') M5_AMT
+	            ,TO_CHAR(M6_AMT, 'FM999999999999.00') M6_AMT
+	            ,TO_CHAR(M7_AMT, 'FM999999999999.00') M7_AMT
+	            ,TO_CHAR(M8_AMT, 'FM999999999999.00') M8_AMT
+	            ,TO_CHAR(M9_AMT, 'FM999999999999.00') M9_AMT
+	            ,TO_CHAR(M10_AMT, 'FM999999999999.00') M10_AMT
+	            ,TO_CHAR(M11_AMT, 'FM999999999999.00') M11_AMT
+	            ,TO_CHAR(M12_AMT, 'FM999999999999.00') M12_AMT
+	            ,TO_CHAR(Y1_AMT, 'FM999999999999.00') Y1_AMT
+	            ,TO_CHAR(Y2_AMT, 'FM999999999999.00') Y2_AMT
+	            ,TO_CHAR(Y3_AMT, 'FM999999999999.00') Y3_AMT
+	            ,TO_CHAR(Y4_AMT, 'FM999999999999.00') Y4_AMT
+	            ,TO_CHAR(Y5_AMT, 'FM999999999999.00') Y5_AMT
+	            ,TO_CHAR(Y6_AMT, 'FM999999999999.00') Y6_AMT
+	            ,TO_CHAR(Y7_AMT, 'FM999999999999.00') Y7_AMT
+	            ,TO_CHAR(Y8_AMT, 'FM999999999999.00') Y8_AMT
+	            ,TO_CHAR(Y9_AMT, 'FM999999999999.00') Y9_AMT
+	            ,TO_CHAR(Y10_AMT, 'FM999999999999.00') Y10_AMT
+	            ,TO_CHAR(Y11_AMT, 'FM999999999999.00') Y11_AMT
+	            ,TO_CHAR(Y12_AMT, 'FM999999999999.00') Y12_AMT
+	            ,TO_CHAR(Y13_AMT, 'FM999999999999.00') Y13_AMT
+	            ,TO_CHAR(Y14_AMT, 'FM999999999999.00') Y14_AMT
+	            ,TO_CHAR(ROUND(M1_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M1_AMT_EX
+	            ,TO_CHAR(ROUND(M2_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M2_AMT_EX
+	            ,TO_CHAR(ROUND(M3_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M3_AMT_EX
+	            ,TO_CHAR(ROUND(M4_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M4_AMT_EX
+	            ,TO_CHAR(ROUND(M5_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M5_AMT_EX
+	            ,TO_CHAR(ROUND(M6_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M6_AMT_EX
+	            ,TO_CHAR(ROUND(M7_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M7_AMT_EX
+	            ,TO_CHAR(ROUND(M8_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M8_AMT_EX
+	            ,TO_CHAR(ROUND(M9_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M9_AMT_EX
+	            ,TO_CHAR(ROUND(M10_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M10_AMT_EX
+	            ,TO_CHAR(ROUND(M11_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M11_AMT_EX
+	            ,TO_CHAR(ROUND(M12_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS M12_AMT_EX
+	            ,TO_CHAR(ROUND(Y1_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y1_AMT_EX
+	            ,TO_CHAR(ROUND(Y2_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y2_AMT_EX
+	            ,TO_CHAR(ROUND(Y3_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y3_AMT_EX
+	            ,TO_CHAR(ROUND(Y4_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y4_AMT_EX
+	            ,TO_CHAR(ROUND(Y5_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y5_AMT_EX
+	            ,TO_CHAR(ROUND(Y6_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y6_AMT_EX
+	            ,TO_CHAR(ROUND(Y7_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y7_AMT_EX
+	            ,TO_CHAR(ROUND(Y8_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y8_AMT_EX
+	            ,TO_CHAR(ROUND(Y9_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y9_AMT_EX
+	            ,TO_CHAR(ROUND(Y10_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y10_AMT_EX
+	            ,TO_CHAR(ROUND(Y11_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y11_AMT_EX
+	            ,TO_CHAR(ROUND(Y12_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y12_AMT_EX
+	            ,TO_CHAR(ROUND(Y13_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y13_AMT_EX
+	            ,TO_CHAR(ROUND(Y14_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y14_AMT_EX
+	            --## 2024-05-21 Added by Youngho.Kang
+	            ,Y0_QTY
+	            ,TO_CHAR(Y0_AMT, 'FM999999999999.00') Y0_AMT
+	            ,TO_CHAR(ROUND(Y0_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')     AS Y0_AMT_EX
+	            ,TOTAL_QTY
+	            ,TO_CHAR(TOTAL_AMT, 'FM999999999999.00') TOTAL_AMT
+	            ,TO_CHAR(ROUND(TOTAL_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS TOTAL_AMT_EX
+	            ,PRA.ECOST_REG_FLAG
+	            ,PRA.COST_REG_FLAG
+	            --// 2024-05-21 Added end
+	       FROM OMS_LONG_PLAN_ANALYSIS_V LP                                                                                                    
+	           ,OMS_PROJECT_PRODUCT_ALL_V PRA 
+	           ,OMS_LONG_PLAN_HEADER_V LPH                         
+	      --## 2023-09-05 Modified by Youngho.Kang 김문하 상무님 지시
+	      /*WHERE LP.BASE_YEAR  ={BASE_YEAR}
+	        AND LP.OU_CODE    ={OU_CODE}
+		    AND OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC({GV_USER_ID},
+                                                    PRA.OU_CODE,
+                                                    PRA.PROJECT_CODE) !='N'
+	        AND LP.PROJECT_PRODUCT_ID = PRA.PROJECT_PRODUCT_ID
+	        AND LPH.PROJECT_PRODUCT_ID = PRA.PROJECT_PRODUCT_ID
+	        AND LPH.BASE_YEAR = LP.BASE_YEAR
+	        AND LPH.PLAN_VERSION   = LP.PLAN_VERSION 
+	        AND PRA.DETAIL_STATUS_CODE NOT IN ('D10')*/
+          WHERE LP.BASE_YEAR  = #{BASE_YEAR}
+            AND LP.OU_CODE    = #{OU_CODE}
+            AND OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                   PRA.OU_CODE,
+                                                   PRA.PROJECT_CODE) !='N'
+            AND LP.OU_CODE = LPH.OU_CODE
+            AND LP.BASE_YEAR = LPH.BASE_YEAR
+            AND LP.PROJECT_CODE = LPH.PROJECT_CODE
+            AND LP.PROJECT_PRODUCT_ID = LPH.PROJECT_PRODUCT_ID
+            AND LP.PLAN_VERSION = LPH.PLAN_VERSION      
+            AND LP.OU_CODE = PRA.OU_CODE
+            AND LP.PROJECT_CODE = PRA.PROJECT_CODE
+            AND LP.PROJECT_PRODUCT_ID = PRA.PROJECT_PRODUCT_ID   
+            AND PRA.DETAIL_STATUS_CODE NOT IN ('D10') 
+	      --// 2023-09-05 Modified end
+	     
+	]]>		        
+        <if test="@com.oms.MyBatisUtil@isEmpty(PROJECT_VERSION)">
+            AND PRA.LATEST_YN = 'Y' --최신 버젼   
+            AND LPH.LATEST_YN = 'Y'
+            AND LP.LATEST_YN = 'Y'
+        </if>  	   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ROLLING_YN)">
+        	<![CDATA[
+        	   AND PRA.ROLLING_YN = #{ROLLING_YN} 
+        	]]>  
+        </if>  	        
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_GROUP)">
+        	<![CDATA[
+        	   AND PRA.CUSTOMER_GROUP = #{CUSTOMER_GROUP} 
+        	]]>  
+        </if>  	        
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_GROUP_CODE)">
+        	<![CDATA[
+        	   AND PRA.PRODUCT_GROUP_CODE = #{PRODUCT_GROUP_CODE} 
+        	]]>  
+        </if>             
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(IMPORTANCE_CODE)">
+        	<![CDATA[
+        	   AND PRA.IMPORTANCE_CODE = #{IMPORTANCE_CODE} 
+        	]]>  
+        </if>         
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(IMPORTANCE_CODE)">
+        	<![CDATA[
+        	   AND PRA.IMPORTANCE_CODE = #{IMPORTANCE_CODE} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
+               AND REGEXP_LIKE(PRA.ACT_STATUS_CODE, #{ACT_STATUS_CODE}, 'i')
+
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DETAIL_STATUS_CODE)">
+               AND REGEXP_LIKE(PRA.DETAIL_STATUS_CODE, #{DETAIL_STATUS_CODE}, 'i')
+
+         
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NATION_CODE)">
+        	<![CDATA[
+        	   AND PRA.CUSTOMER_NATION_CODE = #{CUSTOMER_NATION_CODE} 
+        	]]>  
+        </if>  
+	        
+	      ORDER BY PRA.REGISTER_YEAR,TO_NUMBER (SUBSTR( PRA.PROJECT_CODE,LENGTH(PRA.PROJECT_CODE)-2) ) 
+			     
+		
+    </select>    	      
+
+
+     <!--중장기계획 정보 분석조회 -->
+	<select id="SELECT_LONG_PLAN_FROZEN" parameterType="java.util.Map" resultType="java.util.Map">     
+	<![CDATA[
+		SELECT PRA.OU_CODE
+		      ,PRA.PROJECT_CODE
+		      ,PRA.PROJECT_VERSION
+		      ,PRA.CAR_TYPE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', PRA.CAR_TYPE_CODE, 'KO') AS CAR_TYPE_NAME
+		      ,PRA.REGISTER_YEAR
+		      ,PRA.IMPORTANCE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O017', PRA.IMPORTANCE_CODE, 'KO') AS IMPORTANCE_NAME
+		      ,PRA.ACT_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O015', PRA.ACT_STATUS_CODE, 'KO') AS ACT_STATUS_NAME
+		      ,PRA.DETAIL_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O016', PRA.DETAIL_STATUS_CODE, 'KO') AS DETAIL_STATUS_NAME
+		      ,PRA.OU_COUNTRY_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O001', PRA.OU_COUNTRY_CODE, 'KO') AS OU_COUNTRY_NAME
+		      ,PRA.SOP
+		      ,PRA.EOP
+		      ,PRA.DOMESTIC_EXPORT_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O003', PRA.DOMESTIC_EXPORT_CODE, 'KO') AS DOMESTIC_EXPORT_NAME
+		      ,PRA.RFQ_RESPONSE_ID
+		      ,PRA.RFQ_RESPONSE_NAME
+		      ,PRA.TARGET_YEAR
+		      ,PRA.CUSTOMER_ID
+		      ,PRA.CUSTOMER_NAME
+		      ,PRA.CUSTOMER_GROUP
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O014', PRA.CUSTOMER_GROUP, 'KO') AS CUSTOMER_GROUP_NAME
+		      ,PRA.ERP_CUSTOMER_ID
+		      ,PRA.ERP_CUSTOMER_NAME
+		      ,PRA.CUSTOMER_NATION_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O005', PRA.CUSTOMER_NATION_CODE,  'KO') AS CUSTOMER_NATION_NAME
+		      ,PRA.OEM
+		      ,PRA.PRODUCT_GROUP_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O007', PRA.PRODUCT_GROUP_CODE, 'KO') AS PRODUCT_GROUP_NAME
+		      ,PRA.PRODUCT_NAME_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O008', PRA.PRODUCT_NAME_CODE, 'KO') AS PRODUCT_NAME
+		      ,PRA.PRODUCT_MODEL_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O010', PRA.PRODUCT_MODEL_CODE, 'KO') AS PRODUCT_MODEL_NAME
+		      ,PRA.ITEM_NAME
+		      ,PRA.ERP_ITEM_NO
+		      ,PRA.BUSINESS_GROUP_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O013', PRA.BUSINESS_GROUP_CODE, 'KO') AS BUSINESS_GROUP_NAME
+		      ,PRA.PRODUCT_PKG_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O012', PRA.PRODUCT_PKG_CODE, 'KO') AS PRODUCT_PKG_NAME
+		      ,PRA.REMARK
+		      ,PRA.CUSTOMER_AREA
+		      ,PRA.SALES_TYPE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O022', PRA.SALES_TYPE_CODE, 'KO') AS SALES_TYPE_NAME
+		      ,PRA.PRODUCTION_AREA_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O002', PRA.PRODUCTION_AREA_CODE, 'KO') AS PRODUCTION_AREA_NAME
+		      ,LP.CURRENCY_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('F018', LP.CURRENCY_CODE, 'KO') AS CURRENCY_NAME
+		      ,PRA.RFQ_CODE
+		      ,PRA.ORG_PROJECT_CODE
+		      ,PRA.LATEST_YN
+		      ,PRA.PROJECT_PRODUCT_ID
+		      ,LPH.INCOTERMS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O019', LPH.INCOTERMS_CODE, 'KO') AS INCOTERMS_NAME
+		      ,LPH.INCOTERMS_DETAIL
+		      ,LP.PLAN_VERSION
+		      ,LP.BASE_YEAR
+		      ,LP.LATEST_YN AS PLAN_LATEST_YN
+		      ,SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW') EXCHANGE
+		      ,LP.M1_QTY
+		      ,LP.M2_QTY
+		      ,LP.M3_QTY
+		      ,LP.M4_QTY
+		      ,LP.M5_QTY
+		      ,LP.M6_QTY
+		      ,LP.M7_QTY
+		      ,LP.M8_QTY
+		      ,LP.M9_QTY
+		      ,LP.M10_QTY
+		      ,LP.M11_QTY
+		      ,LP.M12_QTY
+		      ,LP.Y1_QTY
+		      ,LP.Y2_QTY
+		      ,LP.Y3_QTY
+		      ,LP.Y4_QTY
+		      ,LP.Y5_QTY
+		      ,LP.Y6_QTY
+		      ,LP.Y7_QTY
+		      ,LP.Y8_QTY
+		      ,LP.Y9_QTY
+		      ,LP.Y10_QTY
+		      ,LP.Y11_QTY
+		      ,LP.Y12_QTY
+		      ,LP.Y13_QTY
+		      ,LP.Y14_QTY
+		      ,LP.M1_UNIT_PRICE
+		      ,LP.M2_UNIT_PRICE
+		      ,LP.M3_UNIT_PRICE
+		      ,LP.M4_UNIT_PRICE
+		      ,LP.M5_UNIT_PRICE
+		      ,LP.M6_UNIT_PRICE
+		      ,LP.M7_UNIT_PRICE
+		      ,LP.M8_UNIT_PRICE
+		      ,LP.M9_UNIT_PRICE
+		      ,LP.M10_UNIT_PRICE
+		      ,LP.M11_UNIT_PRICE
+		      ,LP.M12_UNIT_PRICE
+		      ,LP.Y1_UNIT_PRICE
+		      ,LP.Y2_UNIT_PRICE
+		      ,LP.Y3_UNIT_PRICE
+		      ,LP.Y4_UNIT_PRICE
+		      ,LP.Y5_UNIT_PRICE
+		      ,LP.Y6_UNIT_PRICE
+		      ,LP.Y7_UNIT_PRICE
+		      ,LP.Y8_UNIT_PRICE
+		      ,LP.Y9_UNIT_PRICE
+		      ,LP.Y10_UNIT_PRICE
+		      ,LP.Y11_UNIT_PRICE
+		      ,LP.Y12_UNIT_PRICE
+		      ,LP.Y13_UNIT_PRICE
+		      ,LP.Y14_UNIT_PRICE
+		      ,TO_CHAR(LP.M1_AMT, 'FM999999999999.00') M1_AMT
+		      ,TO_CHAR(LP.M2_AMT, 'FM999999999999.00') M2_AMT
+		      ,TO_CHAR(LP.M3_AMT, 'FM999999999999.00') M3_AMT
+		      ,TO_CHAR(LP.M4_AMT, 'FM999999999999.00') M4_AMT
+		      ,TO_CHAR(LP.M5_AMT, 'FM999999999999.00') M5_AMT
+		      ,TO_CHAR(LP.M6_AMT, 'FM999999999999.00') M6_AMT
+		      ,TO_CHAR(LP.M7_AMT, 'FM999999999999.00') M7_AMT
+		      ,TO_CHAR(LP.M8_AMT, 'FM999999999999.00') M8_AMT
+		      ,TO_CHAR(LP.M9_AMT, 'FM999999999999.00') M9_AMT
+		      ,TO_CHAR(LP.M10_AMT, 'FM999999999999.00') M10_AMT
+		      ,TO_CHAR(LP.M11_AMT, 'FM999999999999.00') M11_AMT
+		      ,TO_CHAR(LP.M12_AMT, 'FM999999999999.00') M12_AMT
+	          ,TO_CHAR(Y1_AMT, 'FM999999999999.00') Y1_AMT
+	          ,TO_CHAR(Y2_AMT, 'FM999999999999.00') Y2_AMT
+	          ,TO_CHAR(Y3_AMT, 'FM999999999999.00') Y3_AMT
+	          ,TO_CHAR(Y4_AMT, 'FM999999999999.00') Y4_AMT
+	          ,TO_CHAR(Y5_AMT, 'FM999999999999.00') Y5_AMT
+	          ,TO_CHAR(Y6_AMT, 'FM999999999999.00') Y6_AMT
+	          ,TO_CHAR(Y7_AMT, 'FM999999999999.00') Y7_AMT
+	          ,TO_CHAR(Y8_AMT, 'FM999999999999.00') Y8_AMT
+	          ,TO_CHAR(Y9_AMT, 'FM999999999999.00') Y9_AMT
+	          ,TO_CHAR(Y10_AMT, 'FM999999999999.00') Y10_AMT
+	          ,TO_CHAR(Y11_AMT, 'FM999999999999.00') Y11_AMT
+	          ,TO_CHAR(Y12_AMT, 'FM999999999999.00') Y12_AMT
+	          ,TO_CHAR(Y13_AMT, 'FM999999999999.00') Y13_AMT
+	          ,TO_CHAR(Y14_AMT, 'FM999999999999.00') Y14_AMT
+		      ,TO_CHAR(ROUND(LP.M1_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M1_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M2_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M2_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M3_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M3_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M4_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M4_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M5_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M5_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M6_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M6_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M7_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M7_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M8_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M8_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M9_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M9_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M10_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M10_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M11_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M11_AMT_EX
+		      ,TO_CHAR(ROUND(LP.M12_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS M12_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y1_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y1_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y2_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y2_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y3_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y3_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y4_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y4_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y5_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y5_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y6_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y6_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y7_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y7_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y8_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y8_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y9_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y9_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y10_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y10_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y11_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y11_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y12_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y12_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y13_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y13_AMT_EX
+		      ,TO_CHAR(ROUND(LP.Y14_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999') AS Y14_AMT_EX
+	          --## 2024-05-21 Added by Youngho.Kang
+	          ,LP.Y0_QTY
+	          ,TO_CHAR(LP.Y0_AMT, 'FM999999999999.00') Y0_AMT
+	          ,TO_CHAR(ROUND(LP.Y0_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')     AS Y0_AMT_EX
+	          ,LP.TOTAL_QTY
+	          ,TO_CHAR(LP.TOTAL_AMT, 'FM999999999999.00') TOTAL_AMT
+	          ,TO_CHAR(ROUND(LP.TOTAL_AMT_EX * SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW'),0), 'FM999999999999')  AS TOTAL_AMT_EX
+	          ,PRA.ECOST_REG_FLAG
+	          ,PRA.COST_REG_FLAG
+	          --// 2024-05-21 Added end
+		   FROM (SELECT FE.EVENT_ID
+		               ,FE.OU_CODE
+		               ,FE.BASE_YEAR
+		               ,FEP.PROJECT_CODE
+		               ,FEP.PROJECT_VERSION
+		         FROM   OMS_FROZEN_EVENT_T     FE
+		               ,OMS_FROZEN_EVENT_PJT_T FEP
+		         WHERE  FE.EVENT_ID            = #{EVENT_ID}
+		         AND    FE.EVENT_ID            = FEP.EVENT_ID) PJT
+		       ,(SELECT FE.EVENT_ID
+		               ,FE.OU_CODE
+		               ,FE.BASE_YEAR
+		               ,FLP.PROJECT_CODE
+		               ,FLP.PROJECT_PRODUCT_ID
+		               ,FLP.PLAN_VERSION
+		         FROM   OMS_FROZEN_EVENT_T           FE
+		               ,OMS_FROZEN_EVENT_LONG_PLAN_T FLP
+		         WHERE  FE.EVENT_ID            = #{EVENT_ID}
+		         AND    FE.EVENT_ID            = FLP.EVENT_ID) PLP
+		       ,OMS_LONG_PLAN_ANALYSIS_V LP                                                                                                    
+		       --,OMS_PROJECT_PRODUCT_ALL_V PRA
+		       ,OMS_PROJECT_PRODUCT_FROZEN_V  PRA
+		       ,OMS_LONG_PLAN_HEADER_V LPH                         
+		  WHERE PJT.PROJECT_CODE = PLP.PROJECT_CODE
+            AND PJT.EVENT_ID = PRA.EVENT_ID
+		    AND PJT.OU_CODE = PRA.OU_CODE
+		    AND PJT.PROJECT_CODE = PRA.PROJECT_CODE
+		    AND PJT.PROJECT_VERSION = PRA.PROJECT_VERSION
+		    --AND PRA.DETAIL_STATUS_CODE NOT IN ('D10')
+		    AND OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+		                                             PRA.OU_CODE,
+		                                             PRA.PROJECT_CODE) !='N'
+		    AND PLP.OU_CODE      = LPH.OU_CODE
+		    AND PLP.BASE_YEAR    = LPH.BASE_YEAR
+		    AND PLP.PROJECT_CODE = LPH.PROJECT_CODE
+		    AND PLP.PROJECT_PRODUCT_ID = LPH.PROJECT_PRODUCT_ID
+		    AND PLP.PLAN_VERSION = LPH.PLAN_VERSION
+            AND PRA.PROJECT_PRODUCT_ID = LPH.PROJECT_PRODUCT_ID
+		    AND LPH.OU_CODE      = LP.OU_CODE
+		    AND LPH.PROJECT_CODE = LP.PROJECT_CODE
+		    AND LPH.PROJECT_PRODUCT_ID = LP.PROJECT_PRODUCT_ID
+		    AND LPH.PLAN_VERSION = LP.PLAN_VERSION
+            AND LPH.BASE_YEAR    = LP.BASE_YEAR
+	     
+	]]>		        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ROLLING_YN)">
+        	<![CDATA[
+        	   AND PRA.ROLLING_YN = #{ROLLING_YN} 
+        	]]>  
+        </if>  	        
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_GROUP)">
+        	<![CDATA[
+        	   AND PRA.CUSTOMER_GROUP = #{CUSTOMER_GROUP} 
+        	]]>  
+        </if>  	        
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_GROUP_CODE)">
+        	<![CDATA[
+        	   AND PRA.PRODUCT_GROUP_CODE = #{PRODUCT_GROUP_CODE} 
+        	]]>  
+        </if>             
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(IMPORTANCE_CODE)">
+        	<![CDATA[
+        	   AND PRA.IMPORTANCE_CODE = #{IMPORTANCE_CODE} 
+        	]]>  
+        </if>         
+ 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(IMPORTANCE_CODE)">
+        	<![CDATA[
+        	   AND PRA.IMPORTANCE_CODE = #{IMPORTANCE_CODE} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
+               AND REGEXP_LIKE(PRA.ACT_STATUS_CODE, #{ACT_STATUS_CODE}, 'i')
+
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DETAIL_STATUS_CODE)">
+               AND REGEXP_LIKE(PRA.DETAIL_STATUS_CODE, #{DETAIL_STATUS_CODE}, 'i')
+
+         
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NATION_CODE)">
+        	<![CDATA[
+        	   AND PRA.CUSTOMER_NATION_CODE = #{CUSTOMER_NATION_CODE} 
+        	]]>  
+        </if>  
+	        
+	      ORDER BY PRA.REGISTER_YEAR,TO_NUMBER (SUBSTR( PRA.PROJECT_CODE,LENGTH(PRA.PROJECT_CODE)-2) ) 
+			     
+		
+    </select>    	      
+
+
+    <select id="SELECT_NEW_EVENT_VERSION" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+            select  oms_project_long_plan_pkg.pjt_long_plan_event_version_f( i_ou_code            => #{OU_CODE}
+                                                                           , i_base_year          => #{BASE_YEAR} ) AS EVENT_VERSION
+            from    dual
+   		]]>
+   	</select>
+
+
+    <!-- 통합버젼 생성 -->
+    <select id="GEN_FROZEN_EVENT"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    <![CDATA[       
+			CALL  OMS_PROJECT_LONG_PLAN_PKG.PROJECT_LONG_PLAN_FROZEN_PROC( 
+			                                             #{OU_CODE}
+			                                            ,#{BASE_YEAR}
+			                                            ,#{EVENT_VERSION}	
+			                                            ,#{REMARK}	
+			                                            ,#{GV_USER_ID} 
+			                                            ,#{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{NEW_EVENT_VERSION, mode=OUT, jdbcType=VARCHAR, javaType=String}			                                            
+			                                            )
+    ]]>
+
+    </select>   
+</mapper>

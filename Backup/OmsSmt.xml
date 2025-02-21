@@ -1,0 +1,617 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmsSmtMapper">
+		    
+    <!-- 고객관리 : 고객관리 정보 조회 -->				
+	<select id="SELECT_SMT_CUSTOMER" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT SC.OU_CODE
+			     , SC.CUSTOMER_ID
+			     , SC.CUSTOMER_NAME
+			     , SC.CUSTOMER_GROUP
+			     , SMT_GET_CODE_NAME_FUNC('O014',SC.CUSTOMER_GROUP,'KR') AS CUSTOMER_GROUP_NAME
+			     , SC.DIV_IN_OUT
+			     , SMT_GET_CODE_NAME_FUNC('F008',SC.DIV_IN_OUT,'KR') AS DIV_IN_OUT_NAME 
+			     , SC.ERP_CUSTOMER_ID
+			     , SC.ERP_CUSTOMER_NAME
+			     , SC.TAX_REG_NUMBER
+			     , SC.NATION_CODE
+			     , SMT_GET_CODE_NAME_FUNC('O005',SC.NATION_CODE,'KR') AS NATION_CODE_NAME
+			     , SC.USABLE_YN
+			     , SC.REMARK
+			  FROM SMT_CUSTOMER  SC
+			 WHERE SC.OU_CODE = #{OU_CODE}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID}
+        	]]>  
+        </if> 	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(DIV_IN_OUT)">
+            <![CDATA[
+        	   AND SC.DIV_IN_OUT = #{DIV_IN_OUT} 
+        	]]>
+        </if>
+		<![CDATA[
+			 ORDER BY SC.CUSTOMER_NAME
+        ]]>
+    </select>
+    
+    <!-- 고객관리  : CUSTOMER_ID_SEQ -->  
+    <select id="SELECT_CUSTOMER_ID_SEQ" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT SMT_CUSTOMER_ID_SEQ.NEXTVAL  SEQ 
+          	  FROM DUAL
+   		]]>
+   	</select>
+   	
+   	<!-- 고객관리 : 고객관리  정보 insert -->
+    <insert id="INSERT_SMT_CUSTOMER" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+            INSERT INTO SMT_CUSTOMER
+			  (OU_CODE
+			  ,CUSTOMER_ID
+			  ,CUSTOMER_NAME
+			  ,CUSTOMER_GROUP
+			  ,DIV_IN_OUT
+			  ,ERP_CUSTOMER_ID
+			  ,ERP_CUSTOMER_NAME
+			  ,TAX_REG_NUMBER
+			  ,NATION_CODE
+			  ,USABLE_YN
+			  ,REMARK
+			  ,INS_DATE
+			  ,INS_USER_ID
+			  ,UPD_DATE
+			  ,UPD_USER_ID)
+			VALUES
+			  (#{OU_CODE}
+			  ,#{CUSTOMER_ID}
+			  ,#{CUSTOMER_NAME}
+			  ,#{CUSTOMER_GROUP}
+			  ,#{DIV_IN_OUT}
+			  ,NULL
+			  ,NULL
+			  ,#{TAX_REG_NUMBER}
+			  ,#{NATION_CODE}
+			  ,'Y'
+			  ,#{REMARK}
+			  ,SYSDATE
+	          ,#{GV_USER_ID}
+	          ,SYSDATE
+	          ,#{GV_USER_ID})
+        ]]>
+    </insert>
+    
+    <!-- 고객관리 : 고객관리 정보 update -->
+    <update id="UPDATE_SMT_CUSTOMER" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE SMT_CUSTOMER
+			   SET CUSTOMER_NAME      = #{CUSTOMER_NAME}         
+			     , CUSTOMER_GROUP     = #{CUSTOMER_GROUP}   
+			     , DIV_IN_OUT         = #{DIV_IN_OUT}
+			     , TAX_REG_NUMBER     = #{TAX_REG_NUMBER}
+			     , NATION_CODE     	  = #{NATION_CODE}
+			     , USABLE_YN          = #{USABLE_YN}       
+			     , REMARK             = #{REMARK}         
+			     , UPD_DATE           = SYSDATE            
+			     , UPD_USER_ID        = #{GV_USER_ID}        
+			 WHERE OU_CODE            = #{OU_CODE}
+			   AND CUSTOMER_ID        = #{CUSTOMER_ID}
+        ]]> 
+    </update>
+    
+    <!-- 고객관리 : 고객관리 정보 삭제 -->
+    <delete id="DELETE_SMT_CUSTOMER" parameterType="java.util.Map">  
+    		DELETE SMT_CUSTOMER
+			 WHERE OU_CODE     = #{OU_CODE}
+			   AND CUSTOMER_ID = #{CUSTOMER_ID}
+    </delete>
+    
+    <!-- 메일발송 : 메일발송  정보 조회 -->			
+	<select id="SELECT_SMT_MAIL" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT OMSL.OU_CODE 
+				 , OMSL.MAIL_CODE 
+				 , OMSL.MAIL_TITLE
+				 , OMSL.USE_FLAG_YN 
+				 , OMSL.REMARK
+	 		FROM OMS_MAIL_SEND_LIST  OMSL
+			WHERE OMSL.OU_CODE = #{OU_CODE}
+			ORDER BY OMSL.MAIL_CODE 
+		]]>	
+    </select>
+    
+    <!-- 메일발송 : 메일발송  정보 insert -->
+    <insert id="INSERT_SMT_MAIL" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+            INSERT INTO OMS_MAIL_SEND_LIST(
+					OU_CODE
+				   ,MAIL_CODE
+				   ,MAIL_TITLE
+				   ,USE_FLAG_YN
+				   ,REMARK
+				   ,INS_DATE
+				   ,INS_USER_ID
+				   ,UPD_DATE
+				   ,UPD_USER_ID
+				)
+				VALUES(
+				   #{OU_CODE}
+				  ,#{MAIL_CODE}
+				  ,#{MAIL_TITLE}
+				  ,NVL(#{USE_FLAG_YN},'N')
+				  ,#{REMARK}
+				  ,SYSDATE
+		          ,#{GV_USER_ID}
+		          ,SYSDATE
+		          ,#{GV_USER_ID}
+		        )
+        ]]>
+    </insert>
+    
+    <!-- 메일발송 : 메일발송  정보 update -->
+    <update id="UPDATE_SMT_MAIL" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_MAIL_SEND_LIST
+			   SET MAIL_TITLE     = #{MAIL_TITLE}   
+			     , USE_FLAG_YN    = #{USE_FLAG_YN} 
+			     , REMARK		  = #{REMARK}
+			     , UPD_DATE       = SYSDATE            
+			     , UPD_USER_ID    = #{GV_USER_ID}        
+			 WHERE OU_CODE        = #{OU_CODE}
+			   AND MAIL_CODE      = #{MAIL_CODE}
+        ]]> 
+    </update>
+    
+    <!-- Recipient COMBO BOX LIST 조회 -->
+	<select id="SELECT_SMT_RECIPIENT" parameterType="java.util.Map" resultType="java.util.Map">
+		<![CDATA[         
+			SELECT  ITEM_NAME AS NAME
+			   	 ,  ITEM_CODE AS CODE
+			   	 ,  REF_MAIN_CD
+			FROM    SMT_COMM_CODE
+			WHERE   GRP_CODE = 'M001'
+			ORDER BY ARR_NO
+		]]>  
+    </select>  
+    
+      
+     <!-- REF_1 COMBO BOX LIST 조회 -->
+	<select id="SELECT_SMT_REF_1" parameterType="java.util.Map" resultType="java.util.Map">
+		<![CDATA[         
+			SELECT  ITEM_NAME AS NAME
+			   	 ,  ITEM_CODE AS CODE
+			FROM    SMT_COMM_CODE
+			WHERE   GRP_CODE = 'M002'
+			]]>  
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(RECIPIENT_CODE)">
+        	<![CDATA[
+        	   AND	REF_1 = #{RECIPIENT_CODE} 
+			   AND	REF_MAIN_CD = 'M001'
+        	]]>  
+        </if>  
+		<![CDATA[  	
+			ORDER BY ARR_NO
+		]]>  
+    </select>  
+    
+    <!-- 메일발송 상세내역 : 메일발송 상세내역  정보 조회 -->			
+	<select id="SELECT_SMT_MAIL_DETAILS" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[			
+			SELECT OMSD.OU_CODE
+			     , OMSD.MAIL_CODE
+			     , OMSD.RECIPIENT_CODE
+			     , OMSD.REF_1_CODE
+			     , OMSD.REF_2_CODE
+			     , (CASE 
+		            WHEN OMSD.REF_1_CODE IN (10,20)  
+		               THEN (SELECT DEPT.DEPT_NAME FROM HS_HRM.EHR_DEPT_MSTR DEPT WHERE DEPT.DEPT_CODE = OMSD.REF_2_CODE)
+		            WHEN OMSD.REF_1_CODE IN (30)  
+		               THEN (SELECT SCG.GRP_NAME FROM SMT_COMM_GRP SCG WHERE SCG.GRP_CODE = OMSD.REF_2_CODE)
+		            WHEN OMSD.REF_1_CODE IN (40)  
+		               THEN (SELECT SA.AUTH_NAME FROM SMT_AUTH SA WHERE SA.AUTH_CODE = OMSD.REF_2_CODE AND SA.OU_CODE = OMSD.OU_CODE)
+		            ELSE NULL
+			        END) AS REF_2_NAME
+			     , OMSD.REMARK
+			     , TO_CHAR(OMSD.START_DATE,'YYYY-MM-DD') AS START_DATE
+			     , TO_CHAR(OMSD.END_DATE,'YYYY-MM-DD') AS END_DATE
+			FROM  OMS_MAIL_SEND_DETAILS OMSD
+				, SMT_COMM_CODE SCC
+			WHERE OMSD.OU_CODE       = #{OU_CODE}
+			      AND MAIL_CODE      = #{MAIL_CODE}
+			      AND SCC.GRP_CODE = 'M001'
+				  AND SCC.ITEM_CODE = OMSD.RECIPIENT_CODE
+			ORDER BY SCC.ARR_NO, OMSD.REF_1_CODE, OMSD.REF_2_CODE, OMSD.START_DATE
+		]]>	
+    </select>
+    
+    <!-- 메일발송 상세내역 : 메일발송 상세내역  정보 insert -->
+    <insert id="INSERT_SMT_MAIL_DETAILS" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+            INSERT INTO OMS_MAIL_SEND_DETAILS(
+					OU_CODE
+				   ,MAIL_CODE
+				   ,RECIPIENT_CODE
+				   ,REF_1_CODE
+				   ,REF_2_CODE
+				   ,REMARK
+				   ,START_DATE
+				   ,END_DATE
+				   ,INS_DATE
+				   ,INS_USER_ID
+				   ,UPD_DATE
+				   ,UPD_USER_ID
+				)
+				VALUES(
+				   #{OU_CODE}
+				  ,#{MAIL_CODE}
+				  ,#{RECIPIENT_CODE}
+				  ,#{REF_1_CODE}
+				  ,#{REF_2_CODE}
+				  ,#{REMARK}
+				  ,#{START_DATE}
+				  ,#{END_DATE}
+				  ,SYSDATE
+		          ,#{GV_USER_ID}
+		          ,SYSDATE
+		          ,#{GV_USER_ID}
+		        )
+        ]]>
+    </insert>
+    
+    <!-- 메일발송 상세내역 : 메일발송 상세내역  정보 update -->
+    <update id="UPDATE_SMT_MAIL_DETAILS" parameterType="java.util.Map">
+        <![CDATA[
+            UPDATE OMS_MAIL_SEND_DETAILS
+			   SET END_DATE    				= TO_DATE(#{END_DATE},'YYYY-MM-DD')
+			   	 , REMARK					= #{REMARK}    
+			     , UPD_DATE     			= SYSDATE
+		      	 , UPD_USER_ID  			= #{GV_USER_ID}
+			 WHERE OU_CODE        			= #{OU_CODE}
+			   AND MAIL_CODE      			= #{MAIL_CODE}
+			   AND RECIPIENT_CODE   		= #{RECIPIENT_CODE}
+			   AND NVL(REF_1_CODE, CHR(0))  = NVL(#{REF_1_CODE}, CHR(0))
+			   AND NVL(REF_2_CODE, CHR(0))  = NVL(#{REF_2_CODE}, CHR(0))
+			   AND START_DATE      			= TO_DATE(#{START_DATE},'YYYY-MM-DD')		
+        ]]> 
+    </update>
+    
+    <!-- 메일발송 상세내역 : 메일발송 상세내역  정보 delete -->
+     <delete id="DELETE_SMT_MAIL_DETAILS" parameterType="java.util.Map"> 
+	    <![CDATA[
+	        DELETE OMS_MAIL_SEND_DETAILS
+	         WHERE OU_CODE        			= #{OU_CODE}
+			   AND MAIL_CODE      			= #{MAIL_CODE}
+			   AND RECIPIENT_CODE   		= #{RECIPIENT_CODE}
+			   AND NVL(REF_1_CODE, CHR(0))  = NVL(#{REF_1_CODE}, CHR(0))
+			   AND NVL(REF_2_CODE, CHR(0))  = NVL(#{REF_2_CODE}, CHR(0))
+			   AND START_DATE      			= TO_DATE(#{START_DATE},'YYYY-MM-DD')	
+	    ]]>
+     </delete> 
+     
+     
+    <!-- 메일발송 추적 헤더 조회 -->
+	<select id="SELECT_SMT_MAIL_TRACKING_HEADER" parameterType="java.util.Map" resultType="java.util.Map">
+		<![CDATA[         
+			WITH
+			    ehr_organization_chart AS (
+			        SELECT  edh.ou_code
+			        ,       edh.dept_code
+			        ,       edm.dept_name
+			        ,       LPAD(' ', (LEVEL-1)*4, ' ')||edm.dept_name      chart_pos_name
+			        ,       edh.up_dept_code
+			        ,       sys_connect_by_path(LPAD(edh.disp_seq, 2, '0'), '#') idx
+			        ,       ROWNUM  order_seq
+			        FROM    ehr_dept_hierarchy   edh
+			        ,       ehr_dept_mstr        edm
+			        WHERE   1=1
+			        START WITH 1=1
+			        AND     edh.dept_code  = '00000'
+			        AND     edh.ou_code    = #{OU_CODE}
+			        AND     to_date(#{BASE_DATE}, 'yyyymmdd') BETWEEN edh.dept_st_date AND edh.dept_ed_date
+			        AND     edm.ou_code   = edh.ou_code
+			        AND     edm.dept_code = edh.dept_code
+			        AND     to_date(#{BASE_DATE}, 'yyyymmdd') BETWEEN edm.dept_st_date AND edm.dept_ed_date
+			        CONNECT BY 1=1
+			        AND     edh.ou_code      = PRIOR edh.ou_code
+			        AND     edh.up_dept_code = PRIOR edh.dept_code
+			        AND     to_date(#{BASE_DATE}, 'yyyymmdd')   BETWEEN edh.dept_st_date AND edh.dept_ed_date
+			        AND     edm.ou_code    = edh.ou_code
+			        AND     edm.dept_code  = edh.dept_code
+			        AND     to_date(#{BASE_DATE}, 'yyyymmdd') BETWEEN edm.dept_st_date AND edm.dept_ed_date
+			        ORDER SIBLINGS BY ou_code
+			        ,       disp_seq
+			        ,       dept_code )
+				,   t_mail_list AS (
+			        SELECT  msl.ou_code
+			        ,       msl.mail_code
+			        ,       msl.mail_title
+			        ,       msd.recipient_code
+			        ,       cm0.item_name       AS recipient_name
+			        ,       cm0.ref_main_cd
+			        ,       cm0.ref_1
+			        ,       cm0.arr_no
+			        ,       msd.ref_1_code
+			        ,       cm1.item_name       AS ref_1_name
+			        ,       msd.ref_2_code
+			        ,       sa.auth_name
+			        ,       sc.grp_name
+			        ,       eoc.dept_name
+			        ,       eoc.order_seq
+			        FROM    oms_mail_send_list          msl
+			        INNER JOIN oms_mail_send_details    msd
+			        ON      (   msd.ou_code     = msl.ou_code
+			                AND msd.mail_code   = msl.mail_code
+			                AND to_date(#{BASE_DATE}, 'yyyymmdd')  BETWEEN msd.start_date AND NVL(msd.end_date, to_date(#{BASE_DATE}, 'yyyymmdd')) )
+			        INNER JOIN smt_comm_code            cm0
+			        ON      (   cm0.grp_code    = 'M001'
+			                AND cm0.item_code   = msd.recipient_code )
+			        LEFT OUTER JOIN smt_comm_code       cm1
+			        ON      (   cm1.grp_code    = 'M002'
+			                AND cm1.item_code   = msd.ref_1_code )
+			        LEFT OUTER JOIN smt_auth            sa
+			        ON      (   cm0.ref_main_cd = 'ROLE'
+			                AND sa.auth_code    = msd.ref_2_code)
+			        LEFT OUTER JOIN smt_comm_grp        sc
+			        ON      (   cm0.ref_main_cd = 'CODE'
+			                AND sc.grp_code     = msd.ref_2_code)
+			        LEFT OUTER JOIN ehr_organization_chart  eoc
+			        ON      (   cm0.ref_main_cd = 'DEPT'
+			                AND eoc.ou_code     = msd.ou_code
+			                AND eoc.dept_code   = msd.ref_2_code)
+			        WHERE   msl.ou_code     = #{OU_CODE}
+			        AND     msl.use_flag_yn = 'Y')
+			SELECT  
+					CASE
+			            WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN 'D'
+			            ELSE 'S'
+			        END AS  DS_TYPE
+			,       CASE ref_main_cd
+			            WHEN 'USER' THEN recipient_name
+			            WHEN 'ROLE' THEN auth_name
+			            WHEN 'CODE' THEN grp_name
+			            WHEN 'DEPT' THEN NVL(dept_name, ref_1_name)
+			        END AS  TITLE
+			,       dense_rank() OVER(PARTITION BY CASE
+			                                           WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN 'D'
+			                                           ELSE 'S'
+			                                       END
+			                          ORDER BY DECODE(ref_main_cd, 'DEPT', DECODE(dept_name, NULL, 0, 1), 0)
+			                                 , CASE
+			                                       WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN order_seq
+			                                       ELSE arr_no
+			                                   END
+			                                 , CASE
+			                                       WHEN ref_main_cd in ('USER', 'DEPT') THEN NULL
+			                                       ELSE DECODE(ref_2_code, 'ROLE_ADMIN', NULL, ref_2_code)
+			                                   END NULLS LAST)   AS COL_IDX
+			FROM    t_mail_list
+			group by 
+			        CASE ref_main_cd
+			            WHEN 'USER' THEN recipient_name
+			            WHEN 'ROLE' THEN auth_name
+			            WHEN 'CODE' THEN grp_name
+			            WHEN 'DEPT' THEN NVL(dept_name, ref_1_name)
+			        END
+			,       CASE
+			            WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN 'D'
+			            ELSE 'S'
+			        END
+			,       DECODE(ref_main_cd, 'DEPT', DECODE(dept_name, NULL, 0, 1), 0)
+			,       CASE
+			            WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN order_seq
+			            ELSE arr_no
+			        END
+			,       CASE
+			           WHEN ref_main_cd in ('USER', 'DEPT') THEN NULL
+			           ELSE DECODE(ref_2_code, 'ROLE_ADMIN', NULL, ref_2_code)
+			        END
+			ORDER BY 1 DESC
+			,        3
+		]]>  
+    </select>  
+    
+    
+    <!-- 메일발송 추적 데이터 조회 -->
+	<select id="SELECT_SMT_MAIL_TRACKING_INFO" parameterType="java.util.Map" resultType="java.util.Map">
+		<![CDATA[         
+			WITH
+			    ehr_organization_chart AS (
+			        SELECT  edh.ou_code
+			        ,       edh.dept_code
+			        ,       edm.dept_name
+			        ,       LPAD(' ', (LEVEL-1)*4, ' ')||edm.dept_name      chart_pos_name
+			        ,       edh.up_dept_code
+			        ,       sys_connect_by_path(LPAD(edh.disp_seq, 2, '0'), '#') idx
+			        ,       ROWNUM  order_seq
+			        FROM    ehr_dept_hierarchy   edh
+			        ,       ehr_dept_mstr        edm
+			        WHERE   1=1
+			        START WITH 1=1
+			        AND     edh.dept_code  = '00000'
+			        AND     edh.ou_code    = #{OU_CODE}
+			        AND     to_date(#{BASE_DATE}, 'yyyymmdd') BETWEEN edh.dept_st_date AND edh.dept_ed_date
+			        AND     edm.ou_code   = edh.ou_code
+			        AND     edm.dept_code = edh.dept_code
+			        AND     to_date(#{BASE_DATE}, 'yyyymmdd') BETWEEN edm.dept_st_date AND edm.dept_ed_date
+			        CONNECT BY 1=1
+			        AND     edh.ou_code      = PRIOR edh.ou_code
+			        AND     edh.up_dept_code = PRIOR edh.dept_code
+			        AND     to_date(#{BASE_DATE}, 'yyyymmdd')   BETWEEN edh.dept_st_date AND edh.dept_ed_date
+			        AND     edm.ou_code    = edh.ou_code
+			        AND     edm.dept_code  = edh.dept_code
+			        AND     to_date(#{BASE_DATE}, 'yyyymmdd') BETWEEN edm.dept_st_date AND edm.dept_ed_date
+			        ORDER SIBLINGS BY ou_code
+			        ,       disp_seq
+			        ,       dept_code )
+			SELECT  ROW_NUMBER() OVER (ORDER BY mail_code) AS idx
+			,		mail_code
+			,       mail_title
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx =  1 THEN 'Y' END)    col_s1
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx =  2 THEN 'Y' END)    col_s2
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx =  3 THEN 'Y' END)    col_s3
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx =  4 THEN 'Y' END)    col_s4
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx =  5 THEN 'Y' END)    col_s5
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx =  6 THEN 'Y' END)    col_s6
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx =  7 THEN 'Y' END)    col_s7
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx =  8 THEN 'Y' END)    col_s8
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx =  9 THEN 'Y' END)    col_s9
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx = 10 THEN 'Y' END)    col_s10
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx = 11 THEN 'Y' END)    col_s11
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx = 12 THEN 'Y' END)    col_s12
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx = 13 THEN 'Y' END)    col_s13
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx = 14 THEN 'Y' END)    col_s14
+			,       MAX(CASE WHEN ds_type = 'S' AND col_idx = 15 THEN 'Y' END)    col_s15
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  1 AND mab = 'MA' THEN 'Y' END)    col_da1
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  1 AND mab = 'MB' THEN 'Y' END)    col_db1
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  2 AND mab = 'MA' THEN 'Y' END)    col_da2
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  2 AND mab = 'MB' THEN 'Y' END)    col_db2
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  3 AND mab = 'MA' THEN 'Y' END)    col_da3
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  3 AND mab = 'MB' THEN 'Y' END)    col_db3
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  4 AND mab = 'MA' THEN 'Y' END)    col_da4
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  4 AND mab = 'MB' THEN 'Y' END)    col_db4
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  5 AND mab = 'MA' THEN 'Y' END)    col_da5
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  5 AND mab = 'MB' THEN 'Y' END)    col_db5
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  6 AND mab = 'MA' THEN 'Y' END)    col_da6
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  6 AND mab = 'MB' THEN 'Y' END)    col_db6
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  7 AND mab = 'MA' THEN 'Y' END)    col_da7
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  7 AND mab = 'MB' THEN 'Y' END)    col_db7
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  8 AND mab = 'MA' THEN 'Y' END)    col_da8
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  8 AND mab = 'MB' THEN 'Y' END)    col_db8
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  9 AND mab = 'MA' THEN 'Y' END)    col_da9
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx =  9 AND mab = 'MB' THEN 'Y' END)    col_db9
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 10 AND mab = 'MA' THEN 'Y' END)    col_da10
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 10 AND mab = 'MB' THEN 'Y' END)    col_db10
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 11 AND mab = 'MA' THEN 'Y' END)    col_da11
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 11 AND mab = 'MB' THEN 'Y' END)    col_db11
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 12 AND mab = 'MA' THEN 'Y' END)    col_da12
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 12 AND mab = 'MB' THEN 'Y' END)    col_db12
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 13 AND mab = 'MA' THEN 'Y' END)    col_da13
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 13 AND mab = 'MB' THEN 'Y' END)    col_db13
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 14 AND mab = 'MA' THEN 'Y' END)    col_da14
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 14 AND mab = 'MB' THEN 'Y' END)    col_db14
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 15 AND mab = 'MA' THEN 'Y' END)    col_da15
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 15 AND mab = 'MB' THEN 'Y' END)    col_db15
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 16 AND mab = 'MA' THEN 'Y' END)    col_da16
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 16 AND mab = 'MB' THEN 'Y' END)    col_db16
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 17 AND mab = 'MA' THEN 'Y' END)    col_da17
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 17 AND mab = 'MB' THEN 'Y' END)    col_db17
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 18 AND mab = 'MA' THEN 'Y' END)    col_da18
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 18 AND mab = 'MB' THEN 'Y' END)    col_db18
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 19 AND mab = 'MA' THEN 'Y' END)    col_da19
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 19 AND mab = 'MB' THEN 'Y' END)    col_db19
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 20 AND mab = 'MA' THEN 'Y' END)    col_da20
+			,       MAX(CASE WHEN ds_type = 'D' AND col_idx = 20 AND mab = 'MB' THEN 'Y' END)    col_db20
+			FROM    (
+			        SELECT  mail_code
+			        ,       mail_title
+			        ,       CASE
+			                    WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN 'D'
+			                    ELSE 'S'
+			                END AS  DS_TYPE
+			        ,       CASE
+			                    WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN ref_1
+			                END AS  mab
+			        ,       CASE ref_main_cd
+			                    WHEN 'USER' THEN recipient_name
+			                    WHEN 'ROLE' THEN auth_name
+			                    WHEN 'CODE' THEN grp_name
+			                    WHEN 'DEPT' THEN NVL(dept_name, ref_1_name)
+			                END AS  header_text
+			        ,       dense_rank() OVER(PARTITION BY CASE
+			                                                   WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN 'D'
+			                                                   ELSE 'S'
+			                                               END
+			                                  ORDER BY DECODE(ref_main_cd, 'DEPT', DECODE(dept_name, NULL, 0, 1), 0)
+			                                         , CASE
+			                                               WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN order_seq
+			                                               ELSE arr_no
+			                                           END
+			                                         , CASE
+			                                               WHEN ref_main_cd in ('USER', 'DEPT') THEN NULL
+			                                               ELSE DECODE(ref_2_code, 'ROLE_ADMIN', NULL, ref_2_code)
+                                           			   END NULLS LAST)   AS col_idx
+			        FROM    (
+			                SELECT  msl.ou_code
+			                ,       msl.mail_code
+			                ,       msl.mail_title
+			                ,       msd.recipient_code
+			                ,       cm0.item_name       AS recipient_name
+			                ,       cm0.ref_main_cd
+			                ,       cm0.ref_1
+			                ,       cm0.arr_no
+			                ,       msd.ref_1_code
+			                ,       cm1.item_name       AS ref_1_name
+			                ,       msd.ref_2_code
+			                ,       sa.auth_name
+			                ,       sc.grp_name
+			                ,       eoc.dept_name
+			                ,       eoc.order_seq
+			                FROM    oms_mail_send_list          msl
+			                INNER JOIN oms_mail_send_details    msd
+			                ON      (   msd.ou_code     = msl.ou_code
+			                        AND msd.mail_code   = msl.mail_code
+			                        AND to_date(#{BASE_DATE}, 'yyyymmdd')  BETWEEN msd.start_date AND NVL(msd.end_date, to_date(#{BASE_DATE}, 'yyyymmdd')) )
+			                INNER JOIN smt_comm_code            cm0
+			                ON      (   cm0.grp_code    = 'M001'
+			                        AND cm0.item_code   = msd.recipient_code )
+			                LEFT OUTER JOIN smt_comm_code       cm1
+			                ON      (   cm1.grp_code    = 'M002'
+			                        AND cm1.item_code   = msd.ref_1_code )
+			                LEFT OUTER JOIN smt_auth            sa
+			                ON      (   cm0.ref_main_cd = 'ROLE'
+			                        AND sa.auth_code    = msd.ref_2_code)
+			                LEFT OUTER JOIN smt_comm_grp        sc
+			                ON      (   cm0.ref_main_cd = 'CODE'
+			                        AND sc.grp_code     = msd.ref_2_code)
+			                LEFT OUTER JOIN ehr_organization_chart  eoc
+			                ON      (   cm0.ref_main_cd = 'DEPT'
+			                        AND eoc.ou_code     = msd.ou_code
+			                        AND eoc.dept_code   = msd.ref_2_code)
+			                WHERE   msl.ou_code     = #{OU_CODE}
+			                AND     msl.use_flag_yn = 'Y' )
+			        group by mail_code
+			        ,       mail_title
+			        ,       CASE
+			                    WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN 'D'
+			                    ELSE 'S'
+			                END
+			        ,       CASE
+			                    WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN ref_1
+			                END
+			        ,       CASE ref_main_cd
+			                    WHEN 'USER' THEN recipient_name
+			                    WHEN 'ROLE' THEN auth_name
+			                    WHEN 'CODE' THEN grp_name
+			                    WHEN 'DEPT' THEN NVL(dept_name, ref_1_name)
+			                END
+			        ,       DECODE(ref_main_cd, 'DEPT', DECODE(dept_name, NULL, 0, 1), 0)
+			        ,       CASE
+			                    WHEN ref_main_cd = 'DEPT' AND dept_name IS NOT NULL THEN order_seq
+			                    ELSE arr_no
+			                END
+			        ,       CASE
+			                   WHEN ref_main_cd in ('USER', 'DEPT') THEN NULL
+			                   ELSE DECODE(ref_2_code, 'ROLE_ADMIN', NULL, ref_2_code)
+			                END )
+			WHERE 1 = 1
+		]]>
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(MAIL_TITLE)">
+        	<![CDATA[
+        		AND LOWER(mail_title) LIKE '%'|| LOWER(#{MAIL_TITLE}) || '%'
+        	]]>   
+        </if>
+		<![CDATA[	
+			GROUP BY mail_code
+			,       mail_title
+			ORDER BY mail_code
+		]]>  
+    </select>  
+</mapper>

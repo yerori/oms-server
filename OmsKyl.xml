@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmsKylMapper">
+    <!-- RFQ 조회 -->
+	<select id="SELECT_RFQ" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT  OM.OU_CODE
+		, 		TO_CHAR(OM.RFQ_DATE,'RRRR-MM-DD') AS RFQ_DATE
+		,       OM.RFQ_CODE
+		,       OM.CHARGE_USER_ID
+		,       SM.USER_NAME AS CHARGE_USER_NAME
+		,       OM.CUSTOMER_ID
+		,       SC.CUSTOMER_NAME
+		,       GR.ITEM_NAME AS CUSTOMER_GROUP
+		,       OM.CAR_TYPE_CODE
+		,       CAR.ITEM_NAME AS CAR_TYPE_NAME
+		,       OM.OEM
+		,       OM.PRODUCT_NAME_CODE
+		,       CO.ITEM_NAME AS PRODUCT_NAME
+		,       OM.TARGET_DATE
+		,       OM.REMARK
+		FROM OMS_RFQ OM
+		LEFT OUTER JOIN SMT_USER_MSTR SM ON SM.USER_ID = OM.CHARGE_USER_ID
+		JOIN SMT_CUSTOMER SC ON SC.OU_CODE = OM.OU_CODE AND SC.CUSTOMER_ID = OM.CUSTOMER_ID 
+		LEFT OUTER JOIN SMT_COMM_CODE GR ON GR.ITEM_CODE = SC.CUSTOMER_GROUP AND GR.GRP_CODE = 'O014'
+		LEFT OUTER JOIN SMT_COMM_CODE CAR ON CAR.ITEM_CODE = OM.CAR_TYPE_CODE AND CAR.GRP_CODE = 'O018'
+		LEFT OUTER JOIN SMT_COMM_CODE CO ON CO.ITEM_CODE = OM.PRODUCT_NAME_CODE AND CO.GRP_CODE = 'O008'
+    </select>   
+    
+    <!-- PRODUCT NAME, CAT TYPE NAME 제외한 RFQ 조회 -->
+	<select id="SELECT_RFQ_EXCEPT_NAMES" parameterType="java.util.Map" resultType="java.util.Map">  
+			SELECT  OM.OU_CODE
+			, 		TO_CHAR(OM.RFQ_DATE,'RRRR-MM-DD') AS RFQ_DATE
+			,       OM.RFQ_CODE
+			,       OM.CHARGE_USER_ID
+			,       SM.USER_NAME AS CHARGE_USER_NAME
+			,       OM.CUSTOMER_ID
+			,       SC.CUSTOMER_NAME
+			,       GR.ITEM_NAME AS CUSTOMER_GROUP
+			,       OM.CAR_TYPE_CODE
+<!-- 			,       CAR.ITEM_NAME AS CAR_TYPE_NAME -->
+			,       OM.OEM
+			,       OM.PRODUCT_NAME_CODE
+<!-- 			,       CO.ITEM_NAME AS PRODUCT_NAME -->
+			,       OM.TARGET_DATE
+			,       OM.REMARK
+			FROM OMS_RFQ OM
+			LEFT OUTER JOIN SMT_USER_MSTR SM ON SM.USER_ID = OM.CHARGE_USER_ID
+			JOIN SMT_CUSTOMER SC ON SC.OU_CODE = OM.OU_CODE AND SC.CUSTOMER_ID = OM.CUSTOMER_ID 
+			LEFT OUTER JOIN SMT_COMM_CODE GR ON GR.ITEM_CODE = SC.CUSTOMER_GROUP AND GR.GRP_CODE = 'O014'
+<!-- 			LEFT OUTER JOIN SMT_COMM_CODE CAR ON CAR.ITEM_CODE = OM.CAR_TYPE_CODE AND CAR.GRP_CODE = 'O018'
+			LEFT OUTER JOIN SMT_COMM_CODE CO ON CO.ITEM_CODE = OM.PRODUCT_NAME_CODE AND CO.GRP_CODE = 'O008' -->
+    </select>  
+    
+    <!-- CAR TYPE COMBO BOX LIST 조회 -->
+	<select id="SELECT_CAR_TYPE" parameterType="java.util.Map" resultType="java.util.Map">     
+			SELECT	ITEM_NAME AS NAME
+				 ,	ITEM_CODE AS CODE
+			FROM SMT_COMM_CODE 
+			WHERE GRP_CODE = 'O018' 
+			AND ACTIVE_FLAG = 'Y' 
+			ORDER BY ARR_NO
+    </select>   
+   
+    
+	<!-- RFQ  등록 -->
+	<insert id="INSERT_RFQ" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+		INSERT INTO OMS_RFQ
+		  (OU_CODE
+		  ,RFQ_CODE
+		  ,CHARGE_USER_ID
+		  ,CUSTOMER_ID
+		  ,RFQ_DATE
+		  ,CAR_TYPE_CODE
+		  ,OEM
+		  ,PRODUCT_NAME_CODE
+		  ,TARGET_DATE
+		  ,REMARK
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID)
+		VALUES
+		  (#{OU_CODE}
+		  ,OMS_RFQ_PKG.GEN_RFQ_CODE_FUNC(#{GV_USER_ID},
+                                          #{OU_CODE})
+		  ,#{CHARGE_USER_ID}
+		  ,#{CUSTOMER_ID}
+		  ,#{RFQ_DATE}
+		  ,#{CAR_TYPE_CODE}
+		  ,#{OEM}
+		  ,#{PRODUCT_NAME_CODE}
+		  ,#{TARGET_DATE}
+		  ,#{REMARK}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}	 
+		   )
+
+	]]>
+	</insert>    
+	
+	<!-- RFQ  수정 -->
+	<update id="UPDATE_RFQ" parameterType="java.util.Map">
+		UPDATE OMS_RFQ
+		   SET CHARGE_USER_ID    = #{CHARGE_USER_ID}
+		      ,CUSTOMER_ID       = #{CUSTOMER_ID}
+		      ,RFQ_DATE          = #{RFQ_DATE}
+		      ,CAR_TYPE_CODE     = #{CAR_TYPE_CODE}
+		      ,OEM               = #{OEM}
+		      ,PRODUCT_NAME_CODE = #{PRODUCT_NAME_CODE}
+		      ,TARGET_DATE       = #{TARGET_DATE}
+		      ,REMARK            = #{REMARK}
+		      ,UPD_DATE          = #{UPD_DATE}
+		      ,UPD_USER_ID       = #{UPD_USER_ID}
+		 WHERE OU_CODE           = #{OU_CODE}
+		   AND RFQ_CODE          = #{RFQ_CODE}
+		      
+	</update> 
+     
+	<!-- RFQ  삭제 -->
+	<delete id="DELETE_RFQ" parameterType="java.util.Map">
+		DELETE FROM OMS_RFQ	
+		 WHERE OU_CODE           = #{OU_CODE}
+		   AND RFQ_CODE          = #{RFQ_CODE}
+	</delete>	      
+</mapper>

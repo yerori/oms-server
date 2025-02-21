@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmsRfqMapper">
+    <!-- RFQ 조회 -->
+	<select id="SELECT_RFQ" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT RF.OU_CODE
+		      ,RF.RFQ_CODE
+		      ,RF.RFQ_DATE
+		      ,RF.CAR_TYPE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+		      ,RF.TARGET_DATE
+		      ,RFA.CHARGE_USER_ID
+      		  ,(SELECT USER_NAME FROM SMT_USER_MSTR WHERE USER_ID = RFA.CHARGE_USER_ID) AS CHARGE_USER_NAME
+		      ,RF.CUSTOMER_ID
+		      ,RF.CUSTOMER_NAME
+		      ,RF.CUSTOMER_GROUP
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O014', RF.CUSTOMER_GROUP, #{GV_LANG}) AS CUSTOMER_GROUP_NAME
+		      ,RF.ERP_CUSTOMER_ID
+		      ,RF.ERP_CUSTOMER_NAME
+		      ,RF.NATION_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O005', RF.NATION_CODE, #{GV_LANG}) AS NATION_NAME
+		      ,RF.OEM
+		      ,RF.PRODUCT_NAME_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O008', RF.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+		      ,RF.REMARK
+		      ,RF.INS_USER_ID
+		      ,RF.WRITER_NAME
+		      ,RF.ATT_YN
+		      ,RF.PROJECT_COUNT
+		      ,CASE WHEN RFA.CHARGE_USER_ID IS NULL THEN 'I'
+						ELSE 'U' END AS ROW_STATUS
+		  FROM OMS_RFQ_V RF
+		  	 , OMS_RFQ_AUTH 	RFA
+		 WHERE RF.OU_CODE = #{OU_CODE}
+		   AND RFA.OU_CODE = RF.OU_CODE
+		   AND RFA.RFQ_CODE = RF.RFQ_CODE
+		   AND TRUNC(SYSDATE) BETWEEN rfa.START_DATE AND NVL(rfa.END_DATE, '9999-12-31')
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CODE)">
+        	<![CDATA[
+        	   AND RF.RFQ_CODE LIKE '%'|| #{RFQ_CODE} || '%'  
+        	]]>  
+        </if>    
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND RF.CAR_TYPE_CODE = #{CAR_TYPE_CODE} 
+        	]]>  
+        </if> 
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND RF.CUSTOMER_ID = #{CUSTOMER_ID} 
+        	]]>  
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND RF.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_NAME_CODE)">
+        	<![CDATA[
+        	   AND RF.PRODUCT_NAME_CODE = #{PRODUCT_NAME_CODE} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_NAME_CODE)">
+        	<![CDATA[
+        	   AND RF.PRODUCT_NAME_CODE = #{PRODUCT_NAME_CODE} 
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(STD_FROM_DATE)">
+        	<![CDATA[ 
+        	   AND RFQ_DATE BETWEEN TO_DATE(#{STD_FROM_DATE},'YYYY-MM-DD')
+               AND TO_DATE(NVL(#{STD_TO_DATE}, '9999-12-31'),'YYYY-MM-DD')
+        	]]>  
+        </if>
+		 ORDER BY RF.RFQ_CODE, RF.CUSTOMER_NAME 
+    </select>  
+    
+    <!-- RFQ 이관 조회 -->
+	<select id="SELECT_RFQ_TRANSFER" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT rfa.OU_CODE
+			 , rfa.RFQ_CODE
+			 , rfa.CHARGE_USER_ID AS RFQ_CHARGE_USER_ID 
+			 , (SELECT USER_NAME FROM SMT_USER_MSTR WHERE USER_ID = rfa.CHARGE_USER_ID ) AS RFQ_CHARGE_USER_NAME
+			 , rf.CUSTOMER_NAME
+			 , rf.CAR_TYPE_NAME
+			 , rf.PRODUCT_NAME
+			 , rf.RFQ_DATE
+			 , TO_CHAR(rfa.START_DATE, 'YYYYMMDD') AS RFQ_START_DATE
+			 , TO_CHAR(rfa.END_DATE, 'YYYYMMDD') AS RFQ_END_DATE
+			 , pv.PROJECT_CODE
+			 , pv.REGISTER_YEAR
+			 , pv.OU_COUNTRY_NAME
+			 , (SELECT USER_NAME FROM SMT_USER_MSTR WHERE USER_ID = pa.user_id ) as PROJECT_INS_USER_NAME
+			 , CASE WHEN COUNT(rfa.rfq_code) OVER (PARTITION BY rfa.rfq_code) >1 THEN 'Y'
+			        ELSE 'N' 
+			   END AS DUPLICATE_FLAG
+		  FROM OMS_RFQ_V     rf
+		  INNER JOIN OMS_RFQ_AUTH   rfa ON (rf.OU_CODE = rfa.OU_CODE AND rf.RFQ_CODE = rfa.RFQ_CODE)
+		  LEFT OUTER JOIN  (
+		  	OMS_PROJECT_V pv INNER JOIN oms_project_auth pa ON 
+		  		(pv.OU_CODE = pa.OU_CODE 
+		  		 AND pv.PROJECT_CODE = pa.project_code 
+		  		 AND pa.project_role = 'MANAGER' 
+		  		 AND TRUNC(SYSDATE) BETWEEN pa.START_DATE 
+		  		 AND NVL(pa.END_DATE, '9999-12-31') 
+		  	)
+		  ) ON (rf.OU_CODE = pv.OU_CODE AND rf.RFQ_CODE = pv.RFQ_CODE AND pv.LATEST_YN = 'Y')
+
+		 WHERE TRUNC(SYSDATE) BETWEEN rfa.START_DATE AND NVL(rfa.END_DATE, '9999-12-31')
+		   AND rf.RFQ_DATE BETWEEN TO_DATE(NVL(#{RFQ_START_DATE},'1900-01-01'),'YYYY-MM-DD')
+           AND TO_DATE(NVL(#{RFQ_END_DATE}, '9999-12-31'),'YYYY-MM-DD')
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(OU_CODE)">
+        	<![CDATA[
+        	   AND rf.OU_CODE = #{OU_CODE}
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CHARGE_USER_ID)">
+        	<if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CHARGE_USER_NAME)">
+	        	<![CDATA[
+	        	   AND rfa.CHARGE_USER_ID = #{RFQ_CHARGE_USER_ID}
+	        	]]>
+        	</if>
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CODE)">
+        	<![CDATA[
+        	   	AND rfa.RFQ_CODE LIKE '%'|| #{RFQ_CODE} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND rf.CAR_TYPE_CODE = #{CAR_TYPE_CODE} 
+        	   AND pv.CAR_TYPE_CODE = rf.CAR_TYPE_CODE
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+	        	<![CDATA[
+	        	   	AND rf.CUSTOMER_ID = #{CUSTOMER_ID}
+	        	]]>
+        	</if> 
+	    </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND rf.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>      
+	        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_CODE)">
+        	<![CDATA[
+        	   AND rf.PRODUCT_NAME_CODE = #{PRODUCT_CODE} 
+        	]]>  
+        </if>
+		 ORDER BY rf.RFQ_CODE, pv.PROJECT_CODE 
+    </select>  
+    
+	<!-- RFQ  등록 -->
+	<insert id="INSERT_RFQ" parameterType="java.util.Map" useGeneratedKeys="false">
+		<!-- 방법 1. 
+			SELECT  OMS_RFQ_PKG.GEN_RFQ_CODE_FUNC(#{GV_USER_ID}, #{OU_CODE})
+		    INTO    V_RFQ_CODE
+		    FROM    DUAL; 
+		-->
+		<![CDATA[
+			DECLARE
+				V_RFQ_CODE	VARCHAR2(40);
+			BEGIN			    
+				INSERT INTO OMS_RFQ
+					  (OU_CODE
+					  ,RFQ_CODE
+					  ,CHARGE_USER_ID
+					  ,CUSTOMER_ID
+					  ,RFQ_DATE
+					  ,CAR_TYPE_CODE
+					  ,OEM
+					  ,PRODUCT_NAME_CODE
+					  ,TARGET_DATE
+					  ,REMARK
+					  ,INS_DATE
+					  ,INS_USER_ID
+					  ,UPD_DATE
+					  ,UPD_USER_ID)
+				 VALUES
+					  (#{OU_CODE}
+					  ,OMS_RFQ_PKG.GEN_RFQ_CODE_FUNC(#{GV_USER_ID}, #{OU_CODE})
+					  ,#{CHARGE_USER_ID}
+					  ,#{CUSTOMER_ID}
+					  ,#{RFQ_DATE}
+					  ,#{CAR_TYPE_CODE}
+					  ,#{OEM}
+					  ,#{PRODUCT_NAME_CODE}
+					  ,#{TARGET_DATE}
+					  ,#{REMARK}
+					  ,SYSDATE
+					  ,#{GV_USER_ID}
+					  ,SYSDATE
+					  ,#{GV_USER_ID}	 
+					  )
+		         RETURNING RFQ_CODE INTO V_RFQ_CODE;
+					   
+				 INSERT INTO OMS_RFQ_AUTH
+					  (OU_CODE
+					  ,RFQ_CODE
+					  ,CHARGE_USER_ID
+					  ,PREV_CHARGE_USER_ID
+					  ,START_DATE
+					  ,END_DATE
+					  ,INS_DATE
+					  ,INS_USER_ID
+					  ,UPD_DATE
+					  ,UPD_USER_ID)
+				 VALUES
+					  (#{OU_CODE}
+					  ,V_RFQ_CODE
+					  ,#{CHARGE_USER_ID}
+					  ,-1
+					  ,TRUNC(SYSDATE)
+					  ,#{END_DATE}
+					  ,SYSDATE
+					  ,#{GV_USER_ID}
+					  ,SYSDATE
+					  ,#{GV_USER_ID});
+					  
+				COMMIT; 
+			END;
+		]]>
+	</insert>    
+	
+	<!-- RFQ  수정 -->
+	<update id="UPDATE_RFQ" parameterType="java.util.Map">
+		UPDATE OMS_RFQ
+		   SET CUSTOMER_ID       = #{CUSTOMER_ID}
+		      ,RFQ_DATE          = #{RFQ_DATE}
+		      ,CAR_TYPE_CODE     = #{CAR_TYPE_CODE}
+		      ,OEM               = #{OEM}
+		      ,PRODUCT_NAME_CODE = #{PRODUCT_NAME_CODE}
+		      ,TARGET_DATE       = #{TARGET_DATE}
+		      ,REMARK            = #{REMARK}
+		      ,UPD_DATE          = #{UPD_DATE}
+		      ,UPD_USER_ID       = #{UPD_USER_ID}
+		 WHERE OU_CODE           = #{OU_CODE}
+		   AND RFQ_CODE          = #{RFQ_CODE}
+		      
+	</update> 
+     
+	<!-- RFQ  삭제 -->
+	<delete id="DELETE_RFQ" parameterType="java.util.Map">
+		<![CDATA[
+			BEGIN
+				DELETE FROM OMS_RFQ	
+				WHERE OU_CODE           = #{OU_CODE}
+				AND RFQ_CODE          = #{RFQ_CODE};
+				
+				DELETE FROM OMS_RFQ_AUTH
+				WHERE OU_CODE           = #{OU_CODE}
+				AND RFQ_CODE          = #{RFQ_CODE};
+			END;
+		]]>
+	</delete>	 
+	     
+	<!-- RFQ 담당자 변경유무에 따른 정보 이력 조회 -->
+	<select id="SELECT_RFQ_BY_CHARGE_USER_CHANGE" parameterType="java.util.Map" resultType="java.util.Map">       
+		SELECT ROW_NUMBER() OVER (ORDER BY OA.RFQ_CODE, OA.START_DATE, OA.END_DATE) AS IDX
+			 , OA.RFQ_CODE
+			 , AM.USER_NAME AS CHARGE_USER_NAME
+			 , NVL(BM.USER_NAME, AM.USER_NAME) AS PREV_CHARGE_USER_NAME
+			 , SMT_GET_COMMON_CODE_NAME_FUNC('O031', COALESCE(OA.UPD_TYPE_CODE, 'NEW'), #{GV_LANG}) AS UPD_TYPE_NAME
+			 , OA.UPD_DETAILS
+			 , TO_CHAR(OA.START_DATE,'YYYY-MM-DD') AS START_DATE
+			 , TO_CHAR(OA.END_DATE,'YYYY-MM-DD') AS END_DATE
+			 , CM.USER_NAME AS UPD_USER_NAME
+			 , TO_CHAR(OA.UPD_DATE,'YYYY-MM-DD') AS UPD_DATE
+		 FROM OMS_RFQ_AUTH OA
+		 LEFT JOIN SMT_USER_MSTR AM ON OA.CHARGE_USER_ID = AM.USER_ID
+		 LEFT JOIN SMT_USER_MSTR BM ON OA.PREV_CHARGE_USER_ID = BM.USER_ID
+		 LEFT JOIN SMT_USER_MSTR CM ON OA.UPD_USER_ID = CM.USER_ID
+	    WHERE 1=1
+	      AND OA.OU_CODE       = #{OU_CODE}
+	    <if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CODE)">
+        	<![CDATA[
+            	AND RFQ_CODE LIKE '%'|| #{RFQ_CODE} || '%'
+        	]]>  
+	    </if>
+	    	
+	    <if test="@com.oms.MyBatisUtil@isNotEmpty(CHARGE_USER_ID)">
+	    	<if test="@com.oms.MyBatisUtil@isNotEmpty(CHARGE_USER_NAME)">
+		    	<![CDATA[
+			      AND
+					(
+					  (COALESCE(OA.UPD_TYPE_CODE, 'NEW') = 'NEW' 
+					  AND (OA.PREV_CHARGE_USER_ID = #{CHARGE_USER_ID} OR OA.CHARGE_USER_ID = #{CHARGE_USER_ID}))
+					  OR
+					  (COALESCE(OA.UPD_TYPE_CODE, 'NEW') <> 'NEW'
+				]]>  
+			    <if test="CHANGE_FLAG == 'PREV'">
+			        AND OA.PREV_CHARGE_USER_ID = #{CHARGE_USER_ID}))
+			    </if>
+			    <if test="CHANGE_FLAG == 'CURR'">
+			        AND OA.CHARGE_USER_ID = #{CHARGE_USER_ID}))
+			    </if>
+		    </if>
+	    </if>
+	    <if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_DATE)">
+	    	<![CDATA[ 
+	            AND TO_DATE(#{RFQ_DATE}, 'YYYY-MM-DD') BETWEEN OA.START_DATE
+	            	                AND NVL(OA.END_DATE, '9999-12-31')
+	        ]]>  
+	    </if>
+	    ORDER BY OA.RFQ_CODE, OA.START_DATE, OA.END_DATE
+    </select>    
+	
+	<!-- RFQ 권한 조회 -->
+	<select id="SELECT_RFQ_AUTH" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT  ROW_NUMBER() OVER (ORDER BY START_DATE, END_DATE) AS IDX
+			  ,	OU_CODE
+		      , RFQ_CODE
+		      , CHARGE_USER_ID
+		      , CHARGE_USER_NAME
+		      , TO_CHAR(START_DATE,'YYYY-MM-DD') AS START_DATE
+		      , TO_CHAR(END_DATE,'YYYY-MM-DD') AS END_DATE
+		  FROM OMS_RFQ_AUTH_V 
+		 WHERE OU_CODE 		= #{OU_CODE}
+           AND RFQ_CODE 	= #{RFQ_CODE}           
+		 ORDER BY START_DATE DESC, CHARGE_USER_NAME
+    </select>      
+    
+    <!-- RFQ 권한 추가 -->
+	<insert id="INSERT_RFQ_AUTH" parameterType="java.util.Map" useGeneratedKeys="false">     
+		<![CDATA[
+			INSERT INTO OMS_RFQ_AUTH
+				  (OU_CODE
+				  ,RFQ_CODE
+				  ,CHARGE_USER_ID
+				  ,PREV_CHARGE_USER_ID
+				  ,START_DATE
+				  ,END_DATE
+				  ,INS_DATE
+				  ,INS_USER_ID
+				  ,UPD_DATE
+				  ,UPD_USER_ID)
+			VALUES
+				  (#{OU_CODE}
+				  ,#{RFQ_CODE}
+				  ,#{CHARGE_USER_ID}
+				  ,NVL(#{PREV_CHARGE_USER_ID}, -1)
+				  ,#{START_DATE}
+				  ,#{END_DATE}
+				  ,SYSDATE
+				  ,#{GV_USER_ID}
+				  ,SYSDATE
+				  ,#{GV_USER_ID})
+		]]>
+    </insert>  
+    
+    <!-- RFQ 권한 수정 -->
+	<update id="UPDATE_RFQ_AUTH" parameterType="java.util.Map">
+		<![CDATA[
+			UPDATE OMS_RFQ_AUTH
+			   SET
+			       END_DATE				= TO_DATE(#{END_DATE},'YYYY-MM-DD')
+			      ,UPD_DATE				= SYSDATE
+			      ,UPD_USER_ID			= #{GV_USER_ID}
+			WHERE OU_CODE				= #{OU_CODE}
+			  AND RFQ_CODE				= #{RFQ_CODE}
+			  AND START_DATE   		  	= TO_DATE(#{START_DATE},'YYYY-MM-DD')
+		]]>
+    </update>  
+    
+    <!-- RFQ 권한 이관 -->
+	<select id="CREATE_RFQ_TRANSFER" statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">
+    	<![CDATA[
+	        CALL OMS_RFQ_TRANSFER(
+                 #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+            	,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+	            ,#{UPD_OU_CODE}
+	            ,#{GV_USER_ID}
+	            ,#{UPD_USER_ID}
+	            ,#{TRANSFER_DATE}
+	            ,#{UPD_TYPE}
+	            ,utl_encode.text_decode(#{UPD_DETAILS}, 'UTF8', 1)
+	        )
+        ]]>
+    </select>
+     
+</mapper>

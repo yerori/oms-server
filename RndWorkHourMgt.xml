@@ -1,0 +1,699 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="RndWorkHourMgtMapper">
+	<!-- 연구소 시간관리 달력 조회 -->
+	<select id="SELECT_RND_WORK_CALENDAR" parameterType="java.util.Map" resultType="java.util.Map">
+	<![CDATA[
+	SELECT RWC.DATA_TYPE                               DATA_TYPE
+          ,DECODE(RWC.DATA_TYPE,'2','요일','4','규정시간')  GUBUN
+          ,RWC.DD_01 ,RWC.DD_02 ,RWC.DD_03 ,RWC.DD_04 ,RWC.DD_05      
+          ,RWC.DD_06 ,RWC.DD_07 ,RWC.DD_08 ,RWC.DD_09 ,RWC.DD_10
+          ,RWC.DD_11 ,RWC.DD_12 ,RWC.DD_13 ,RWC.DD_14 ,RWC.DD_15
+          ,RWC.DD_16 ,RWC.DD_17 ,RWC.DD_18 ,RWC.DD_19 ,RWC.DD_20
+          ,RWC.DD_21 ,RWC.DD_22 ,RWC.DD_23 ,RWC.DD_24 ,RWC.DD_25
+          ,RWC.DD_26 ,RWC.DD_27 ,RWC.DD_28 ,RWC.DD_29 ,RWC.DD_30
+          ,RWC.DD_31
+          ,CASE WHEN RWC.DATA_TYPE = '4' THEN
+               TO_CHAR(TO_NUMBER(NVL(RWC.DD_01,'0')) + TO_NUMBER(NVL(RWC.DD_02,'0')) + TO_NUMBER(NVL(RWC.DD_03,'0')) + TO_NUMBER(NVL(RWC.DD_04,'0')) + TO_NUMBER(NVL(RWC.DD_05,'0')) +      
+                       TO_NUMBER(NVL(RWC.DD_06,'0')) + TO_NUMBER(NVL(RWC.DD_07,'0')) + TO_NUMBER(NVL(RWC.DD_08,'0')) + TO_NUMBER(NVL(RWC.DD_09,'0')) + TO_NUMBER(NVL(RWC.DD_10,'0')) +
+                       TO_NUMBER(NVL(RWC.DD_11,'0')) + TO_NUMBER(NVL(RWC.DD_12,'0')) + TO_NUMBER(NVL(RWC.DD_13,'0')) + TO_NUMBER(NVL(RWC.DD_14,'0')) + TO_NUMBER(NVL(RWC.DD_15,'0')) +
+                       TO_NUMBER(NVL(RWC.DD_16,'0')) + TO_NUMBER(NVL(RWC.DD_17,'0')) + TO_NUMBER(NVL(RWC.DD_18,'0')) + TO_NUMBER(NVL(RWC.DD_19,'0')) + TO_NUMBER(NVL(RWC.DD_20,'0')) +
+                       TO_NUMBER(NVL(RWC.DD_21,'0')) + TO_NUMBER(NVL(RWC.DD_22,'0')) + TO_NUMBER(NVL(RWC.DD_23,'0')) + TO_NUMBER(NVL(RWC.DD_24,'0')) + TO_NUMBER(NVL(RWC.DD_25,'0')) +
+                       TO_NUMBER(NVL(RWC.DD_26,'0')) + TO_NUMBER(NVL(RWC.DD_27,'0')) + TO_NUMBER(NVL(RWC.DD_28,'0')) + TO_NUMBER(NVL(RWC.DD_29,'0')) + TO_NUMBER(NVL(RWC.DD_30,'0')) +
+                       TO_NUMBER(NVL(RWC.DD_31,'0')))
+             ELSE
+               TO_CHAR(NULL)
+           END                     ROW_TOTAL
+    FROM   RND_WORK_CALENDAR_MGT_T RWC
+    WHERE  RWC.OU_CODE             = #{OU_CODE}
+    AND    RWC.YYYY_MM             = #{WORK_YYYYMM}
+    AND    RWC.DATA_TYPE           IN ('2','4')
+    UNION ALL
+    SELECT '5'             DATA_TYPE
+          ,XXX.EMP_NAME    GUBUN
+          ,TO_CHAR(XXX.DD_01) DD_01 ,TO_CHAR(XXX.DD_02) DD_02 ,TO_CHAR(XXX.DD_03) DD_03 ,TO_CHAR(XXX.DD_04) DD_04 
+          ,TO_CHAR(XXX.DD_05) DD_05 ,TO_CHAR(XXX.DD_06) DD_06 ,TO_CHAR(XXX.DD_07) DD_07 ,TO_CHAR(XXX.DD_08) DD_08 
+          ,TO_CHAR(XXX.DD_09) DD_09 ,TO_CHAR(XXX.DD_10) DD_10 ,TO_CHAR(XXX.DD_11) DD_11 ,TO_CHAR(XXX.DD_12) DD_12 
+          ,TO_CHAR(XXX.DD_13) DD_13 ,TO_CHAR(XXX.DD_14) DD_14 ,TO_CHAR(XXX.DD_15) DD_15 ,TO_CHAR(XXX.DD_16) DD_16 
+          ,TO_CHAR(XXX.DD_17) DD_17 ,TO_CHAR(XXX.DD_18) DD_18 ,TO_CHAR(XXX.DD_19) DD_19 ,TO_CHAR(XXX.DD_20) DD_20
+          ,TO_CHAR(XXX.DD_21) DD_21 ,TO_CHAR(XXX.DD_22) DD_22 ,TO_CHAR(XXX.DD_23) DD_23 ,TO_CHAR(XXX.DD_24) DD_24 
+          ,TO_CHAR(XXX.DD_25) DD_25 ,TO_CHAR(XXX.DD_26) DD_26 ,TO_CHAR(XXX.DD_27) DD_27 ,TO_CHAR(XXX.DD_28) DD_28 
+          ,TO_CHAR(XXX.DD_29) DD_29 ,TO_CHAR(XXX.DD_30) DD_30 ,TO_CHAR(XXX.DD_31) DD_31
+          ,TO_CHAR(XXX.DD_01 + XXX.DD_02 + XXX.DD_03 + XXX.DD_04 + XXX.DD_05 + XXX.DD_06 + XXX.DD_07 + XXX.DD_08 + XXX.DD_09 + XXX.DD_10 +
+                   XXX.DD_11 + XXX.DD_12 + XXX.DD_13 + XXX.DD_14 + XXX.DD_15 + XXX.DD_16 + XXX.DD_17 + XXX.DD_18 + XXX.DD_19 + XXX.DD_20 +
+                   XXX.DD_21 + XXX.DD_22 + XXX.DD_23 + XXX.DD_24 + XXX.DD_25 + XXX.DD_26 + XXX.DD_27 + XXX.DD_28 + XXX.DD_29 + XXX.DD_30 +
+                   XXX.DD_31)    ROW_TOTAL
+    FROM   (SELECT EIM.EMP_NAME  AS EMP_NAME
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'01',RWD.WORK_TIME,0)),0) AS DD_01 
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'02',RWD.WORK_TIME,0)),0) AS DD_02
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'03',RWD.WORK_TIME,0)),0) AS DD_03
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'04',RWD.WORK_TIME,0)),0) AS DD_04
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'05',RWD.WORK_TIME,0)),0) AS DD_05
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'06',RWD.WORK_TIME,0)),0) AS DD_06
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'07',RWD.WORK_TIME,0)),0) AS DD_07
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'08',RWD.WORK_TIME,0)),0) AS DD_08
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'09',RWD.WORK_TIME,0)),0) AS DD_09
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'10',RWD.WORK_TIME,0)),0) AS DD_10
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'11',RWD.WORK_TIME,0)),0) AS DD_11
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'12',RWD.WORK_TIME,0)),0) AS DD_12
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'13',RWD.WORK_TIME,0)),0) AS DD_13
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'14',RWD.WORK_TIME,0)),0) AS DD_14
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'15',RWD.WORK_TIME,0)),0) AS DD_15
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'16',RWD.WORK_TIME,0)),0) AS DD_16
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'17',RWD.WORK_TIME,0)),0) AS DD_17
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'18',RWD.WORK_TIME,0)),0) AS DD_18
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'19',RWD.WORK_TIME,0)),0) AS DD_19
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'20',RWD.WORK_TIME,0)),0) AS DD_20
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'21',RWD.WORK_TIME,0)),0) AS DD_21
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'22',RWD.WORK_TIME,0)),0) AS DD_22
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'23',RWD.WORK_TIME,0)),0) AS DD_23
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'24',RWD.WORK_TIME,0)),0) AS DD_24
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'25',RWD.WORK_TIME,0)),0) AS DD_25
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'26',RWD.WORK_TIME,0)),0) AS DD_26
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'27',RWD.WORK_TIME,0)),0) AS DD_27
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'28',RWD.WORK_TIME,0)),0) AS DD_28
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'29',RWD.WORK_TIME,0)),0) AS DD_29
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'30',RWD.WORK_TIME,0)),0) AS DD_30
+                  ,NVL(SUM(DECODE(TO_CHAR(RWD.WORK_DATE,'DD'),'31',RWD.WORK_TIME,0)),0) AS DD_31
+            FROM   RND_WORK_CALENDAR_DETAIL_T RWD
+                  ,HS_HRM.EHR_INSA_MSTR          EIM
+            WHERE  RWD.OU_CODE                = #{OU_CODE}
+            AND    RWD.WORK_DATE              BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD'))
+            AND    EXISTS
+                       (SELECT 1
+                        FROM   RND_WORK_CALENDAR_MGT_T RWC
+					    WHERE  RWC.OU_CODE             = #{OU_CODE}
+					    AND    RWC.YYYY_MM             = #{WORK_YYYYMM} )
+            AND    RWD.OU_CODE                = EIM.OU_CODE
+            AND    RWD.EMP_NO                 = EIM.EMP_NO
+     ]]>
+     <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_CODE)">
+            <![CDATA[
+            AND    RWD.CURR_DEPT_CODE         = #{DEPT_CODE}
+        	]]>
+     </if>
+     <if test="@com.oms.MyBatisUtil@isEmpty(DEPT_CODE) and AUTH_CODE.equals('DEPT')">
+            <![CDATA[
+            AND    RWD.CURR_DEPT_CODE         IN            
+                   (SELECT XXX.DEPT_CODE
+					FROM   (SELECT EDV.UP_DEPT_CODE
+					              ,SMT_GET_DEPT_NAME_FUNC(EDV.OU_CODE,EDV.UP_DEPT_CODE) UP_DEPT_NAME
+					              ,EDV.DEPT_CODE
+					              ,EDV.DEPT_NAME
+					              ,EDV.APPLY_ST_DATE
+					              ,EDV.APPLY_ED_DATE
+					        FROM   HS_HRM.EHR_DEPT_MSTR_HIST_V EDV
+					        WHERE  EDV.OU_CODE          = #{OU_CODE}
+					        AND    EDV.DEPT_TYPE        = '50'   
+					        AND    EDV.DEPT_CODE        IN (SELECT T.DEPT_CODE
+					                                        FROM   HS_HRM.EHR_INSA_GAZ_LINE  T
+					                                        WHERE  T.OU_CODE          = #{OU_CODE}
+					                                        AND    T.EMP_NO           = #{DEPT_EMP_NO}
+					                                        AND   (T.JIKCHAK_CODE     IS NOT NULL AND T.JIKCHAK_CODE  <> '99' )
+					                                        AND    T.CONFIRM_FLAG     = 'Y'
+					                                        AND    T.APPLY_FLAG       = 'Y'
+					                                        AND   (T.CHARGE_END_DATE - T.CHARGE_DATE) > 0
+					                                        AND  ((T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                        OR    (T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                        OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                        OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                             )   
+					                                        )  /* 팀 */
+					        AND  ((EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					        OR    (EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					        OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					        OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					             )
+					        UNION ALL
+					        SELECT EDV.UP_DEPT_CODE
+					              ,SMT_GET_DEPT_NAME_FUNC(EDV.OU_CODE,EDV.UP_DEPT_CODE) UP_DEPT_NAME
+					              ,EDV.DEPT_CODE
+					              ,EDV.DEPT_NAME
+					              ,EDV.APPLY_ST_DATE
+					              ,EDV.APPLY_ED_DATE
+					        FROM   HS_HRM.EHR_DEPT_MSTR_HIST_V EDV
+					        WHERE  EDV.OU_CODE          = #{OU_CODE}
+					        AND    EDV.DEPT_TYPE        = '50'     
+					        AND    EDV.UP_DEPT_CODE     IN (SELECT T.DEPT_CODE
+					                                        FROM   HS_HRM.EHR_INSA_GAZ_LINE  T
+					                                        WHERE  T.OU_CODE          = #{OU_CODE}
+					                                        AND    T.EMP_NO           = #{DEPT_EMP_NO}
+					                                        AND   (T.JIKCHAK_CODE     IS NOT NULL AND T.JIKCHAK_CODE  <> '99' )
+					                                        AND    T.CONFIRM_FLAG     = 'Y'
+					                                        AND    T.APPLY_FLAG       = 'Y'
+					                                        AND   (T.CHARGE_END_DATE - T.CHARGE_DATE) > 0
+					                                        AND  ((T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                        OR    (T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                        OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                        OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                             )   
+					                                        )     /* 실 */
+					        AND  ((EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					        OR    (EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					        OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					        OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					             )
+					        UNION ALL
+					        SELECT EDV.UP_DEPT_CODE
+					              ,SMT_GET_DEPT_NAME_FUNC(EDV.OU_CODE,EDV.UP_DEPT_CODE) UP_DEPT_NAME
+					              ,EDV.DEPT_CODE
+					              ,EDV.DEPT_NAME
+					              ,EDV.APPLY_ST_DATE
+					              ,EDV.APPLY_ED_DATE
+					        FROM   HS_HRM.EHR_DEPT_MSTR_HIST_V EDV
+					        WHERE  EDV.OU_CODE          = #{OU_CODE}
+					        AND    EDV.DEPT_TYPE        = '50' 
+					        AND    EDV.UP_DEPT_CODE     IN (SELECT EDV.DEPT_CODE
+					                                        FROM   HS_HRM.EHR_DEPT_MSTR_HIST_V EDV
+					                                        WHERE  EDV.OU_CODE          = #{OU_CODE}
+					                                        AND    EDV.UP_DEPT_CODE     IN (SELECT T.DEPT_CODE
+					                                                                        FROM   HS_HRM.EHR_INSA_GAZ_LINE  T
+					                                                                        WHERE  T.OU_CODE          = #{OU_CODE}
+					                                                                        AND    T.EMP_NO           = #{DEPT_EMP_NO}
+					                                                                        AND   (T.JIKCHAK_CODE     IS NOT NULL AND T.JIKCHAK_CODE  <> '99' )
+					                                                                        AND    T.CONFIRM_FLAG     = 'Y'
+					                                                                        AND    T.APPLY_FLAG       = 'Y'
+					                                                                        AND   (T.CHARGE_END_DATE - T.CHARGE_DATE) > 0
+					                                                                        AND  ((T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                                                        OR    (T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                                                        OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                                                        OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE  >=LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					                                                                             )   
+					                                                                        )  
+					                                        AND    EDV.DEPT_TYPE        = '30' 
+					                                        )  /* 본부 */
+					        AND  ((EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					        OR    (EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					        OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					        OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+					             )  
+					        )  XXX
+					WHERE EXISTS
+					          (SELECT 1
+					           FROM   RND_WORK_CALENDAR_DETAIL_T RWC
+					           WHERE  RWC.OU_CODE                = #{OU_CODE}
+					           AND    RWC.CURR_DEPT_CODE         = XXX.DEPT_CODE )               
+                  )
+        	]]>
+     </if>
+     <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NO)">
+            <![CDATA[
+        	AND    RWD.EMP_NO                 = #{EMP_NO}
+        	]]>
+     </if>
+            GROUP BY EIM.EMP_NAME
+            ) XXX
+    <![CDATA[   
+    ORDER BY DATA_TYPE, GUBUN
+	]]>
+	</select>
+    
+    <!-- 부서 ALL Popup -->
+	<select id="SELECT_ALL_DEPT" parameterType="java.util.Map" resultType="java.util.Map">
+	<![CDATA[
+	SELECT DISTINCT 
+	       RWC.CURR_DEPT_CODE         DEPT_CODE
+	      ,EDM.DEPT_NAME              DEPT_NAME
+	FROM   RND_WORK_CALENDAR_DETAIL_T RWC
+	      ,HS_HRM.EHR_DEPT_MSTR          EDM
+	WHERE  RWC.OU_CODE                = #{OU_CODE}
+	AND    RWC.WORK_DATE              BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD')) + 0.99999
+	AND    RWC.OU_CODE                = EDM.OU_CODE
+	AND    RWC.CURR_DEPT_CODE         = EDM.DEPT_CODE
+	ORDER BY EDM.DEPT_NAME    
+	]]>
+	</select>
+	
+	<!-- 부서 ALL Popup -->
+	<select id="SELECT_ALL_EMP" parameterType="java.util.Map" resultType="java.util.Map">
+	<![CDATA[
+	SELECT DISTINCT 
+	       RWC.EMP_NO
+	      ,EIM.EMP_NAME
+	FROM   RND_WORK_CALENDAR_DETAIL_T RWC
+	      ,HS_HRM.EHR_INSA_MSTR          EIM
+	WHERE  RWC.OU_CODE                = #{OU_CODE}
+	AND    RWC.WORK_DATE              BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD')) + 0.99999
+	]]>
+	<if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_CODE)">
+        <![CDATA[
+	       AND    RWC.CURR_DEPT_CODE         = #{DEPT_CODE}
+        ]]>
+    </if>
+	<![CDATA[   
+	AND    RWC.OU_CODE                = EIM.OU_CODE
+	AND    RWC.EMP_NO                 = EIM.EMP_NO
+	ORDER BY EIM.EMP_NAME
+	]]>
+	</select>
+	
+	<!-- 연구소 시간관리 다운로드 상세내역 그리드 조회 -->
+	<select id="SELECT_DW_WORK_DETAIL" parameterType="java.util.Map" resultType="java.util.Map">
+	<![CDATA[
+	SELECT RCD.WORK_ID
+	      ,RCD.OU_CODE
+          ,RCD.CURR_DEPT_CODE  AS DEPT_CODE
+	      ,EDM.DEPT_NAME
+	      ,RCD.EMP_NO
+	      ,EIM.EMP_NAME
+	      ,TO_CHAR(RCD.WORK_DATE,'YYYYMMDD')                     WORK_DATE
+	      ,HS_HRM.SMT_GET_CODE_NAME_FUNC('H005',RCD.JIKWI_CODE,#{GV_LANG})    JIKWI_NAME  
+	      ,SMT_GET_CODE_NAME_FUNC('R001',RCD.WORK_TYPE,#{GV_LANG})         WORK_TYPE
+	      ,RCD.PJT_CODE
+	      ,RCD.PJT_NAME
+	      ,SMT_GET_CODE_NAME_FUNC('R002',RCD.DEV_PHASE,#{GV_LANG})     DEV_PHASE
+	      ,SMT_GET_CODE_NAME_FUNC('R003',RCD.WORK_NAME,#{GV_LANG})     WORK_NAME
+	      ,RCD.WORK_TEXT
+	      ,RCD.WORK_TIME
+          ,RCD.JIKJONG_CODE
+          ,RCD.JIKWI_CODE
+	FROM   RND_WORK_CALENDAR_DETAIL_T RCD
+	      ,HS_HRM.EHR_INSA_MSTR       EIM
+	      ,HS_HRM.EHR_DEPT_MSTR       EDM
+	WHERE  RCD.OU_CODE                = #{OU_CODE}
+	AND    RCD.WORK_DATE              BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD')) + 0.99999
+    ]]>
+     <if test="@com.oms.MyBatisUtil@isNotEmpty(DEPT_CODE)">
+            <![CDATA[
+            AND    RCD.CURR_DEPT_CODE         = #{DEPT_CODE}
+        	]]>
+     </if>
+     <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NO)">
+            <![CDATA[
+        	AND    RCD.EMP_NO                 = #{EMP_NO}
+        	]]>
+     </if>
+    <![CDATA[   
+	AND    RCD.EMP_NO                 = EIM.EMP_NO(+)
+	AND    RCD.OU_CODE                = EDM.OU_CODE(+)
+	AND    RCD.CURR_DEPT_CODE         = EDM.DEPT_CODE(+)
+    ORDER BY EIM.EMP_NAME, RCD.WORK_DATE, RCD.WORK_TYPE, RCD.DEV_PHASE, RCD.WORK_NAME
+	]]>
+	</select>
+	
+	<!-- 연구원 업무시간관리 요약 -->
+	<select id="SELECT_RND_SUMMARY1" parameterType="java.util.Map" resultType="java.util.Map">
+	<![CDATA[
+	SELECT ABC.DEPT_CODE                    DEPT_CODE
+	      ,EDM.DEPT_NAME                    DEPT_NAME
+    ]]>
+	      <if test="JIKCHAK_NAME=='팀원' or JIKCHAK_NAME=='팀장'" >
+          <![CDATA[  
+	      ,EIM.EMP_NAME                     EMP_NAME
+	      ,ABC.EMP_NO                       EMP_NO 
+	      ,HS_HRM.SMT_GET_CODE_NAME_FUNC('H005',EIM.JIKWI_CODE,#{GV_LANG}) JIKWI_NAME 
+	      ,EIM.JIKWI_CODE                                               JIKWI_CODE 
+	      ]]>
+	      </if>
+	<![CDATA[      
+	      ,SUM(ABC.WORK_DAYS)               WORK_DAYS                                      /* 근무일수 */
+	      ,SUM(ABC.WORK_DAYS) * 8           REGULAR_WORK_TIMES                             /* 규정업무시간 */
+	      ,SUM(ABC.INPUT_WORK_TIMES)        INPUT_WORK_TIMES                               /* 등록업무시간 */
+	      ,DECODE(SIGN((SUM(ABC.WORK_DAYS) * 8) - SUM(ABC.INPUT_WORK_TIMES)),-1,0,(SUM(ABC.WORK_DAYS) * 8) - SUM(ABC.INPUT_WORK_TIMES))     NOT_INPUT_WORK_TIMES    /* 미등록업무시간 */  
+	      ,DECODE(SIGN(SUM(ABC.INPUT_WORK_TIMES) - (SUM(ABC.WORK_DAYS) * 8)),-1,0,(SUM(ABC.INPUT_WORK_TIMES) - (SUM(ABC.WORK_DAYS) * 8)))   EXCESS_INPUT_WORK_TIMES  /* 초과업무시간 */
+	      ,SUM(ABC.SHORTAGE_WORK_DAYS)      SHORTAGE_WORK_DAYS   /* 등록부족일수 */
+	      ,SUM(ABC.SHORTAGE_WORK_TIME)      SHORTAGE_WORK_TIME   /* 부족업무시간 */
+	      ,SUM(ABC.HOLY_WORK_DAYS)          HOLIDAY_WORK_DAYS    /* 휴일근무일수 */
+	      ,SUM(ABC.HOLY_WORK_TIME)          HOLIDAY_WORK_TIME    /* 휴일업무시간 */
+	FROM   (-- 근무일수 / 규정업무시간 / 등록업무시간 
+	        SELECT RCD.CURR_DEPT_CODE         DEPT_CODE
+	              ,RCD.EMP_NO                 EMP_NO
+	              ,RND_WORK_CALENDAR_MGT_PKG.GET_EMP_WORK_DAYS(#{GV_OU_CODE},RCD.CURR_DEPT_CODE,RCD.EMP_NO,#{WORK_YYYYMM})  WORK_DAYS /* 근무일수 */
+	              ,SUM(NVL(RCD.WORK_TIME,0))  INPUT_WORK_TIMES         /* 등록업무시간 */
+	              ,0                          SHORTAGE_WORK_DAYS       /* 등록부족일수 */
+	              ,0                          SHORTAGE_WORK_TIME       /* 부족업무시간 */
+	              ,0                          HOLY_WORK_DAYS           /* 휴일근무일수 */
+	              ,0                          HOLY_WORK_TIME           /* 휴일업무시간 */
+	        FROM   RND_WORK_CALENDAR_DETAIL_T RCD
+	        WHERE  RCD.OU_CODE                = #{GV_OU_CODE}
+	        AND    RCD.WORK_DATE              BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) + 0.99999
+	        GROUP BY RCD.CURR_DEPT_CODE 
+	                ,RCD.EMP_NO 
+	        UNION ALL        
+	        -- 등록부족일수 / 부족업무시간
+	        SELECT AAA.CURR_DEPT_CODE      DEPT_CODE
+	              ,AAA.EMP_NO              EMP_NO
+	              ,0                       WORK_DAYS                /* 근무일수 */
+	              ,0                       INPUT_WORK_TIMES         /* 등록업무시간 */
+	              ,COUNT(*)                SHORTAGE_WORK_DAYS       /* 등록부족일수 */
+	              ,SUM(SHORTAGE_WORK_TIME) SHORTAGE_WORK_TIME       /* 부족업무시간 */
+	              ,0                       HOLY_WORK_DAYS           /* 휴일근무일수 */
+	              ,0                       HOLY_WORK_TIME           /* 휴일업무시간 */
+	        FROM (SELECT RCD.CURR_DEPT_CODE
+	                    ,RCD.EMP_NO
+	                    ,RCD.WORK_DATE
+	                    ,SUM(NVL(RCD.WORK_TIME,0))  SHORTAGE_WORK_TIME
+	              FROM   RND_WORK_CALENDAR_DETAIL_T RCD
+	                    ,(SELECT XXX.TODAY_STR
+	                            ,DECODE(YYY.HOLY_TYPE,'3','Y',XXX.DAY_OFF_FLAG)    DAY_OFF_FLAG
+	                      FROM   (SELECT TO_CHAR(FIRST_DAY + LEVEL - 1,'YYYYMMDD') TODAY_STR       -- 해당일자STR
+	                                    ,DECODE(TO_CHAR(FIRST_DAY + LEVEL - 1,'D'),7,'Y',1,'Y',TO_CHAR(NULL)) DAY_OFF_FLAG -- 휴일여부
+	                              FROM  (SELECT TO_DATE(#{WORK_YYYYMM},'YYYYMM') FIRST_DAY FROM DUAL)
+	                              CONNECT BY FIRST_DAY + LEVEL - 1 <= TRUNC(LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM'))) ) XXX
+	                             ,(SELECT SCA.* , TO_CHAR(SCA.CAL_DATE,'YYYYMMDD') TODAY_STR
+	                               FROM   HS_HRM.SMT_CALENDAR   SCA
+	                               WHERE  SCA.OU_CODE           = #{GV_OU_CODE}
+	                               AND    TO_CHAR(SCA.CAL_DATE,'YYYYMM')  = #{WORK_YYYYMM}
+	                               AND    SCA.HOLY_TYPE                   = '3' ) YYY
+	                      WHERE XXX.TODAY_STR  = YYY.TODAY_STR(+)
+	                              ) ZZZ
+	              WHERE  RCD.OU_CODE                = #{GV_OU_CODE}
+	              AND    RCD.WORK_DATE              BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) + 0.99999 
+	              AND    TO_CHAR(RCD.WORK_DATE,'YYYYMMDD') = ZZZ.TODAY_STR
+	              AND    ZZZ.DAY_OFF_FLAG                  IS NULL  
+	              GROUP BY RCD.CURR_DEPT_CODE
+	                      ,RCD.EMP_NO 
+	                      ,RCD.WORK_DATE  
+	              HAVING SUM(NVL(RCD.WORK_TIME,0)) < 8   /* 정규근무일 중 정규업무시간 보다 적게 입력한 일자 */
+	              ) AAA
+	        GROUP BY AAA.CURR_DEPT_CODE 
+	                ,AAA.EMP_NO        
+	        UNION ALL 
+	        --  휴일근무일수 / 휴일업무시간
+	        SELECT RCD.CURR_DEPT_CODE            DEPT_CODE
+	              ,RCD.EMP_NO                    EMP_NO
+	              ,0                             WORK_DAYS                /* 근무일수 */
+	              ,0                             INPUT_WORK_TIMES         /* 등록업무시간 */
+	              ,0                             SHORTAGE_WORK_DAYS       /* 등록부족일수 */
+	              ,0                             SHORTAGE_WORK_TIME       /* 부족업무시간 */
+	              ,COUNT(DISTINCT RCD.WORK_DATE) HOLY_WORK_DAYS           /* 휴일근무일수 */
+	              ,SUM(NVL(RCD.WORK_TIME,0))     HOLY_WORK_TIME           /* 휴일업무시간 */
+	        FROM   RND_WORK_CALENDAR_DETAIL_T RCD
+	              ,(SELECT XXX.TODAY_STR
+	                      ,DECODE(YYY.HOLY_TYPE,'3','Y',XXX.DAY_OFF_FLAG)    DAY_OFF_FLAG
+	                FROM   (SELECT TO_CHAR(FIRST_DAY + LEVEL - 1,'YYYYMMDD') TODAY_STR       -- 해당일자STR
+	                              ,DECODE(TO_CHAR(FIRST_DAY + LEVEL - 1,'D'),7,'Y',1,'Y',TO_CHAR(NULL)) DAY_OFF_FLAG -- 휴일여부
+	                        FROM  (SELECT TO_DATE(#{WORK_YYYYMM},'YYYYMM') FIRST_DAY FROM DUAL)
+	                        CONNECT BY FIRST_DAY + LEVEL - 1 <= TRUNC(LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM'))) ) XXX
+	                       ,(SELECT SCA.* , TO_CHAR(SCA.CAL_DATE,'YYYYMMDD') TODAY_STR
+	                         FROM   HS_HRM.SMT_CALENDAR   SCA
+	                         WHERE  SCA.OU_CODE           = #{GV_OU_CODE}
+	                         AND    TO_CHAR(SCA.CAL_DATE,'YYYYMM')  = #{WORK_YYYYMM}
+	                         AND    SCA.HOLY_TYPE                   = '3' ) YYY
+	                WHERE XXX.TODAY_STR  = YYY.TODAY_STR(+)
+	                        ) ZZZ
+	        WHERE  RCD.OU_CODE                = #{GV_OU_CODE}
+	        AND    RCD.WORK_DATE              BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) + 0.99999  
+	        AND    TO_CHAR(RCD.WORK_DATE,'YYYYMMDD') = ZZZ.TODAY_STR
+	        AND    ZZZ.DAY_OFF_FLAG                  = 'Y'
+	        GROUP BY RCD.CURR_DEPT_CODE
+	                ,RCD.EMP_NO  ) ABC
+	      ,HS_HRM.EHR_DEPT_MSTR   EDM
+	      ,HS_HRM.EHR_INSA_MSTR   EIM
+	WHERE  ABC.DEPT_CODE = EDM.DEPT_CODE
+	AND    EDM.OU_CODE   = #{GV_OU_CODE}
+	AND    ABC.EMP_NO    = EIM.EMP_NO
+	AND    EIM.OU_CODE   = #{GV_OU_CODE}      
+	]]>
+    <if test="@com.oms.MyBatisUtil@isNotEmpty(EMP_NO)">
+	    <![CDATA[
+	    AND    ABC.EMP_NO    = #{EMP_NO}
+	    ]]>
+    </if> 
+    <if test="JIKCHAK_NAME!='팀원'" >
+    <![CDATA[  
+	AND    ABC.DEPT_CODE IN    
+	                   (SELECT XXX.DEPT_CODE
+	                    FROM   (SELECT EDV.UP_DEPT_CODE
+	                                  ,SMT_GET_DEPT_NAME_FUNC(EDV.OU_CODE,EDV.UP_DEPT_CODE) UP_DEPT_NAME
+	                                  ,EDV.DEPT_CODE
+	                                  ,EDV.DEPT_NAME
+	                                  ,EDV.APPLY_ST_DATE
+	                                  ,EDV.APPLY_ED_DATE
+	                            FROM   HS_HRM.EHR_DEPT_MSTR_HIST_V EDV
+	                            WHERE  EDV.OU_CODE          = #{GV_OU_CODE}
+	                            AND    EDV.DEPT_TYPE        = '50'   
+	                            AND    EDV.DEPT_CODE        IN (SELECT T.DEPT_CODE
+	                                                            FROM   HS_HRM.EHR_INSA_GAZ_LINE  T
+	                                                            WHERE  T.OU_CODE          = #{GV_OU_CODE}
+	                                                            AND    T.EMP_NO           = #{DEPT_EMP_NO}
+	                                                            AND   (T.JIKCHAK_CODE     IS NOT NULL AND T.JIKCHAK_CODE  <> '99' )
+	                                                            AND    T.CONFIRM_FLAG     = 'Y'
+	                                                            AND    T.APPLY_FLAG       = 'Y'
+	                                                            AND   (T.CHARGE_END_DATE - T.CHARGE_DATE) > 0
+	                                                            AND  ((T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                            OR    (T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                            OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                            OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                                 )   
+	                                                            )  /* 팀 */
+	                            AND  ((EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                            OR    (EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                            OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                            OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                 )
+	                            UNION ALL
+	                            SELECT EDV.UP_DEPT_CODE
+	                                  ,SMT_GET_DEPT_NAME_FUNC(EDV.OU_CODE,EDV.UP_DEPT_CODE) UP_DEPT_NAME
+	                                  ,EDV.DEPT_CODE
+	                                  ,EDV.DEPT_NAME
+	                                  ,EDV.APPLY_ST_DATE
+	                                  ,EDV.APPLY_ED_DATE
+	                            FROM   HS_HRM.EHR_DEPT_MSTR_HIST_V EDV
+	                            WHERE  EDV.OU_CODE          = #{GV_OU_CODE}
+	                            AND    EDV.DEPT_TYPE        = '50'     
+	                            AND    EDV.UP_DEPT_CODE     IN (SELECT T.DEPT_CODE
+	                                                            FROM   HS_HRM.EHR_INSA_GAZ_LINE  T
+	                                                            WHERE  T.OU_CODE          = #{GV_OU_CODE}
+	                                                            AND    T.EMP_NO           = #{DEPT_EMP_NO}
+	                                                            AND   (T.JIKCHAK_CODE     IS NOT NULL AND T.JIKCHAK_CODE  <> '99' )
+	                                                            AND    T.CONFIRM_FLAG     = 'Y'
+	                                                            AND    T.APPLY_FLAG       = 'Y'
+	                                                            AND   (T.CHARGE_END_DATE - T.CHARGE_DATE) > 0
+	                                                            AND  ((T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                            OR    (T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                            OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                            OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                                 )   
+	                                                            )     /* 실 */
+	                            AND  ((EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                            OR    (EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                            OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                            OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                 )
+	                            UNION ALL
+	                            SELECT EDV.UP_DEPT_CODE
+	                                  ,SMT_GET_DEPT_NAME_FUNC(EDV.OU_CODE,EDV.UP_DEPT_CODE) UP_DEPT_NAME
+	                                  ,EDV.DEPT_CODE
+	                                  ,EDV.DEPT_NAME
+	                                  ,EDV.APPLY_ST_DATE
+	                                  ,EDV.APPLY_ED_DATE
+	                            FROM   HS_HRM.EHR_DEPT_MSTR_HIST_V EDV
+	                            WHERE  EDV.OU_CODE          = #{GV_OU_CODE}
+	                            AND    EDV.DEPT_TYPE        = '50' 
+	                            AND    EDV.UP_DEPT_CODE     IN (SELECT EDV.DEPT_CODE
+	                                                            FROM   HS_HRM.EHR_DEPT_MSTR_HIST_V EDV
+	                                                            WHERE  EDV.OU_CODE          = #{GV_OU_CODE}
+	                                                            AND    EDV.UP_DEPT_CODE     IN (SELECT T.DEPT_CODE
+	                                                                                            FROM   HS_HRM.EHR_INSA_GAZ_LINE  T
+	                                                                                            WHERE  T.OU_CODE          = #{GV_OU_CODE}
+	                                                                                            AND    T.EMP_NO           = #{DEPT_EMP_NO}
+	                                                                                            AND   (T.JIKCHAK_CODE     IS NOT NULL AND T.JIKCHAK_CODE  <> '99' )
+	                                                                                            AND    T.CONFIRM_FLAG     = 'Y'
+	                                                                                            AND    T.APPLY_FLAG       = 'Y'
+	                                                                                            AND   (T.CHARGE_END_DATE - T.CHARGE_DATE) > 0
+	                                                                                            AND  ((T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                                                            OR    (T.CHARGE_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                                                            OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                                                            OR    (T.CHARGE_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND T.CHARGE_END_DATE  >=LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                                                                                 )   
+	                                                                                            )  
+	                                                            AND    EDV.DEPT_TYPE        = '30' 
+	                                                            )  /* 본부 */
+	                            AND  ((EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                            OR    (EDV.APPLY_ST_DATE      <= TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                            OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                            OR    (EDV.APPLY_ST_DATE      BETWEEN TO_DATE(#{WORK_YYYYMM}||'01','YYYYMMDD') AND LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')) AND EDV.APPLY_ED_DATE  >= LAST_DAY(TO_DATE(#{WORK_YYYYMM},'YYYYMM')))
+	                                 )  
+	                            )  XXX
+	                    WHERE EXISTS
+	                              (SELECT 1
+	                               FROM   RND_WORK_CALENDAR_DETAIL_T RWC
+	                               WHERE  RWC.OU_CODE                = #{GV_OU_CODE}
+	                               AND    RWC.CURR_DEPT_CODE         = XXX.DEPT_CODE 
+	                               AND    ROWNUM = 1 )               
+	                    )
+	]]>
+	</if>
+	<![CDATA[  
+	GROUP BY ABC.DEPT_CODE
+	        ,EDM.DEPT_NAME
+	]]>
+	<if test="JIKCHAK_NAME=='팀원' or JIKCHAK_NAME=='팀장'" >
+    <![CDATA[
+	        ,EIM.EMP_NAME
+	        ,ABC.EMP_NO 
+	        ,HS_HRM.SMT_GET_CODE_NAME_FUNC('H005',EIM.JIKWI_CODE,#{GV_LANG}) 
+	        ,EIM.JIKWI_CODE 
+	]]>
+    </if>
+	<![CDATA[  
+	ORDER BY DEPT_CODE
+	]]>
+	<if test="JIKCHAK_NAME=='팀원' or JIKCHAK_NAME=='팀장'" >
+    <![CDATA[         
+	        ,JIKWI_CODE DESC
+	        ,EMP_NAME  
+	]]>
+	</if>      
+	</select>	
+	
+    <!-- 압므 코드 구성 관리 -->
+	<select id="SELECT_RND_WORK_CODE" parameterType="java.util.Map" resultType="java.util.Map">
+	<![CDATA[	
+	  SELECT RCH.OU_CODE        OU_CODE 
+	        ,RCH.MAIN_CODE      MAIN_CODE
+	        ,C01.ITEM_NAME      MAIN_NAME
+	        ,RCH.MAIN_SORT_NO   MAIN_SORT_NO
+	        ,RCH.MIDDLE_CODE    MIDDLE_CODE
+	        ,C02.ITEM_NAME      MIDDLE_NAME
+	        ,RCH.MIDDLE_SORT_NO MIDDLE_SORT_NO
+	        ,RCH.SMALL_CODE     SMALL_CODE
+	        ,C03.ITEM_NAME      SMALL_NAME
+	        ,RCH.SMALL_SORT_NO  SMALL_SORT_NO
+	        ,NVL((SELECT 'Y'
+	              FROM   RND_WORK_CALENDAR_DETAIL_T RWD
+	              WHERE  RWD.OU_CODE                = RCH.OU_CODE
+	              AND    RWD.WORK_TYPE              = RCH.MAIN_CODE
+	              AND    RWD.DEV_PHASE              = RCH.MIDDLE_CODE
+	              AND    RWD.WORK_NAME              = RCH.SMALL_CODE
+	              AND    ROWNUM                     = 1 ),' ')  USED_YN
+	        ,TO_CHAR(RCH.START_DATE,'YYYYMMDD')     START_DATE
+	        ,TO_CHAR(RCH.END_DATE,'YYYYMMDD')       END_DATE
+	  FROM   RND_WORK_CODE_HIERARCHY_T RCH
+	        ,(SELECT *
+	          FROM   SMT_COMM_CODE SCC
+	          WHERE  SCC.GRP_CODE  = 'R001') C01
+	        ,(SELECT *
+	          FROM   SMT_COMM_CODE SCC
+	          WHERE  SCC.GRP_CODE  = 'R002') C02
+	        ,(SELECT *
+	          FROM   SMT_COMM_CODE SCC
+	          WHERE  SCC.GRP_CODE  = 'R003') C03
+	  WHERE  RCH.OU_CODE     = #{GV_OU_CODE}
+	  AND    RCH.MAIN_CODE   = C01.ITEM_CODE(+)
+	  AND    RCH.MIDDLE_CODE = C02.ITEM_CODE(+)
+	  AND    RCH.SMALL_CODE  = C03.ITEM_CODE(+)        
+	  ORDER BY RCH.MAIN_SORT_NO
+	          ,RCH.MIDDLE_SORT_NO
+	          ,RCH.SMALL_SORT_NO
+    ]]>  
+	</select>	
+	
+	<!-- 업무코드 관리 중복 체크  -->
+    <select id="CHECK_RND_WORK_CODE_DUP" statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">
+    <![CDATA[
+        CALL RND_WORK_CALENDAR_MGT_PKG.CHECK_WORK_CODE_DUP(
+             #{O_CNT, mode=OUT, jdbcType=VARCHAR, javaType=String}
+            ,#{O_ERROR_MSG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+            ,#{I_OU_CODE}
+            ,#{I_MAIN_CODE}
+            ,#{I_MIDDLE_CODE}
+            ,#{I_SMALL_CODE}
+        )
+        ]]>
+    </select>
+    
+    <!-- 업무코드 정렬번호 가져오기  -->
+    <select id="GET_SORT_NO" statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">
+    <![CDATA[
+        CALL RND_WORK_CALENDAR_MGT_PKG.GET_SORT_NO(
+             #{O_SORT_NO, mode=OUT, jdbcType=VARCHAR, javaType=String}
+            ,#{O_ERROR_MSG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+            ,#{I_OU_CODE}
+            ,#{I_MAIN_CODE}
+            ,#{I_MIDDLE_CODE}
+            ,#{I_SMALL_CODE}
+        )
+        ]]>
+    </select>
+    
+    <!-- 업무코드 관리 INSERT -->
+    <insert id="INSERT_WORK_CODE" parameterType="java.util.Map" useGeneratedKeys="false">
+    <![CDATA[
+   	    INSERT INTO RND_WORK_CODE_HIERARCHY_T RCH
+		   (OU_CODE
+		   ,MAIN_CODE
+		   ,MAIN_SORT_NO
+		   ,MIDDLE_CODE
+		   ,MIDDLE_SORT_NO
+	       ,SMALL_CODE
+	       ,SMALL_SORT_NO
+		   ,START_DATE
+		   ,END_DATE
+		   ,INS_USE_ID
+	   	   ,INS_DATE
+	   	   ,UPD_USER_ID
+	   	   ,UPD_DATE
+		   )
+		VALUES   
+		   (#{OU_CODE}
+           ,#{MAIN_CODE}
+           ,#{MAIN_SORT_NO}
+           ,#{MIDDLE_CODE}
+           ,#{MIDDLE_SORT_NO}
+           ,#{SMALL_CODE}
+           ,#{SMALL_SORT_NO}
+           ,#{START_DATE}
+           ,#{END_DATE}
+		   ,#{GV_USER_ID}
+		   ,SYSDATE
+		   ,#{GV_USER_ID}
+		   ,SYSDATE
+		   ) 
+    ]]>    
+    </insert>    
+    
+    <!-- 업무코드 관리 UPDATE -->
+    <update id="UPDATE_WORK_CODE" parameterType="java.util.Map">    
+    <![CDATA[
+   	    UPDATE RND_WORK_CODE_HIERARCHY_T RCH
+		SET    RCH.MAIN_SORT_NO          = #{MAIN_SORT_NO}
+		      ,RCH.MIDDLE_SORT_NO        = #{MIDDLE_SORT_NO}
+		      ,RCH.SMALL_SORT_NO         = #{SMALL_SORT_NO}
+		      ,RCH.START_DATE            = #{START_DATE}
+		      ,RCH.END_DATE              = #{END_DATE}
+              ,RCH.UPD_USER_ID           = #{GV_USER_ID}
+		      ,RCH.UPD_DATE              = SYSDATE
+        WHERE  RCH.OU_CODE               = #{OU_CODE}
+        AND    RCH.MAIN_CODE             = #{MAIN_CODE}
+        AND    RCH.MIDDLE_CODE           = #{MIDDLE_CODE}
+        AND    RCH.SMALL_CODE            = #{SMALL_CODE}
+    ]]>    
+    </update>     
+    
+    <!-- 업무코드 관리 DELETE -->
+    <delete id="DELETE_WORK_CODE" parameterType="java.util.Map">    
+        DELETE RND_WORK_CODE_HIERARCHY_T RCH
+        WHERE  RCH.OU_CODE               = #{OU_CODE}
+        AND    RCH.MAIN_CODE             = #{MAIN_CODE}
+        AND    RCH.MIDDLE_CODE           = #{MIDDLE_CODE}
+        AND    RCH.SMALL_CODE            = #{SMALL_CODE}
+    </delete>  
+    
+    <!-- 압므 코드 구성 관리 -->
+	<select id="POPUP_RND_WORK_CODE" parameterType="java.util.Map" resultType="java.util.Map">
+	<![CDATA[	
+    SELECT SCC.ITEM_NAME   NAME
+	      ,SCC.ITEM_CODE   CODE
+	FROM   SMT_COMM_CODE   SCC
+	WHERE  SCC.GRP_CODE    = #{GROUP_CODE}
+	AND    SCC.ACTIVE_FLAG = 'Y'         
+	]]>
+	    <if test="@com.oms.MyBatisUtil@isNotEmpty(NAME)">
+	    <![CDATA[
+	    AND    SCC.NAME        LIKE '%' || #{NAME} || '%'
+	    ]]>
+	    </if>
+	<![CDATA[	     
+	ORDER BY SCC.ARR_NO 
+	]]>
+    </select>
+</mapper>
+

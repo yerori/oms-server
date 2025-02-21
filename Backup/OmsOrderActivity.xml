@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmsOrderActivityMapper">
+    <!-- 주수활동 조회 -->
+	<select id="SELECT_ORDER_ACTIVITY" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT ORDER_ACTIVITY_ID
+		      ,OU_CODE
+		      ,PROJECT_CODE
+		      ,NO
+		      ,ACT_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O015', ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+		      ,DETAIL_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O016', DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+		      ,ACT_DATE
+		      ,CHARGE_USER_ID
+		      ,CHARGE_NAME
+		      ,ACTION_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O020', ACTION_CODE, #{GV_LANG}) AS ACTION_NAME
+		      ,ATT_YN
+		      ,REMARK
+		  FROM OMS_ORDER_ACTIVITY_V
+		 WHERE OU_CODE = #{OU_CODE}
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ORDER_ACTIVITY_ID)">
+        	<![CDATA[
+        	   AND ORDER_ACTIVITY_ID = #{ORDER_ACTIVITY_ID} 
+        	]]>  
+        </if> 
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PROJECT_CODE = #{PROJECT_CODE} 
+        	]]>  
+        </if>                  
+		 ORDER BY  NO 
+    </select>   
+	<!-- 주수활동  등록 -->
+	<insert id="INSERT_ORDER_ACTIVITY" parameterType="java.util.Map" useGeneratedKeys="false">    
+	<![CDATA[
+	BEGIN
+		INSERT INTO OMS_ORDER_ACTIVITY
+		  (ORDER_ACTIVITY_ID
+		  ,OU_CODE
+		  ,PROJECT_CODE
+		  ,NO
+		  ,ACT_STATUS_CODE
+		  ,DETAIL_STATUS_CODE
+		  ,ACT_DATE
+		  ,CHARGE_USER_ID
+		  ,ACTION_CODE
+		  ,REMARK
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID)
+		VALUES
+		  (OMS_ORDER_ACTIVITY_SEQ.NEXTVAL
+		  ,#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,#{NO}
+		  ,#{ACT_STATUS_CODE}
+		  ,#{DETAIL_STATUS_CODE}
+		  ,TO_DATE(#{ACT_DATE},'RRRRMMDD')
+		  ,#{CHARGE_USER_ID}
+		  ,#{ACTION_CODE}
+		  ,#{REMARK}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}	 
+		   );
+		   
+		UPDATE OMS_PROJECT
+		   SET ACT_STATUS_CODE    = #{ACT_STATUS_CODE}
+		      ,DETAIL_STATUS_CODE = #{DETAIL_STATUS_CODE}
+		      ,UPD_DATE           = SYSDATE
+		      ,UPD_USER_ID        = #{GV_USER_ID}
+		WHERE OU_CODE             = #{OU_CODE}
+		  AND PROJECT_CODE        = #{PROJECT_CODE};      
+
+		COMMIT;
+        IF  #{ACT_STATUS_CODE} = 'S01' THEN
+		  OMS_PROJECT_MAIL_PKG.SEND_MAIL_ACTIVITY_S01_PROC( 
+                                                            #{GV_USER_ID} 
+                                                           ,#{OU_CODE}
+                                                           ,#{PROJECT_CODE} );		
+        END IF; 	
+        
+        IF  #{ACT_STATUS_CODE} = 'S04' THEN
+		  OMS_PROJECT_MAIL_PKG.SEND_MAIL_ACTIVITY_S04_PROC( 
+                                                            #{GV_USER_ID} 
+                                                           ,#{OU_CODE}
+                                                           ,#{PROJECT_CODE} );		
+        END IF;    
+         	
+        IF  #{DETAIL_STATUS_CODE} = 'D04' THEN
+		  OMS_PROJECT_MAIL_PKG.SEND_MAIL_STATUS_D04_PROC( 
+                                                            #{GV_USER_ID} 
+                                                           ,#{OU_CODE}
+                                                           ,#{PROJECT_CODE} );		
+        END IF;    
+                                               	   	
+        IF  #{DETAIL_STATUS_CODE} = 'D09' THEN
+		  OMS_PROJECT_MAIL_PKG.SEND_MAIL_STATUS_D09_PROC( 
+                                                            #{GV_USER_ID} 
+                                                           ,#{OU_CODE}
+                                                           ,#{PROJECT_CODE} );		
+        END IF; 
+    END;
+	]]>
+	</insert>    
+	
+	<!-- 주수활동  수정 -->
+	<update id="UPDATE_ORDER_ACTIVITY" parameterType="java.util.Map">
+	BEGIN
+		UPDATE OMS_ORDER_ACTIVITY
+		   SET 
+		       NO                 = #{NO}
+		      ,ACT_STATUS_CODE    = #{ACT_STATUS_CODE}
+		      ,DETAIL_STATUS_CODE = #{DETAIL_STATUS_CODE}
+		      ,ACT_DATE           = TO_DATE(#{ACT_DATE},'RRRRMMDD')
+		      ,CHARGE_USER_ID     = #{CHARGE_USER_ID}
+		      ,ACTION_CODE        = #{ACTION_CODE}
+		      ,REMARK             = #{REMARK}
+		      ,UPD_DATE           = SYSDATE
+		      ,UPD_USER_ID        = #{GV_USER_ID}	
+		 WHERE OU_CODE            = #{OU_CODE}
+	       AND ORDER_ACTIVITY_ID  = #{ORDER_ACTIVITY_ID};
+	       
+		   
+		UPDATE OMS_PROJECT
+		   SET ACT_STATUS_CODE    = #{ACT_STATUS_CODE}
+		      ,DETAIL_STATUS_CODE = #{DETAIL_STATUS_CODE}
+		      ,UPD_DATE           = SYSDATE
+		      ,UPD_USER_ID        = #{GV_USER_ID}
+		WHERE OU_CODE             = #{OU_CODE}
+		  AND PROJECT_CODE        = #{PROJECT_CODE}; 	       
+	END;	      
+	</update> 
+     
+	<!-- 주수활동  삭제 -->
+	<delete id="DELETE_ORDER_ACTIVITY" parameterType="java.util.Map">
+		DELETE OMS_ORDER_ACTIVITY 	
+		 WHERE OU_CODE = #{OU_CODE}
+	       AND ORDER_ACTIVITY_ID  = #{ORDER_ACTIVITY_ID}
+	</delete>	
+	
+    <!-- 활동단계코드 조회 --> 
+    <select id="SELECT_ACT_STATUS_CODE" parameterType="java.util.Map" resultType="java.util.Map">
+	      SELECT CC.ITEM_CODE  AS CODE
+	           , SMT_GET_CODE_NAME_FUNC(CC.GRP_CODE,CC.ITEM_CODE,#{GV_LANG})  AS NAME   
+	           , ARR_NO SORT
+	        FROM SMT_COMM_CODE  CC
+	       WHERE 1=1
+	         AND CC.GRP_CODE = 'O015'
+		     AND NVL(CC.ACTIVE_FLAG,'N') = 'Y'
+		   ORDER BY CC.ARR_NO, CC.ITEM_CODE
+    </select>
+    
+    <!-- 상세상태코드 조회 --> 
+    <select id="SELECT_DETAIL_STATUS_CODE" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT CC.ITEM_CODE  AS CODE
+             , SMT_GET_CODE_NAME_FUNC(CC.GRP_CODE,CC.ITEM_CODE,#{GV_LANG})  AS NAME  
+             , CH.ARR_NO SORT
+          FROM SMT_COMM_CODE  CC
+              ,SMT_CODE_HEIRACHY CH
+         WHERE 1=1
+           AND CH.PARENT_GRP_CODE  = 'O015'
+           AND CH.PARENT_ITEM_CODE = #{PARENT_ITEM_CODE}
+           AND CC.GRP_CODE = CH.CHILD_GRP_CODE
+           AND CC.ITEM_CODE = CH.CHILD_ITEM_CODE
+         AND NVL(CC.ACTIVE_FLAG,'N') = 'Y'
+		   ORDER BY CC.ARR_NO, CC.ITEM_CODE
+    </select>    
+    	      
+</mapper>

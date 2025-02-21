@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmeCostMapper">
+    <!-- 원가 조회 -->
+	<select id="SELECT_COST" parameterType="java.util.Map" resultType="java.util.Map">     
+        SELECT  COST_ID
+        ,       OU_CODE
+        ,       PROJECT_CODE
+        ,       PROJECT_PRODUCT_ID
+        ,       COST_STEP_CODE
+        ,       TO_CHAR(COST_DATE, 'RRRRMMDD') AS COST_DATE
+        ,       SALES_PRICE
+        ,       TOTAL_COST
+        ,       REVENUE_COST
+        ,       MATERIAL_COST
+        ,       PROCESS_COST
+        ,       LABOR_COST
+        ,       MANUFACTUR_COST
+        ,       EXPENSE_COST
+        ,       EQUIPMENT_DEPR_COST
+        ,       MOLD_DEPR_COST
+        ,       REPAIR_COST
+        ,       ELECTRICITY_COST
+        ,       OVERHEAD_COST
+        ,       VARIABLE_OVH_COST
+        ,       FIXED_OVH_COST
+        ,       SGNA_COST
+        ,       MAINTENANCE_COST
+        ,       TEST_COST
+        ,       TRANSPORTATION_COST
+        ,       PACKAGING_COST
+        ,       COMMISSION_COST
+        ,       OTHER_COST
+        ,       QUALITY_COST
+        ,       INSPECTION_COST
+        ,       INTEREST_COST
+        ,       CONFIRM
+        ,       REMARK
+        ,       OLD_COST_ID
+        ,       INS_DATE
+        ,       INS_USER_ID
+        ,       TO_CHAR(UPD_DATE,'RRRRMMDD HH24MI') AS UPD_DATE
+        ,       UPD_USER_ID
+        ,       (SELECT USER_NAME  FROM SMT_USER_MSTR WHERE USER_ID = OC.UPD_USER_ID  )AS UPD_USER_NAME
+        ,       ATT_YN
+        ,       ROW_NUMBER() OVER(ORDER BY INS_DATE) AS REG_SEQ
+        FROM    OMS_COST_V OC
+        WHERE   OU_CODE = #{OU_CODE}
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(COST_ID)">
+        	<![CDATA[
+        	   AND COST_ID = #{COST_ID} 
+        	]]>  
+        </if> 
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_PRODUCT_ID)">
+        	<![CDATA[
+        	   AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID} 
+        	]]>  
+        </if> 
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PROJECT_CODE = #{PROJECT_CODE} 
+        	]]>  
+        </if>                  
+		 ORDER BY COST_DATE 
+    </select>   
+	<!-- 원가  등록 -->
+	<insert id="INSERT_COST" parameterType="java.util.Map" useGeneratedKeys="false">    
+	   <selectKey keyProperty="NEW_COST_ID" resultType="string" order="BEFORE">
+			SELECT OMS_COST_SEQ.NEXTVAL
+			FROM DUAL
+        </selectKey>
+	    <![CDATA[
+        BEGIN
+            INSERT 
+            INTO    OMS_COST
+            (       COST_ID
+            ,       OU_CODE
+            ,       PROJECT_CODE
+            ,       PROJECT_PRODUCT_ID
+            ,       COST_STEP_CODE
+            ,       COST_DATE
+            ,       SALES_PRICE
+            ,       TOTAL_COST
+            ,       REVENUE_COST
+            ,       MATERIAL_COST
+            ,       PROCESS_COST
+            ,       LABOR_COST
+            ,       MANUFACTUR_COST
+            ,       EXPENSE_COST
+            ,       EQUIPMENT_DEPR_COST
+            ,       MOLD_DEPR_COST
+            ,       REPAIR_COST
+            ,       ELECTRICITY_COST
+            ,       OVERHEAD_COST
+            ,       VARIABLE_OVH_COST
+            ,       FIXED_OVH_COST
+            ,       SGNA_COST
+            ,       MAINTENANCE_COST
+            ,       TEST_COST
+            ,       TRANSPORTATION_COST
+            ,       PACKAGING_COST
+            ,       COMMISSION_COST
+            ,       OTHER_COST
+            ,       QUALITY_COST
+            ,       INSPECTION_COST
+            ,       INTEREST_COST
+            ,       CONFIRM
+            ,       REMARK
+            ,       OLD_COST_ID
+            ,       INS_DATE
+            ,       INS_USER_ID
+            ,       UPD_DATE
+            ,       UPD_USER_ID )
+            VALUES
+            (       #{NEW_COST_ID}
+            ,       #{OU_CODE}
+            ,       #{PROJECT_CODE}
+            ,       #{PROJECT_PRODUCT_ID}
+            ,       #{COST_STEP_CODE}
+            ,       TO_DATE(#{COST_DATE}, 'RRRRMMDD')
+            ,       #{SALES_PRICE}
+            ,       #{TOTAL_COST}
+            ,       #{REVENUE_COST}
+            ,       #{MATERIAL_COST}
+            ,       #{PROCESS_COST}
+            ,       #{LABOR_COST}
+            ,       #{MANUFACTUR_COST}
+            ,       #{EXPENSE_COST}
+            ,       #{EQUIPMENT_DEPR_COST}
+            ,       #{MOLD_DEPR_COST}
+            ,       #{REPAIR_COST}
+            ,       #{ELECTRICITY_COST}
+            ,       #{OVERHEAD_COST}
+            ,       #{VARIABLE_OVH_COST}
+            ,       #{FIXED_OVH_COST}
+            ,       #{SGNA_COST}
+            ,       #{MAINTENANCE_COST}
+            ,       #{TEST_COST}
+            ,       #{TRANSPORTATION_COST}
+            ,       #{PACKAGING_COST}
+            ,       #{COMMISSION_COST}
+            ,       #{OTHER_COST}
+            ,       #{QUALITY_COST}
+            ,       #{INSPECTION_COST}
+            ,       #{INTEREST_COST}
+            ,       #{CONFIRM}
+            ,       #{REMARK}
+            ,       #{OLD_COST_ID}
+            ,       SYSDATE
+            ,       #{GV_USER_ID}
+            ,       SYSDATE
+            ,       #{GV_USER_ID}  );    
+                                                              
+            IF  #{CONFIRM} = 'Y' THEN
+                OMS_PROJECT_MAIL_PKG.SEND_MAIL_COST_CONFIRM_PROC(#{GV_USER_ID} 
+                                                                ,#{OU_CODE}
+                                                                ,#{PROJECT_CODE}
+                                                                ,#{NEW_COST_ID} );   
+            END IF;           
+                  
+        END;
+		]]>
+	</insert>    
+	
+	<!-- 원가  수정 -->
+	<update id="UPDATE_COST" parameterType="java.util.Map">
+	    <![CDATA[
+        BEGIN
+            UPDATE  OMS_COST
+            SET     PROJECT_CODE            =   #{PROJECT_CODE}
+            ,       PROJECT_PRODUCT_ID      =   #{PROJECT_PRODUCT_ID}
+            ,       COST_STEP_CODE          =   #{COST_STEP_CODE}
+            ,       COST_DATE               =   TO_DATE(#{COST_DATE}, 'RRRRMMDD')
+            ,       SALES_PRICE             =   #{SALES_PRICE}
+            ,       TOTAL_COST              =   #{TOTAL_COST}
+            ,       REVENUE_COST            =   #{REVENUE_COST}
+            ,       MATERIAL_COST           =   #{MATERIAL_COST}
+            ,       PROCESS_COST            =   #{PROCESS_COST}
+            ,       LABOR_COST              =   #{LABOR_COST}
+            ,       MANUFACTUR_COST         =   #{MANUFACTUR_COST}
+            ,       EXPENSE_COST            =   #{EXPENSE_COST}
+            ,       EQUIPMENT_DEPR_COST     =   #{EQUIPMENT_DEPR_COST}
+            ,       MOLD_DEPR_COST          =   #{MOLD_DEPR_COST}
+            ,       REPAIR_COST             =   #{REPAIR_COST}
+            ,       ELECTRICITY_COST        =   #{ELECTRICITY_COST}
+            ,       OVERHEAD_COST           =   #{OVERHEAD_COST}
+            ,       VARIABLE_OVH_COST       =   #{VARIABLE_OVH_COST}
+            ,       FIXED_OVH_COST          =   #{FIXED_OVH_COST}
+            ,       SGNA_COST               =   #{SGNA_COST}
+            ,       MAINTENANCE_COST        =   #{MAINTENANCE_COST}
+            ,       TEST_COST               =   #{TEST_COST}
+            ,       TRANSPORTATION_COST     =   #{TRANSPORTATION_COST}
+            ,       PACKAGING_COST          =   #{PACKAGING_COST}
+            ,       COMMISSION_COST         =   #{COMMISSION_COST}
+            ,       OTHER_COST              =   #{OTHER_COST}
+            ,       QUALITY_COST            =   #{QUALITY_COST}
+            ,       INSPECTION_COST         =   #{INSPECTION_COST}
+            ,       INTEREST_COST           =   #{INTEREST_COST}
+            ,       CONFIRM                 =   #{CONFIRM}
+            ,       REMARK                  =   #{REMARK}
+            ,       OLD_COST_ID             =   #{OLD_COST_ID}
+            ,       INS_DATE                =   SYSDATE
+            ,       INS_USER_ID             =   #{GV_USER_ID}
+            ,       UPD_DATE                =   SYSDATE
+            ,       UPD_USER_ID             =   #{GV_USER_ID}
+            WHERE   OU_CODE            = #{OU_CODE}
+            AND     COST_ID            = #{COST_ID};          
+                                                                  
+            IF  #{CONFIRM} = 'Y' THEN
+                OMS_PROJECT_MAIL_PKG.SEND_MAIL_COST_CONFIRM_PROC(#{GV_USER_ID} 
+                                                                ,#{OU_CODE}
+                                                                ,#{PROJECT_CODE}
+                                                                ,#{COST_ID} );   
+            END IF;                        
+        END;
+		]]>
+	</update> 
+     
+	<!-- 원가  삭제 -->
+	<delete id="DELETE_COST" parameterType="java.util.Map">
+        <![CDATA[
+		DELETE  OMS_COST	
+        WHERE   OU_CODE   = #{OU_CODE}
+        AND     COST_ID   = #{ESTIMATE_COST_ID}
+        ]]>
+	</delete>	
+	
+ 
+    	      
+</mapper>

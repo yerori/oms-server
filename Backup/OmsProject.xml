@@ -1,0 +1,1731 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmsProjectMapper">
+    <!-- 프로젝트 조회 -->
+	<select id="SELECT_PROJECT" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT OU_CODE
+		      ,PROJECT_CODE
+		      ,PROJECT_VERSION
+		      ,CAR_TYPE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+		      ,REGISTER_YEAR
+		      ,IMPORTANCE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O017', IMPORTANCE_CODE, #{GV_LANG}) AS IMPORTANCE_NAME
+		      ,ACT_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O015', ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+		      ,DETAIL_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O016', DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+		      ,OU_COUNTRY_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O001', OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+		      ,SOP
+		      ,EOP
+		      ,DOMESTIC_EXPORT_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O003', DOMESTIC_EXPORT_CODE, #{GV_LANG}) AS DOMESTIC_EXPORT_NAME
+		      ,RFQ_RESPONSE_ID
+		      ,RFQ_RESPONSE_NAME
+		      ,TARGET_YEAR
+		      ,CUSTOMER_ID
+		      ,CUSTOMER_NAME
+		      ,CUSTOMER_GROUP
+		      ,ERP_CUSTOMER_ID
+		      ,ERP_CUSTOMER_NAME
+              ,SMT_GET_COMMON_CODE_NAME_FUNC('O014', CUSTOMER_GROUP, #{GV_LANG}) AS CUSTOMER_GROUP_NAME
+		      ,CUSTOMER_NATION_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O005', CUSTOMER_NATION_CODE,  #{GV_LANG}) AS CUSTOMER_NATION_NAME
+		      ,OEM
+		      ,REMARK
+              ,CUSTOMER_AREA
+              ,SALES_TYPE_CODE
+              ,SMT_GET_COMMON_CODE_NAME_FUNC('O022', SALES_TYPE_CODE, 'KO') AS SALES_TYPE_NAME
+		      ,PRODUCTION_AREA_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O002', PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+		      ,CURRENCY_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('F018', CURRENCY_CODE, #{GV_LANG}) AS CURRENCY_NAME
+		      ,RFQ_CODE
+		      ,ORG_PROJECT_CODE
+		      ,LATEST_YN
+		      ,ROLLING_YN
+		      ,OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                  OU_CODE,
+                                                  PROJECT_CODE)  AS AUTH
+		  FROM OMS_PROJECT_V PV
+		 WHERE OU_CODE = #{OU_CODE}
+		   AND OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                  OU_CODE,
+                                                  PROJECT_CODE) !='N'
+        <if test="@com.oms.MyBatisUtil@isEmpty(PROJECT_VERSION)">
+        	<![CDATA[
+        	   AND PV.LATEST_YN = 'Y' --최신 버젼   
+        	]]>  
+        </if>     
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ROLLING_YN)">
+        	<![CDATA[
+        	   AND PV.ROLLING_YN = #{ROLLING_YN} 
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_VERSION)">
+        	<![CDATA[
+        	   AND PV.PROJECT_VERSION = #{PROJECT_VERSION} 
+        	]]>  
+        </if> 				 
+		   	 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PV.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND PV.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND PV.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
+               AND REGEXP_LIKE(PV.ACT_STATUS_CODE, #{ACT_STATUS_CODE}, 'i')
+
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DETAIL_STATUS_CODE)">
+               AND REGEXP_LIKE(PV.DETAIL_STATUS_CODE, #{DETAIL_STATUS_CODE}, 'i')
+
+         
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CODE)">
+        	<![CDATA[
+        	   AND PV.RFQ_CODE LIKE '%'|| #{RFQ_CODE} || '%'
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND PV.CAR_TYPE_CODE LIKE '%'|| #{CAR_TYPE_CODE} || '%'
+        	]]>  
+        </if>  
+		 ORDER BY REGISTER_YEAR, TO_NUMBER (SUBSTR( PV.PROJECT_CODE,LENGTH(PV.PROJECT_CODE)-2) )     
+	 </select>	 
+    <!-- 프로젝트 조회 -->
+	<select id="SELECT_PROJECT_ALL" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT OU_CODE
+		      ,PROJECT_CODE
+		      ,PROJECT_VERSION
+		      ,CAR_TYPE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+		      ,REGISTER_YEAR
+		      ,IMPORTANCE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O017', IMPORTANCE_CODE, #{GV_LANG}) AS IMPORTANCE_NAME
+		      ,ACT_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O015', ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+		      ,DETAIL_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O016', DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+		      ,OU_COUNTRY_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O001', OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+		      ,SOP
+		      ,EOP
+		      ,DOMESTIC_EXPORT_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O003', DOMESTIC_EXPORT_CODE, #{GV_LANG}) AS DOMESTIC_EXPORT_NAME
+		      ,RFQ_RESPONSE_ID
+		      ,RFQ_RESPONSE_NAME
+		      ,TARGET_YEAR
+		      ,CUSTOMER_ID
+		      ,CUSTOMER_NAME
+		      ,CUSTOMER_GROUP
+              ,SMT_GET_COMMON_CODE_NAME_FUNC('O014', CUSTOMER_GROUP, #{GV_LANG}) AS CUSTOMER_GROUP_NAME
+		      ,ERP_CUSTOMER_ID
+		      ,ERP_CUSTOMER_NAME
+		      ,CUSTOMER_NATION_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O005', CUSTOMER_NATION_CODE,  #{GV_LANG}) AS CUSTOMER_NATION_NAME
+		      ,OEM
+		      ,PRODUCT_GROUP_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O007', PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+		      ,PRODUCT_NAME_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O008', PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+		      ,PRODUCT_MODEL_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O010', PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+		      ,ITEM_NAME
+		      ,ERP_ITEM_NO
+		      ,BUSINESS_GROUP_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O013', BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+		      ,PRODUCT_PKG_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O012', PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+		      ,REMARK
+              ,CUSTOMER_AREA
+              ,SALES_TYPE_CODE
+              ,SMT_GET_COMMON_CODE_NAME_FUNC('O022', SALES_TYPE_CODE, 'KO') AS SALES_TYPE_NAME
+		      ,PRODUCTION_AREA_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O002', PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+		      ,CURRENCY_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('F018', CURRENCY_CODE, #{GV_LANG}) AS CURRENCY_NAME
+		      ,RFQ_CODE
+		      ,ORG_PROJECT_CODE
+		      ,LATEST_YN
+		      ,ROLLING_YN
+		      ,PROJECT_PRODUCT_ID
+		      ,OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                  OU_CODE,
+                                                  PROJECT_CODE)  AS AUTH
+              ,ECOST_REG_FLAG
+              ,COST_REG_FLAG
+		  FROM OMS_PROJECT_PRODUCT_ALL_V PV
+		 WHERE OU_CODE = #{OU_CODE}
+		   AND OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                  OU_CODE,
+                                                  PROJECT_CODE) !='N'
+        <if test="@com.oms.MyBatisUtil@isEmpty(PROJECT_VERSION)">
+        	<![CDATA[
+        	   AND PV.LATEST_YN = 'Y' --최신 버젼   
+        	]]>  
+        </if>     
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_VERSION)">
+        	<![CDATA[
+        	   AND PV.PROJECT_VERSION = #{PROJECT_VERSION} 
+        	]]>  
+        </if> 		
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ROLLING_YN)">
+        	<![CDATA[
+        	   AND PV.ROLLING_YN = #{ROLLING_YN} 
+        	]]>  
+        </if>  
+		   	 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PV.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND PV.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND PV.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
+               AND REGEXP_LIKE(PV.ACT_STATUS_CODE, #{ACT_STATUS_CODE}, 'i')
+
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DETAIL_STATUS_CODE)">
+               AND REGEXP_LIKE(PV.DETAIL_STATUS_CODE, #{DETAIL_STATUS_CODE}, 'i')
+
+         
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND PV.CAR_TYPE_CODE LIKE '%'|| #{CAR_TYPE_CODE} || '%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CODE)">
+        	<![CDATA[
+        	   AND PV.RFQ_CODE LIKE '%'|| #{RFQ_CODE} || '%'
+        	]]>  
+        </if>  
+		 ORDER BY REGISTER_YEAR, TO_NUMBER (SUBSTR( PV.PROJECT_CODE,LENGTH(PV.PROJECT_CODE)-2) ) 
+    </select>
+    <!-- 프로젝트 버젼 조회 -->
+	<select id="SELECT_PROJECT_VERSION" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT DISTINCT PROJECT_VERSION AS CODE
+		       ,PROJECT_VERSION AS NAME
+		  FROM OMS_PROJECT_V PV
+		 WHERE OU_CODE = #{OU_CODE}
+           AND PV.PROJECT_CODE = REPLACE( #{PROJECT_CODE} ,'^', ' ' )  
+  		 ORDER BY TO_NUMBER (PROJECT_VERSION ) DESC
+    </select>
+    
+	<!-- 프로젝트  등록 -->
+	<insert id="INSERT_OMS_PROJECT" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+	BEGIN
+	       
+		INSERT INTO OMS_PROJECT
+		  (OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_VERSION
+		  ,CAR_TYPE_CODE
+		  ,REGISTER_YEAR
+		  ,IMPORTANCE_CODE
+		  ,ACT_STATUS_CODE
+		  ,DETAIL_STATUS_CODE
+		  ,OU_COUNTRY_CODE
+		  ,SOP
+		  ,EOP
+		  ,DOMESTIC_EXPORT_CODE
+		  ,TARGET_YEAR
+		  ,CUSTOMER_ID
+		  ,OEM
+		  ,REMARK
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID
+		  ,LATEST_YN
+		  ,CUSTOMER_AREA
+		  ,SALES_TYPE_CODE
+		  ,PRODUCTION_AREA_CODE
+		  ,CURRENCY_CODE
+		  ,RFQ_CODE
+		  ,ORG_PROJECT_CODE
+		  ,ROLLING_YN)
+		VALUES
+		  (#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,(SELECT NVL(MAX(PROJECT_VERSION),0) +1 
+	         FROM OMS_PROJECT
+	         WHERE OU_CODE = #{OU_CODE}
+	           AND PROJECT_CODE = #{PROJECT_CODE} )
+		  ,#{CAR_TYPE_CODE}
+		  ,#{REGISTER_YEAR}
+		  ,#{IMPORTANCE_CODE}
+		  ,#{ACT_STATUS_CODE}
+		  ,#{DETAIL_STATUS_CODE}
+		  ,#{OU_COUNTRY_CODE}
+		  ,#{SOP}
+		  ,#{EOP}
+		  ,#{DOMESTIC_EXPORT_CODE}
+		  ,#{TARGET_YEAR}
+		  ,#{CUSTOMER_ID}
+		  ,#{OEM}
+		  ,#{REMARK}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,#{LATEST_YN}
+		  ,#{CUSTOMER_AREA}
+		  ,#{SALES_TYPE_CODE}
+		  ,#{PRODUCTION_AREA_CODE}
+		  ,#{CURRENCY_CODE}
+		  ,#{RFQ_CODE}
+		  ,#{ORG_PROJECT_CODE}
+		  ,#{ROLLING_YN}  );
+		  
+		  OMS_PROJECT_MAIL_PKG.SEND_MAIL_PROJECT_CREATE_PROC( 
+                                                        #{GV_USER_ID} 
+		                                            ,#{OU_CODE}
+		                                            ,#{PROJECT_CODE}	                                            
+		                                            );		  
+		  		  
+	END;	  
+
+	]]>
+	</insert>    
+	
+	<!-- 프로젝트  수정 -->
+	<update id="UPDATE_OMS_PROJECT" parameterType="java.util.Map">
+		UPDATE OMS_PROJECT
+		   SET CAR_TYPE_CODE         = #{CAR_TYPE_CODE}
+		      ,REGISTER_YEAR         = #{REGISTER_YEAR}
+		      ,IMPORTANCE_CODE       = #{IMPORTANCE_CODE}
+		      ,ACT_STATUS_CODE       = #{ACT_STATUS_CODE}
+		      ,DETAIL_STATUS_CODE    = #{DETAIL_STATUS_CODE}
+		      ,OU_COUNTRY_CODE       = #{OU_COUNTRY_CODE}
+		      ,SOP                   = #{SOP}
+		      ,EOP                   = #{EOP}
+		      ,DOMESTIC_EXPORT_CODE = #{DOMESTIC_EXPORT_CODE}
+		      ,TARGET_YEAR           = #{TARGET_YEAR}
+		      ,CUSTOMER_ID           = #{CUSTOMER_ID}
+		      ,OEM                   = #{OEM}
+		      ,REMARK                = #{REMARK}
+		      ,UPD_DATE              = SYSDATE
+		      ,UPD_USER_ID           = #{GV_USER_ID}
+		      ,LATEST_YN             = #{LATEST_YN}
+		      ,CUSTOMER_AREA         = #{CUSTOMER_AREA}
+		      ,SALES_TYPE_CODE       = #{SALES_TYPE_CODE}
+		      ,PRODUCTION_AREA_CODE  = #{PRODUCTION_AREA_CODE}
+		      ,CURRENCY_CODE         = #{CURRENCY_CODE}
+		      ,RFQ_CODE              = #{RFQ_CODE}
+		      ,ORG_PROJECT_CODE      = #{ORG_PROJECT_CODE}
+		      ,ROLLING_YN            = #{ROLLING_YN}
+		 WHERE OU_CODE = #{OU_CODE}
+		   AND PROJECT_CODE = #{PROJECT_CODE}
+		   AND PROJECT_VERSION       = #{PROJECT_VERSION}
+		      
+	</update> 
+     
+	<!-- 프로젝트  삭제 -->
+	<delete id="DELETE_OMS_PROJECT" parameterType="java.util.Map">
+		DELETE FROM OMS_PROJECT		 
+		 WHERE OU_CODE = #{OU_CODE}
+		   AND PROJECT_CODE = #{PROJECT_CODE}
+	</delete>	
+
+    <!-- 프로젝트 복사  -->
+    <select id="COPY_PROJECT_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    <![CDATA[       
+			CALL  OMS_PROJECT_PKG.COPY_PROJECT_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{USER_ID}
+			                                            ,#{OU_CODE}
+			                                            ,#{PROJECT_CODE}
+			                                            ,#{CAR_TYPE_CODE}
+			                                            ,#{CUSTOMER_ID}
+			                                            ,#{REGISTER_YEAR}			                                            
+			                                            )
+    ]]>
+
+    </select>   
+
+    <!-- 프로젝트 전체 복사  -->
+    <select id="COPY_PROJECT_ALL_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    <![CDATA[       
+			CALL  OMS_PROJECT_PKG.COPY_PROJECT_ALL_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{NEW_PROJECT_CODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{NEW_PROJECT_VERSION, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{USER_ID}
+			                                            ,#{OU_CODE}
+			                                            ,#{PROJECT_CODE}
+			                                            ,#{RFQ_CODE}
+			                                            ,#{CAR_TYPE_CODE}
+			                                            ,#{CUSTOMER_ID}
+			                                            ,#{REGISTER_YEAR}			                                            
+			                                            )
+    ]]>
+
+    </select>  
+
+    <!-- 프로젝트 전체 복사  -->
+    <select id="REVISION_PROJECT_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    <![CDATA[       
+			CALL  OMS_PROJECT_PKG.REVISION_PROJECT_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{USER_ID}
+			                                            ,#{OU_CODE}
+			                                            ,#{PROJECT_CODE}
+			                                            ,#{PROJECT_VERSION}	                                            
+			                                            )
+    ]]>
+
+    </select>          
+     <!-- 프로젝트 코드  -->
+    <select id="SELECT_PROJECT_CODE"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    <![CDATA[       
+			SELECT  OMS_PROJECT_PKG.GEN_PROJECT_CODE_FUNC( 
+			                                             #{USER_ID}
+			                                            ,#{OU_CODE}			                      
+			                                            ,#{CAR_TYPE_CODE}
+			                                            ,#{CUSTOMER_ID}
+			                                            ,#{REGISTER_YEAR}			                                            
+			                                            )  AS PROJECT_CODE
+			  FROM DUAL                                          
+    ]]>
+
+    </select>     
+    <!-- 프로젝트 제품 조회 -->
+	<select id="SELECT_PROJECT_PRODUCT" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT PROJECT_PRODUCT_ID
+		      ,OU_CODE
+		      ,PROJECT_CODE
+		      ,PROJECT_VERSION
+		      ,BUSINESS_GROUP_CODE
+		      ,BUSINESS_GROUP_NAME
+		      ,PRODUCT_GROUP_CODE
+		      ,PRODUCT_GROUP_NAME
+		      ,PRODUCT_NAME_CODE
+		      ,PRODUCT_NAME
+		      ,PRODUCT_MODEL_CODE
+		      ,PRODUCT_MODEL_NAME
+		      ,PRODUCT_PKG_CODE
+		      ,PRODUCT_PKG_NAME
+		      ,ITEM_NAME
+		      ,ERP_ITEM_NO
+		      ,PSO_PROJECT_ID
+		  FROM OMS_PROJECT_PRODUCT_V PP
+		 WHERE OU_CODE = #{OU_CODE}
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PP.PROJECT_CODE = #{PROJECT_CODE} 
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isEmpty(PROJECT_VERSION)">
+        	<![CDATA[
+        	   AND PP.PROJECT_VERSION = (SELECT PROJECT_VERSION 
+        	                              FROM OMS_PROJECT OP
+        	                             WHERE OU_CODE = #{OU_CODE}
+        	                               AND OP.PROJECT_CODE = #{PROJECT_CODE} 
+        	                               AND OP.LATEST_YN = 'Y')
+        	]]>  
+        </if>     
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_VERSION)">
+        	<![CDATA[
+        	   AND PP.PROJECT_VERSION = #{PROJECT_VERSION} 
+        	]]>  
+        </if>      
+		 ORDER BY BUSINESS_GROUP_CODE,PRODUCT_GROUP_NAME 
+    </select>      
+
+	<!-- 프로젝트 제품 등록 -->
+	<insert id="INSERT_OMS_PROJECT_PRODUCT" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+		INSERT INTO OMS_PROJECT_PRODUCT
+		  (PROJECT_PRODUCT_ID
+		  ,OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_VERSION
+		  ,BUSINESS_GROUP_CODE
+		  ,PRODUCT_GROUP_CODE
+		  ,PRODUCT_NAME_CODE
+		  ,PRODUCT_MODEL_CODE
+		  ,PRODUCT_PKG_CODE
+		  ,ITEM_NAME
+		  ,ERP_ITEM_NO
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID)
+		VALUES
+		  (OMS_PROJECT_PRODUCT_SEQ.NEXTVAL
+		  ,#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,#{PROJECT_VERSION}
+		  ,#{BUSINESS_GROUP_CODE}
+		  ,#{PRODUCT_GROUP_CODE}
+		  ,#{PRODUCT_NAME_CODE}
+		  ,#{PRODUCT_MODEL_CODE}
+		  ,#{PRODUCT_PKG_CODE}
+		  ,#{ITEM_NAME}
+		  ,#{ERP_ITEM_NO}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID} )
+
+	]]>
+	</insert>    
+	
+	<!-- 프로젝트 제품 수정 -->
+	<update id="UPDATE_OMS_PROJECT_PRODUCT" parameterType="java.util.Map">
+		UPDATE OMS_PROJECT_PRODUCT
+		   SET OU_CODE             = #{OU_CODE}
+		      ,PROJECT_CODE        = #{PROJECT_CODE}
+		      ,PROJECT_VERSION     = #{PROJECT_VERSION}
+		      ,BUSINESS_GROUP_CODE = #{BUSINESS_GROUP_CODE}
+		      ,PRODUCT_GROUP_CODE  = #{PRODUCT_GROUP_CODE}
+		      ,PRODUCT_NAME_CODE   = #{PRODUCT_NAME_CODE}
+		      ,PRODUCT_MODEL_CODE  = #{PRODUCT_MODEL_CODE}
+		      ,PRODUCT_PKG_CODE    = #{PRODUCT_PKG_CODE}
+		      ,ITEM_NAME           = #{ITEM_NAME}
+		      ,ERP_ITEM_NO         = #{ERP_ITEM_NO}
+		      ,UPD_DATE            = SYSDATE
+		      ,UPD_USER_ID         = #{GV_USER_ID}
+		 WHERE PROJECT_PRODUCT_ID  = #{PROJECT_PRODUCT_ID}
+	</update> 
+     
+	<!-- 프로젝트 제품 삭제 -->
+	<delete id="DELETE_OMS_PROJECT_PRODUCT" parameterType="java.util.Map">
+		DELETE FROM OMS_PROJECT_PRODUCT
+		WHERE PROJECT_PRODUCT_ID  = #{PROJECT_PRODUCT_ID}
+	</delete>	
+ 
+    <!-- RFQ 조회 -->
+	<select id="SELECT_RFQ" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT OU_CODE
+		      ,RFQ_CODE
+		      ,RFQ_DATE
+		      ,CAR_TYPE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+		      ,CHARGE_USER_ID
+		      ,RFQ_CHARGE_NAME
+		      ,TARGET_DATE
+		      ,CUSTOMER_ID
+		      ,CUSTOMER_NAME
+		      ,CUSTOMER_GROUP
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O014', CUSTOMER_GROUP, #{GV_LANG}) AS CUSTOMER_GROUP_NAME
+		      ,ERP_CUSTOMER_ID
+		      ,ERP_CUSTOMER_NAME
+		      ,NATION_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O005',NATION_CODE, #{GV_LANG}) AS NATION_NAME
+		      ,OEM
+		      ,PRODUCT_NAME_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O008', PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+		      ,REMARK
+		      ,INS_USER_ID
+		      ,WRITER_NAME
+		      ,ATT_YN
+		  FROM OMS_RFQ_V RF
+		 WHERE OU_CODE = #{OU_CODE}
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CODE)">
+        	<![CDATA[
+        	   AND RFQ_CODE LIKE '%'|| #{RFQ_CODE} || '%'
+        	]]>  
+        </if>    
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND CAR_TYPE_CODE = #{CAR_TYPE_CODE} 
+        	]]>  
+        </if>      
+		 ORDER BY RFQ_CODE,CUSTOMER_NAME 
+    </select>  	
+    <!-- 중장기계획 헤더  조회 -->
+	<select id="SELECT_PLAN_HEADER" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT OU_CODE
+		      ,PROJECT_CODE
+		      ,PROJECT_PRODUCT_ID
+		      ,BASE_YEAR
+		      ,INCOTERMS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O019', INCOTERMS_CODE, #{GV_LANG}) AS INCOTERMS_NAME
+		      ,INCOTERMS_DETAIL
+		      ,PLAN_VERSION
+		      ,LATEST_YN
+		      ,REMARK
+		  FROM OMS_LONG_PLAN_HEADER_V
+		 WHERE OU_CODE = #{OU_CODE}  
+           AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID} 
+           AND BASE_YEAR= #{BASE_YEAR}
+           AND PROJECT_CODE   = #{PROJECT_CODE}
+           AND PLAN_VERSION   = #{PLAN_VERSION}
+	 </select>    
+    <!-- 중장기계획 조회 -->
+	<select id="SELECT_PLAN" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT OU_CODE
+		      ,PROJECT_CODE
+		      ,PROJECT_VERSION
+		      ,ACT_STATUS_CODE
+		      ,PROJECT_LATEST_YN
+		      ,PROJECT_PRODUCT_ID
+		      ,ITEM_NAME
+		      ,PLAN_VERSION
+		      ,BASE_YEAR
+		      ,PLAN_YEAR
+		      ,PLAN_MONTH
+		      ,PLAN_YEAR||PLAN_MONTH PLAN_YYYYMM
+		      ,QTY
+		      ,TO_CHAR(UNIT_PRICE, 'FM999999999990.0000')   AS UNIT_PRICE
+		      ,CURRENCY_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('F018',CURRENCY_CODE, #{GV_LANG}) AS CURRENCY_NAME
+		      ,TO_CHAR(AMT, 'FM99999999999990.00') AS AMT
+		      ,TO_CHAR(AMT_KRW, 'FM9999999999999990') AS AMT
+		      ,REMARK
+		      ,LATEST_YN
+		      ,UPD_DATE
+		      ,UPDATE_USER_NAME
+		  FROM OMS_LONG_PLAN_V LP
+		 WHERE OU_CODE = #{OU_CODE}           
+        <if test="@com.oms.MyBatisUtil@isEmpty(PLAN_VERSION)">
+        	<![CDATA[
+        	   AND LP.LATEST_YN = 'Y' --최신 버젼   
+        	]]>  
+        </if>          
+         <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_LATEST_YN)">
+        	<![CDATA[
+        	   AND LP.PROJECT_LATEST_YN =#{PROJECT_LATEST_YN}   
+        	]]>  
+        </if>         
+         <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_PRODUCT_ID)">
+        	<![CDATA[
+        	    AND LP.PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID} 
+        	]]>  
+        </if>   
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PLAN_VERSION)">
+        	<![CDATA[
+        	   AND LP.PLAN_VERSION = #{PLAN_VERSION} 
+        	]]>  
+        </if> 		 
+		   	 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND LP.PROJECT_CODE like  '%'|| #{PROJECT_CODE}|| '%'
+        	]]>  
+        </if>  
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(BASE_YEAR)">
+        	<![CDATA[
+        	   AND LP.BASE_YEAR= #{BASE_YEAR}
+        	]]>  
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
+        	<![CDATA[
+        	   AND LP.ACT_STATUS_CODE = #{ACT_STATUS_CODE}
+        	]]>  
+        </if>  
+
+		 ORDER BY TO_NUMBER (SUBSTR( LP.PROJECT_CODE,LENGTH(LP.PROJECT_CODE)-2) ),ITEM_NAME,PLAN_YEAR||PLAN_MONTH   
+	 </select>	 
+
+    <!-- 중장기계획 UUPLOAD 조회 -->
+	<select id="SELECT_PLAN_UPLOAD" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT OU_CODE
+		      ,PROJECT_CODE
+		      ,PROJECT_VERSION
+		      ,ACT_STATUS_CODE
+		      ,PROJECT_LATEST_YN
+		      ,PROJECT_PRODUCT_ID
+		      ,ITEM_NAME
+		      ,ERP_ITEM_NO
+		      ,INCOTERMS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O019',INCOTERMS_CODE, #{GV_LANG}) AS INCOTERMS_NAME
+		      ,INCOTERMS_DETAIL
+		      ,PLAN_VERSION
+		      ,BASE_YEAR
+		      ,PLAN_YEAR
+		      ,PLAN_MONTH
+		      ,PLAN_YEAR||PLAN_MONTH PLAN_YYYYMM
+		      ,QTY
+		      ,UNIT_PRICE
+		      ,CURRENCY_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('F018',CURRENCY_CODE, #{GV_LANG}) AS CURRENCY_NAME
+		      ,AMT
+		      ,AMT_KRW
+		      ,REMARK
+		      ,LATEST_YN
+		      ,DETAIL_STATUS_CODE
+		      ,UPD_DATE
+		      ,UPDATE_USER_NAME
+		      ,ROLLING_YN
+		  FROM OMS_LONG_PLAN_V LP
+		 WHERE OU_CODE = #{OU_CODE}      
+		   AND NVL(DETAIL_STATUS_CODE,'-999') NOT IN ( 'D09','D04','D10')  
+		   AND OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                  OU_CODE,
+                                                  PROJECT_CODE) ='W'    
+        <if test="@com.oms.MyBatisUtil@isEmpty(PLAN_VERSION)">
+        	<![CDATA[
+        	   AND LP.LATEST_YN = 'Y' --최신 버젼   
+        	]]>  
+        </if>          
+         <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_LATEST_YN)">
+        	<![CDATA[
+        	   AND LP.PROJECT_LATEST_YN =#{PROJECT_LATEST_YN}   
+        	]]>  
+        </if>         
+         <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_PRODUCT_ID)">
+        	<![CDATA[
+        	    AND LP.PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID} 
+        	]]>  
+        </if>   
+
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PLAN_VERSION)">
+        	<![CDATA[
+        	   AND LP.PLAN_VERSION = #{PLAN_VERSION} 
+        	]]>  
+        </if> 		 
+		   	 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND LP.PROJECT_CODE like  '%'|| #{PROJECT_CODE}|| '%'
+        	]]>  
+        </if>  
+ 
+		   	 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CODE)">
+        	<![CDATA[
+        	   AND LP.PROJECT_CODE like  '%'|| #{RFQ_CODE}|| '%'
+        	]]>  
+        </if>  
+        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(BASE_YEAR)">
+        	<![CDATA[
+        	   AND LP.BASE_YEAR= #{BASE_YEAR}
+        	]]>  
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
+        	<![CDATA[
+        	   AND LP.ACT_STATUS_CODE = #{ACT_STATUS_CODE}
+        	]]>  
+        </if>  
+
+		 ORDER BY TO_NUMBER (SUBSTR( LP.PROJECT_CODE,LENGTH(LP.PROJECT_CODE)-2) ),ITEM_NAME,PROJECT_PRODUCT_ID,PLAN_YEAR||PLAN_MONTH   
+	 </select>	
+	 
+     <!--중장기계획 정보 분석조회 -->
+	<select id="SELECT_LONG_PLAN_UPLOAD_WIDTH" parameterType="java.util.Map" resultType="java.util.Map">     
+	<![CDATA[	
+		  SELECT PRA.OU_CODE
+		        ,PRA.PROJECT_CODE
+		        ,PRA.PROJECT_VERSION
+		        ,PRA.CAR_TYPE_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', PRA.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+		        ,PRA.REGISTER_YEAR
+		        ,PRA.IMPORTANCE_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O017', PRA.IMPORTANCE_CODE, #{GV_LANG}) AS IMPORTANCE_NAME
+		        ,PRA.ACT_STATUS_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O015', PRA.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+		        ,PRA.DETAIL_STATUS_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O016', PRA.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+		        ,PRA.OU_COUNTRY_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O001', PRA.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
+		        ,PRA.SOP
+		        ,PRA.EOP
+		        ,PRA.DOMESTIC_EXPORT_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O003', PRA.DOMESTIC_EXPORT_CODE, #{GV_LANG}) AS DOMESTIC_EXPORT_NAME
+		        ,PRA.RFQ_RESPONSE_ID
+		        ,PRA.RFQ_RESPONSE_NAME
+		        ,PRA.TARGET_YEAR
+		        ,PRA.CUSTOMER_ID
+		        ,PRA.CUSTOMER_NAME
+		        ,PRA.CUSTOMER_GROUP
+                ,SMT_GET_COMMON_CODE_NAME_FUNC('O014', PRA.CUSTOMER_GROUP, #{GV_LANG}) AS CUSTOMER_GROUP_NAME
+		        ,PRA.ERP_CUSTOMER_ID
+		        ,PRA.ERP_CUSTOMER_NAME
+		        ,PRA.CUSTOMER_NATION_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O005', PRA.CUSTOMER_NATION_CODE,  #{GV_LANG}) AS CUSTOMER_NATION_NAME
+		        ,PRA.OEM
+		        ,PRA.PRODUCT_GROUP_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O007', PRA.PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+		        ,PRA.PRODUCT_NAME_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O008', PRA.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+		        ,PRA.PRODUCT_MODEL_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O010', PRA.PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+		        ,PRA.ITEM_NAME
+		        ,PRA.ERP_ITEM_NO
+		        ,PRA.BUSINESS_GROUP_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O013', PRA.BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+		        ,PRA.PRODUCT_PKG_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O012', PRA.PRODUCT_PKG_CODE, #{GV_LANG}) AS PRODUCT_PKG_NAME
+		        ,PRA.REMARK
+                ,PRA.CUSTOMER_AREA
+                ,PRA.SALES_TYPE_CODE
+                ,SMT_GET_COMMON_CODE_NAME_FUNC('O022', PRA.SALES_TYPE_CODE, 'KO') AS SALES_TYPE_NAME
+		        ,PRA.PRODUCTION_AREA_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O002', PRA.PRODUCTION_AREA_CODE, #{GV_LANG}) AS PRODUCTION_AREA_NAME
+		        ,LP.CURRENCY_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('F018', LP.CURRENCY_CODE, #{GV_LANG}) AS CURRENCY_NAME
+		        ,PRA.RFQ_CODE
+		        ,PRA.ORG_PROJECT_CODE
+		        ,PRA.LATEST_YN
+		        ,PRA.PROJECT_PRODUCT_ID
+		        ,PRA.ROLLING_YN
+	            ,LPH.INCOTERMS_CODE
+		        ,SMT_GET_COMMON_CODE_NAME_FUNC('O019', LPH.INCOTERMS_CODE, #{GV_LANG}) AS INCOTERMS_NAME
+	            ,LPH.INCOTERMS_DETAIL
+	            ,LP.PLAN_VERSION
+	            ,LP.BASE_YEAR
+	            ,LP.LATEST_YN AS PLAN_LATEST_YN
+	            ,SMT_EXCHANGE_RATE_FUNC(#{OU_CODE},#{EXCHNAGE_CODE}, #{BASE_YEAR},LP.CURRENCY_CODE, 'KRW') EXCHANGE
+	            ,M1_QTY
+	            ,M2_QTY
+	            ,M3_QTY
+	            ,M4_QTY
+	            ,M5_QTY
+	            ,M6_QTY
+	            ,M7_QTY
+	            ,M8_QTY
+	            ,M9_QTY
+	            ,M10_QTY
+	            ,M11_QTY
+	            ,M12_QTY
+	            ,Y1_QTY
+	            ,Y2_QTY
+	            ,Y3_QTY
+	            ,Y4_QTY
+	            ,Y5_QTY
+	            ,Y6_QTY
+	            ,Y7_QTY
+	            ,Y8_QTY
+	            ,Y9_QTY
+	            ,Y10_QTY
+	            ,Y11_QTY
+	            ,Y12_QTY
+	            ,Y13_QTY
+	            ,Y14_QTY
+	            ,M1_UNIT_PRICE
+	            ,M2_UNIT_PRICE
+	            ,M3_UNIT_PRICE
+	            ,M4_UNIT_PRICE
+	            ,M5_UNIT_PRICE
+	            ,M6_UNIT_PRICE
+	            ,M7_UNIT_PRICE
+	            ,M8_UNIT_PRICE
+	            ,M9_UNIT_PRICE
+	            ,M10_UNIT_PRICE
+	            ,M11_UNIT_PRICE
+	            ,M12_UNIT_PRICE
+	            ,Y1_UNIT_PRICE
+	            ,Y2_UNIT_PRICE
+	            ,Y3_UNIT_PRICE
+	            ,Y4_UNIT_PRICE
+	            ,Y5_UNIT_PRICE
+	            ,Y6_UNIT_PRICE
+	            ,Y7_UNIT_PRICE
+	            ,Y8_UNIT_PRICE
+	            ,Y9_UNIT_PRICE
+	            ,Y10_UNIT_PRICE
+	            ,Y11_UNIT_PRICE
+	            ,Y12_UNIT_PRICE
+	            ,Y13_UNIT_PRICE
+	            ,Y14_UNIT_PRICE
+	            ,TO_CHAR(M1_AMT, 'FM999999999999.00') M1_AMT
+	            ,TO_CHAR(M2_AMT, 'FM999999999999.00') M2_AMT
+	            ,TO_CHAR(M3_AMT, 'FM999999999999.00') M3_AMT
+	            ,TO_CHAR(M4_AMT, 'FM999999999999.00') M4_AMT
+	            ,TO_CHAR(M5_AMT, 'FM999999999999.00') M5_AMT
+	            ,TO_CHAR(M6_AMT, 'FM999999999999.00') M6_AMT
+	            ,TO_CHAR(M7_AMT, 'FM999999999999.00') M7_AMT
+	            ,TO_CHAR(M8_AMT, 'FM999999999999.00') M8_AMT
+	            ,TO_CHAR(M9_AMT, 'FM999999999999.00') M9_AMT
+	            ,TO_CHAR(M10_AMT, 'FM999999999999.00') M10_AMT
+	            ,TO_CHAR(M11_AMT, 'FM999999999999.00') M11_AMT
+	            ,TO_CHAR(M12_AMT, 'FM999999999999.00') M12_AMT
+	            ,TO_CHAR(Y1_AMT, 'FM999999999999.00') Y1_AMT
+	            ,TO_CHAR(Y2_AMT, 'FM999999999999.00') Y2_AMT
+	            ,TO_CHAR(Y3_AMT, 'FM999999999999.00') Y3_AMT
+	            ,TO_CHAR(Y4_AMT, 'FM999999999999.00') Y4_AMT
+	            ,TO_CHAR(Y5_AMT, 'FM999999999999.00') Y5_AMT
+	            ,TO_CHAR(Y6_AMT, 'FM999999999999.00') Y6_AMT
+	            ,TO_CHAR(Y7_AMT, 'FM999999999999.00') Y7_AMT
+	            ,TO_CHAR(Y8_AMT, 'FM999999999999.00') Y8_AMT
+	            ,TO_CHAR(Y9_AMT, 'FM999999999999.00') Y9_AMT
+	            ,TO_CHAR(Y10_AMT, 'FM999999999999.00') Y10_AMT
+	            ,TO_CHAR(Y11_AMT, 'FM999999999999.00') Y11_AMT
+	            ,TO_CHAR(Y12_AMT, 'FM999999999999.00') Y12_AMT
+	            ,TO_CHAR(Y13_AMT, 'FM999999999999.00') Y13_AMT
+	            ,TO_CHAR(Y14_AMT, 'FM999999999999.00') Y14_AMT
+	       FROM OMS_LONG_PLAN_ANALYSIS_V LP                                                                                                    
+	           ,OMS_PROJECT_PRODUCT_ALL_V PRA 
+	           ,OMS_LONG_PLAN_HEADER_V LPH                         
+	      WHERE LP.BASE_YEAR  =#{BASE_YEAR}
+	        AND LP.OU_CODE    =#{OU_CODE}
+		    AND OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                    PRA.OU_CODE,
+                                                    PRA.PROJECT_CODE) !='N'
+	        AND LP.PROJECT_PRODUCT_ID = PRA.PROJECT_PRODUCT_ID
+	        AND LPH.PROJECT_PRODUCT_ID = PRA.PROJECT_PRODUCT_ID
+	        AND LPH.BASE_YEAR = LP.BASE_YEAR
+	        AND LPH.PLAN_VERSION   = LP.PLAN_VERSION 
+	        AND PRA.DETAIL_STATUS_CODE NOT IN ('D10')
+	     
+	]]>		        
+        <if test="@com.oms.MyBatisUtil@isEmpty(PROJECT_VERSION)">
+            AND PRA.LATEST_YN = 'Y' --최신 버젼   
+            AND LPH.LATEST_YN = 'Y'
+            AND LP.LATEST_YN = 'Y'
+        </if>  	   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ROLLING_YN)">
+        	<![CDATA[
+        	   AND PRA.ROLLING_YN = #{ROLLING_YN} 
+        	]]>  
+        </if>  	    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PRA.PROJECT_CODE like  '%'|| #{PROJECT_CODE}|| '%'
+        	]]>  
+        </if>      
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(RFQ_CODE)">
+        	<![CDATA[
+        	   AND PRA.PROJECT_CODE like  '%'|| #{RFQ_CODE}|| '%'
+        	]]>  
+        </if>        
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND PRA.CUSTOMER_ID =  #{CUSTOMER_ID}
+        	]]>  
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
+               AND REGEXP_LIKE(PRA.ACT_STATUS_CODE, #{ACT_STATUS_CODE}, 'i')
+        </if>   
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(DETAIL_STATUS_CODE)">
+               AND REGEXP_LIKE(PRA.DETAIL_STATUS_CODE, #{DETAIL_STATUS_CODE}, 'i')     
+        </if>           
+	      ORDER BY PRA.REGISTER_YEAR,TO_NUMBER (SUBSTR( PRA.PROJECT_CODE,LENGTH(PRA.PROJECT_CODE)-2) ) 
+			     
+		
+    </select>  	 
+	  	 
+    <!-- 중장기계획 버젼 조회 -->
+	<select id="SELECT_PLAN_VERSION" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT  PLAN_VERSION AS CODE
+		       ,PLAN_VERSION AS NAME
+		       ,LATEST_YN AS LATEST_YN
+		       ,UPD_DATE
+		       ,UPDATE_USER_NAME
+		  FROM OMS_LONG_PLAN_VERSION_V LP
+		 WHERE OU_CODE = #{OU_CODE}
+           AND LP.PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID} 
+           AND LP.BASE_YEAR =  #{BASE_YEAR} 
+  		 ORDER BY TO_NUMBER (PLAN_VERSION ) DESC
+    </select>	
+	<!-- 중장기계획헤더  등록 -->
+	<insert id="INSERT_PLAN_HEADER" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+		INSERT INTO OMS_LONG_PLAN_HEADER
+		  (OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_PRODUCT_ID
+		  ,BASE_YEAR
+		  ,INCOTERMS_CODE
+		  ,INCOTERMS_DETAIL
+		  ,PLAN_VERSION
+		  ,LATEST_YN 
+		  ,REMARK
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID)
+		VALUES
+		  (#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,#{PROJECT_PRODUCT_ID}
+		  ,#{BASE_YEAR}
+		  ,#{INCOTERMS_CODE}
+		  ,#{INCOTERMS_DETAIL}
+		  ,#{PLAN_VERSION}
+		  ,#{LATEST_YN}
+		  ,#{REMARK}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID})	  
+	]]>
+	</insert> 
+	<!-- 중장기계획헤더  UPLOAD -->
+	<insert id="INSERT_PLAN_HEADER_UPLOAD" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+		INSERT INTO OMS_LONG_PLAN_HEADER_UPLOAD
+		  (OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_PRODUCT_ID
+		  ,BASE_YEAR
+		  ,INCOTERMS_CODE
+		  ,INCOTERMS_DETAIL
+		  ,PLAN_VERSION
+		  ,LATEST_YN 
+		  ,REMARK
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID)
+		VALUES
+		  (#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,#{PROJECT_PRODUCT_ID}
+		  ,#{BASE_YEAR}
+		  ,#{INCOTERMS_CODE}
+		  ,#{INCOTERMS_DETAIL}
+		  ,#{PLAN_VERSION}
+		  ,#{LATEST_YN}
+		  ,#{REMARK}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID})	  
+	]]>
+	</insert>           
+	<!-- 중장기계획  등록 -->
+	<insert id="INSERT_PLAN" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+		INSERT INTO OMS_LONG_PLAN
+		  (OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_PRODUCT_ID
+		  ,PLAN_VERSION
+		  ,BASE_YEAR
+		  ,PLAN_YEAR
+		  ,PLAN_MONTH
+		  ,QTY
+		  ,UNIT_PRICE
+		  ,CURRENCY_CODE
+		  ,REMARK
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID
+		  ,LATEST_YN)
+		VALUES
+		  (#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,#{PROJECT_PRODUCT_ID}
+		  ,#{PLAN_VERSION}
+		  ,#{BASE_YEAR}
+		  ,SUBSTR( REPLACE(#{PLAN_YYYYMM},'-',''),1,4)
+		  ,SUBSTR( REPLACE(#{PLAN_YYYYMM},'-',''),5,2)
+		  ,#{QTY}
+		  ,#{UNIT_PRICE}
+		  ,#{CURRENCY_CODE}
+		  ,#{REMARK}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,#{LATEST_YN})	  
+
+	]]>
+	</insert>  
+	<!-- 중장기계획  Upload등록 -->
+	<insert id="INSERT_PLAN_UPLOAD" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+		 INSERT INTO OMS_LONG_PLAN_UPLOAD
+		  (OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_PRODUCT_ID
+		  ,BASE_YEAR
+		  ,CURRENCY_CODE
+		  ,M_01_QTY
+		  ,M_02_QTY
+		  ,M_03_QTY
+		  ,M_04_QTY
+		  ,M_05_QTY
+		  ,M_06_QTY
+		  ,M_07_QTY
+		  ,M_08_QTY
+		  ,M_09_QTY
+		  ,M_10_QTY
+		  ,M_11_QTY
+		  ,M_12_QTY
+		  ,M1_01_QTY
+		  ,M2_01_QTY
+		  ,M3_01_QTY
+		  ,M4_01_QTY
+		  ,M5_01_QTY
+		  ,M6_01_QTY
+		  ,M7_01_QTY
+		  ,M8_01_QTY
+		  ,M9_01_QTY
+		  ,M10_01_QTY
+		  ,M11_01_QTY
+		  ,M12_01_QTY
+		  ,M13_01_QTY
+		  ,M14_01_QTY
+		  ,M_01_UNIT_PRICE
+		  ,M_02_UNIT_PRICE
+		  ,M_03_UNIT_PRICE
+		  ,M_04_UNIT_PRICE
+		  ,M_05_UNIT_PRICE
+		  ,M_06_UNIT_PRICE
+		  ,M_07_UNIT_PRICE
+		  ,M_08_UNIT_PRICE
+		  ,M_09_UNIT_PRICE
+		  ,M_10_UNIT_PRICE
+		  ,M_11_UNIT_PRICE
+		  ,M_12_UNIT_PRICE
+		  ,M1_01_UNIT_PRICE
+		  ,M2_01_UNIT_PRICE
+		  ,M3_01_UNIT_PRICE
+		  ,M4_01_UNIT_PRICE
+		  ,M5_01_UNIT_PRICE
+		  ,M6_01_UNIT_PRICE
+		  ,M7_01_UNIT_PRICE
+		  ,M8_01_UNIT_PRICE
+		  ,M9_01_UNIT_PRICE
+		  ,M10_01_UNIT_PRICE
+		  ,M11_01_UNIT_PRICE
+		  ,M12_01_UNIT_PRICE
+		  ,M13_01_UNIT_PRICE
+		  ,M14_01_UNIT_PRICE
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID)
+		VALUES
+		  (#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,#{PROJECT_PRODUCT_ID}
+		  ,#{BASE_YEAR}
+		  ,#{CURRENCY_CODE}
+		  ,#{M1_QTY}
+		  ,#{M2_QTY}
+		  ,#{M3_QTY}
+		  ,#{M4_QTY}
+		  ,#{M5_QTY}
+		  ,#{M6_QTY}
+		  ,#{M7_QTY}
+		  ,#{M8_QTY}
+		  ,#{M9_QTY}
+		  ,#{M10_QTY}
+		  ,#{M11_QTY}
+		  ,#{M12_QTY}
+		  ,#{Y1_QTY}
+		  ,#{Y2_QTY}
+		  ,#{Y3_QTY}
+		  ,#{Y4_QTY}
+		  ,#{Y5_QTY}
+		  ,#{Y6_QTY}
+		  ,#{Y7_QTY}
+		  ,#{Y8_QTY}
+		  ,#{Y9_QTY}
+		  ,#{Y10_QTY}
+		  ,#{Y11_QTY}
+		  ,#{Y12_QTY}
+		  ,#{Y13_QTY}
+		  ,#{Y14_QTY}
+		  ,#{M1_UNIT_PRICE}
+		  ,#{M2_UNIT_PRICE}
+		  ,#{M3_UNIT_PRICE}
+		  ,#{M4_UNIT_PRICE}
+		  ,#{M5_UNIT_PRICE}
+		  ,#{M6_UNIT_PRICE}
+		  ,#{M7_UNIT_PRICE}
+		  ,#{M8_UNIT_PRICE}
+		  ,#{M9_UNIT_PRICE}
+		  ,#{M10_UNIT_PRICE}
+		  ,#{M11_UNIT_PRICE}
+		  ,#{M12_UNIT_PRICE}
+		  ,#{Y1_UNIT_PRICE}
+		  ,#{Y2_UNIT_PRICE}
+		  ,#{Y3_UNIT_PRICE}
+		  ,#{Y4_UNIT_PRICE}
+		  ,#{Y5_UNIT_PRICE}
+		  ,#{Y6_UNIT_PRICE}
+		  ,#{Y7_UNIT_PRICE}
+		  ,#{Y8_UNIT_PRICE}
+		  ,#{Y9_UNIT_PRICE}
+		  ,#{Y10_UNIT_PRICE}
+		  ,#{Y11_UNIT_PRICE}
+		  ,#{Y12_UNIT_PRICE}
+		  ,#{Y13_UNIT_PRICE}
+		  ,#{Y14_UNIT_PRICE}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}  ) 
+
+	]]>
+	</insert>  	  
+	<!-- 중장기계획 헤더 수정 -->
+	<update id="UPDATE_PLAN_HEADER" parameterType="java.util.Map">
+		UPDATE OMS_LONG_PLAN_HEADER
+		   SET 
+		       INCOTERMS_CODE     = #{INCOTERMS_CODE}
+		      ,INCOTERMS_DETAIL   = #{INCOTERMS_DETAIL}
+		      ,LATEST_YN          = #{LATEST_YN}
+		      ,REMARK             = #{REMARK}
+		      ,UPD_DATE           = SYSDATE
+		      ,UPD_USER_ID        = #{GV_USER_ID}
+		 WHERE OU_CODE            = #{OU_CODE}
+	       AND PROJECT_CODE       = #{PROJECT_CODE}
+	       AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID}
+	       AND BASE_YEAR          = #{BASE_YEAR}		
+	       AND PLAN_VERSION       = #{PLAN_VERSION}      
+	</update> 
+		
+	<!-- 중장기계획  수정 -->
+	<update id="UPDATE_PLAN" parameterType="java.util.Map">
+		UPDATE OMS_LONG_PLAN
+		   SET 
+		       QTY                = #{QTY}
+		      ,UNIT_PRICE         = #{UNIT_PRICE}
+		      ,CURRENCY_CODE      = #{CURRENCY_CODE}
+		      ,REMARK             = #{REMARK}
+		      ,LATEST_YN          = #{LATEST_YN}
+		      ,UPD_DATE           = SYSDATE
+		      ,UPD_USER_ID        = #{GV_USER_ID}
+		 WHERE OU_CODE            = #{OU_CODE}
+		   AND PROJECT_CODE       = #{PROJECT_CODE}
+		   AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID}
+		   AND PLAN_VERSION       = #{PLAN_VERSION}
+		   AND BASE_YEAR          = #{BASE_YEAR}
+		   AND PLAN_YEAR          = SUBSTR( #{PLAN_YYYYMM},1,4)
+		   AND PLAN_MONTH         = SUBSTR( #{PLAN_YYYYMM},5,2)
+
+		      
+	</update> 
+	<!-- 중장기계획헤더   삭제 -->
+	<delete id="DELETE_PLAN_HEADER" parameterType="java.util.Map">
+		DELETE FROM OMS_LONG_PLAN	
+		 WHERE OU_CODE            = #{OU_CODE}
+	       AND PROJECT_CODE       = #{PROJECT_CODE}
+	       AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID}
+	       AND BASE_YEAR          = #{BASE_YEAR}		
+	</delete>	
+	     
+	<!-- 중장기계획  삭제 -->
+	<delete id="DELETE_PLAN" parameterType="java.util.Map">
+		DELETE FROM OMS_LONG_PLAN		 
+		 WHERE OU_CODE            = #{OU_CODE}
+		   AND PROJECT_CODE       = #{PROJECT_CODE}
+		   AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID}
+		   AND PLAN_VERSION       = #{PLAN_VERSION}
+		   AND BASE_YEAR          = #{BASE_YEAR}
+		   AND PLAN_YEAR          = SUBSTR( #{PLAN_YYYYMM},1,4)
+		   AND PLAN_MONTH         = SUBSTR( #{PLAN_YYYYMM},5,2)
+	</delete>	
+	<!-- 중장기계획  헤더 리비젼 -->
+	<insert id="REVISION_PLAN_HEADER" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+	BEGIN
+		INSERT INTO OMS_LONG_PLAN_HEADER
+		  (OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_PRODUCT_ID
+		  ,BASE_YEAR
+		  ,INCOTERMS_CODE
+		  ,INCOTERMS_DETAIL
+		  ,PLAN_VERSION
+		  ,LATEST_YN 
+		  ,REMARK
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID)
+		VALUES
+		  (#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,#{PROJECT_PRODUCT_ID}
+		  ,#{BASE_YEAR}
+		  ,#{INCOTERMS_CODE}
+		  ,#{INCOTERMS_DETAIL}
+		  ,#{PLAN_VERSION}
+		  ,#{LATEST_YN}
+		  ,#{REMARK}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID});
+		  
+  		UPDATE OMS_LONG_PLAN_HEADER
+	   	   SET LATEST_YN = 'N'
+		 WHERE OU_CODE            = #{OU_CODE}
+		   AND PROJECT_CODE       = #{PROJECT_CODE}
+		   AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID}
+		   AND PLAN_VERSION       <> #{PLAN_VERSION}
+		   AND BASE_YEAR          = #{BASE_YEAR};  
+		     
+  		UPDATE OMS_LONG_PLAN
+	   	   SET LATEST_YN = 'N'
+		 WHERE OU_CODE            = #{OU_CODE}
+		   AND PROJECT_CODE       = #{PROJECT_CODE}
+		   AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID}
+		   AND PLAN_VERSION       <> #{PLAN_VERSION}
+		   AND BASE_YEAR          = #{BASE_YEAR};  		   
+	END;	  
+		  
+
+	]]>
+	</insert>    	
+	<!-- 중장기계획  리비젼 -->
+	<insert id="REVISION_PLAN" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+	BEGIN
+		INSERT INTO OMS_LONG_PLAN
+		  (OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_PRODUCT_ID
+		  ,PLAN_VERSION
+		  ,BASE_YEAR
+		  ,PLAN_YEAR
+		  ,PLAN_MONTH
+		  ,QTY
+		  ,UNIT_PRICE
+		  ,CURRENCY_CODE
+		  ,REMARK
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID
+		  ,LATEST_YN)
+		VALUES
+		  (#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,#{PROJECT_PRODUCT_ID}
+		  ,#{PLAN_VERSION}
+		  ,#{BASE_YEAR}
+		  ,SUBSTR( REPLACE(#{PLAN_YYYYMM},'-',''),1,4)
+		  ,SUBSTR( REPLACE(#{PLAN_YYYYMM},'-',''),5,2)
+		  ,#{QTY}
+		  ,#{UNIT_PRICE}
+		  ,#{CURRENCY_CODE}
+		  ,#{REMARK}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,#{LATEST_YN});
+		  
+  		UPDATE OMS_LONG_PLAN
+	   	   SET LATEST_YN = 'N'
+		 WHERE OU_CODE            = #{OU_CODE}
+		   AND PROJECT_CODE       = #{PROJECT_CODE}
+		   AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID}
+		   AND PLAN_VERSION       <> #{PLAN_VERSION}
+		   AND BASE_YEAR          = #{BASE_YEAR};    
+	END;	  
+		  
+
+	]]>
+	</insert>      
+	<!-- 프로젝트  리비젼 -->
+	<insert id="REVISION_PROJECT" parameterType="java.util.Map" useGeneratedKeys="false">
+	<![CDATA[
+	BEGIN
+		INSERT INTO OMS_PROJECT
+		  (OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_VERSION
+		  ,CAR_TYPE_CODE
+		  ,REGISTER_YEAR
+		  ,IMPORTANCE_CODE
+		  ,ACT_STATUS_CODE
+		  ,DETAIL_STATUS_CODE
+		  ,OU_COUNTRY_CODE
+		  ,SOP
+		  ,EOP
+		  ,DOMESTIC_EXPORT_CODE
+		  ,TARGET_YEAR
+		  ,CUSTOMER_ID
+		  ,OEM
+		  ,REMARK
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID
+		  ,LATEST_YN
+		  ,CUSTOMER_AREA
+		  ,SALES_TYPE_CODE
+		  ,PRODUCTION_AREA_CODE
+		  ,CURRENCY_CODE
+		  ,RFQ_CODE
+		  ,ORG_PROJECT_CODE
+		  ,ROLLING_YN)
+		VALUES
+		  (#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,#{PROJECT_VERSION}
+		  ,#{CAR_TYPE_CODE}
+		  ,#{REGISTER_YEAR}
+		  ,#{IMPORTANCE_CODE}
+		  ,#{ACT_STATUS_CODE}
+		  ,#{DETAIL_STATUS_CODE}
+		  ,#{OU_COUNTRY_CODE}
+		  ,#{SOP}
+		  ,#{EOP}
+		  ,#{DOMESTIC_EXPORT_CODE}
+		  ,#{TARGET_YEAR}
+		  ,#{CUSTOMER_ID}
+		  ,#{OEM}
+		  ,#{REMARK}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,#{LATEST_YN}
+		  ,#{CUSTOMER_AREA}
+		  ,#{SALES_TYPE_CODE}
+		  ,#{PRODUCTION_AREA_CODE}
+		  ,#{CURRENCY_CODE}
+		  ,#{RFQ_CODE}
+		  ,#{ORG_PROJECT_CODE}
+		  ,#{ROLLING_YN} );
+		  
+  		UPDATE OMS_PROJECT
+	   	   SET LATEST_YN = 'N'
+		 WHERE OU_CODE            = #{OU_CODE}
+		   AND PROJECT_CODE       = #{PROJECT_CODE}
+		   AND PROJECT_VERSION       <> #{PROJECT_VERSION};
+	END;	  
+		  
+
+	]]>
+	</insert>      
+	<!-- 프로젝트 제품 리비젼 -->
+	<insert id="REVISION_PROJECT_PRODUCT" parameterType="java.util.Map" useGeneratedKeys="false">
+	     <selectKey keyProperty="NEW_PROJECT_PRODUCT_ID" resultType="string" order="BEFORE">
+			SELECT OMS_PROJECT_PRODUCT_SEQ.NEXTVAL  
+			FROM DUAL
+        </selectKey>			
+	<![CDATA[
+	BEGIN
+		INSERT INTO OMS_PROJECT_PRODUCT
+		  (PROJECT_PRODUCT_ID
+		  ,OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_VERSION
+		  ,BUSINESS_GROUP_CODE
+		  ,PRODUCT_GROUP_CODE
+		  ,PRODUCT_NAME_CODE
+		  ,PRODUCT_MODEL_CODE
+		  ,PRODUCT_PKG_CODE
+		  ,ITEM_NAME
+		  ,ERP_ITEM_NO
+		  ,OLD_PROJECT_PRODUCT_ID
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID
+		  ,PSO_PROJECT_ID)
+		VALUES
+		  (#{NEW_PROJECT_PRODUCT_ID}
+		  ,#{OU_CODE}
+		  ,#{PROJECT_CODE}
+		  ,#{PROJECT_VERSION}
+		  ,#{BUSINESS_GROUP_CODE}
+		  ,#{PRODUCT_GROUP_CODE}
+		  ,#{PRODUCT_NAME_CODE}
+		  ,#{PRODUCT_MODEL_CODE}
+		  ,#{PRODUCT_PKG_CODE}
+		  ,#{ITEM_NAME}
+		  ,#{ERP_ITEM_NO}
+		  ,#{PROJECT_PRODUCT_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,SYSDATE
+		  ,#{GV_USER_ID}
+		  ,#{PSO_PROJECT_ID} );
+
+      INSERT INTO OMS_LONG_PLAN_HEADER
+        (OU_CODE
+        ,PROJECT_CODE
+        ,PROJECT_PRODUCT_ID
+        ,BASE_YEAR
+        ,PLAN_VERSION 
+        ,INCOTERMS_CODE
+        ,INCOTERMS_DETAIL
+        ,LATEST_YN 
+        ,REMARK
+        ,INS_DATE
+        ,INS_USER_ID
+        ,UPD_DATE
+        ,UPD_USER_ID)
+      SELECT
+             LPH.OU_CODE
+            ,PROJECT_CODE
+            ,#{NEW_PROJECT_PRODUCT_ID}
+            ,BASE_YEAR
+            ,PLAN_VERSION
+            ,INCOTERMS_CODE
+            ,INCOTERMS_DETAIL
+            ,LATEST_YN
+            ,REMARK
+		    ,SYSDATE
+		    ,#{GV_USER_ID}
+		    ,SYSDATE
+		    ,#{GV_USER_ID} 
+       FROM OMS_LONG_PLAN_HEADER LPH
+       WHERE LPH.OU_CODE =  #{OU_CODE}
+         AND LPH.PROJECT_CODE = #{PROJECT_CODE}
+         AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID};
+
+		  
+		INSERT INTO OMS_LONG_PLAN
+		  (OU_CODE
+		  ,PROJECT_CODE
+		  ,PROJECT_PRODUCT_ID
+		  ,PLAN_VERSION
+		  ,BASE_YEAR
+		  ,PLAN_YEAR
+		  ,PLAN_MONTH
+		  ,QTY
+		  ,UNIT_PRICE
+		  ,CURRENCY_CODE
+		  ,REMARK
+		  ,INS_DATE
+		  ,INS_USER_ID
+		  ,UPD_DATE
+		  ,UPD_USER_ID
+		  ,LATEST_YN)
+		SELECT OU_CODE
+		      ,PROJECT_CODE
+		      ,#{NEW_PROJECT_PRODUCT_ID}
+		      ,PLAN_VERSION
+		      ,BASE_YEAR
+		      ,PLAN_YEAR
+		      ,PLAN_MONTH
+		      ,QTY
+		      ,UNIT_PRICE
+		      ,CURRENCY_CODE
+		      ,REMARK
+		      ,SYSDATE
+		      ,#{GV_USER_ID}
+		      ,SYSDATE
+		      ,#{GV_USER_ID}
+		      ,LATEST_YN
+		  FROM OMS_LONG_PLAN
+		 WHERE OU_CODE = #{OU_CODE}
+		   AND PROJECT_CODE = #{PROJECT_CODE}
+		   AND PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID} ;		  
+		   
+        INSERT 
+        INTO    OMS_ESTIMATE_COST
+        (       ESTIMATE_COST_ID
+        ,       OU_CODE
+        ,       PROJECT_CODE
+        ,       PROJECT_PRODUCT_ID
+        ,       ESTIMATE_DATE
+        ,       SALES_PRICE
+        ,       TOTAL_COST
+        ,       REVENUE_COST
+        ,       MATERIAL_COST
+        ,       PROCESS_COST
+        ,       LABOR_COST
+        ,       MANUFACTUR_COST
+        ,       EXPENSE_COST
+        ,       EQUIPMENT_DEPR_COST
+        ,       MOLD_DEPR_COST
+        ,       REPAIR_COST
+        ,       ELECTRICITY_COST
+        ,       OVERHEAD_COST
+        ,       VARIABLE_OVH_COST
+        ,       FIXED_OVH_COST
+        ,       SGNA_COST
+        ,       MAINTENANCE_COST
+        ,       TEST_COST
+        ,       TRANSPORTATION_COST
+        ,       PACKAGING_COST
+        ,       COMMISSION_COST
+        ,       OTHER_COST
+        ,       QUALITY_COST
+        ,       INSPECTION_COST
+        ,       INTEREST_COST
+        ,       CONFIRM
+        ,       TARGET_COST_YN
+        ,       REMARK
+        ,       OLD_ESTIMATE_COST_ID
+        ,       INS_DATE
+        ,       INS_USER_ID
+        ,       UPD_DATE
+        ,       UPD_USER_ID)
+        SELECT 
+                OMS_ESTIMATE_COST_SEQ.NEXTVAL
+        ,       OU_CODE
+        ,       PROJECT_CODE
+        ,       PROJECT_PRODUCT_ID
+        ,       TO_DATE(ESTIMATE_DATE, 'RRRRMMDD')
+        ,       SALES_PRICE
+        ,       TOTAL_COST
+        ,       REVENUE_COST
+        ,       MATERIAL_COST
+        ,       PROCESS_COST
+        ,       LABOR_COST
+        ,       MANUFACTUR_COST
+        ,       EXPENSE_COST
+        ,       EQUIPMENT_DEPR_COST
+        ,       MOLD_DEPR_COST
+        ,       REPAIR_COST
+        ,       ELECTRICITY_COST
+        ,       OVERHEAD_COST
+        ,       VARIABLE_OVH_COST
+        ,       FIXED_OVH_COST
+        ,       SGNA_COST
+        ,       MAINTENANCE_COST
+        ,       TEST_COST
+        ,       TRANSPORTATION_COST
+        ,       PACKAGING_COST
+        ,       COMMISSION_COST
+        ,       OTHER_COST
+        ,       QUALITY_COST
+        ,       INSPECTION_COST
+        ,       INTEREST_COST
+        ,       CONFIRM
+        ,       TARGET_COST_YN
+        ,       REMARK
+        ,       OLD_ESTIMATE_COST_ID
+        ,       SYSDATE
+        ,       #{GV_USER_ID}
+        ,       SYSDATE
+        ,       #{GV_USER_ID} 
+        FROM    OMS_ESTIMATE_COST EC
+        WHERE   OU_CODE = #{OU_CODE}
+        AND     PROJECT_CODE = #{PROJECT_CODE}
+        AND     PROJECT_PRODUCT_ID = #{PROJECT_PRODUCT_ID} ;
+		   
+    END;
+	]]>
+	</insert>  	   	 
+	
+    <!-- 전년도 중장기 계획 복사  -->
+    <select id="COPY_LONG_PLAN_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    <![CDATA[       
+			CALL  OMS_PROJECT_PKG.COPY_LONG_PLAN_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{USER_ID}
+			                                            ,#{OU_CODE}
+			                                            ,#{PROJECT_CODE}
+			                                            ,#{PROJECT_PRODUCT_ID}
+			                                            ,#{ITEM_NAME}
+			                                            ,#{BASE_YEAR}		                                            
+			                                            )
+    ]]>
+
+    </select> 	 
+    <!-- 전년도 중장기 계획 Upload  가로-->
+    <select id="UPLOAD_LONG_PLAN_WIDTH_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    <![CDATA[       
+			CALL  OMS_PROJECT_PKG.UPLOAD_LONG_PLAN_WIDTH_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{USER_ID}
+			                                            ,#{OU_CODE}
+			                                            ,#{BASE_YEAR}		                                            
+			                                            )
+    ]]>
+
+    </select>  
+    <!-- 전년도 중장기 계획 Upload  -->
+    <select id="UPLOAD_LONG_PLAN_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    <![CDATA[       
+			CALL  OMS_PROJECT_PKG.UPLOAD_LONG_PLAN_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{USER_ID}
+			                                            ,#{OU_CODE}
+			                                            ,#{BASE_YEAR}		                                            
+			                                            )
+    ]]>
+
+    </select> 
+    	
+    <!-- CLOSE 검증  -->
+    <select id="CLOSE_VALIDATION_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    <![CDATA[       
+			CALL  OMS_PROJECT_PKG.CLOSE_VALIDATION_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+			                                            ,#{OU_CODE}
+			                                            ,#{PROJECT_CODE}		                                            
+			                                            )
+    ]]>
+
+    </select>       
+     <!-- Upload 검증-->
+	<select id="UPLOAD_VALIDATION_PROC" statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">     
+			CALL  OMS_PROJECT_PKG.UPLOAD_VALIDATION_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+			                                            ,#{OU_CODE}
+			                                            ,#{PROJECT_CODE}	
+			                                            ,#{PROJECT_PRODUCT_ID}	
+			                                            ,#{INCOTERMS_CODE}	                                            
+			                                            )
+	 </select>	
+    <!-- 사업계획 단가 복사 -->
+    <select id="COPY_BIZ_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    <![CDATA[       
+			CALL  OMS_PROJECT_PKG.COPY_BIZ_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{GV_USER_ID} 
+			                                            ,#{OU_CODE}
+			                                            ,#{PROJECT_CODE}	
+			                                            ,#{PROJECT_PRODUCT_ID}	
+			                                            ,#{BASE_YEAR}	
+			                                            ,#{BIZ_YEAR}		                                            
+			                                            )
+    ]]>
+
+    </select>   	           
+
+    <select id="SELECT_FROZEN_PROJECT_VERSION" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+            select  oms_project_long_plan_pkg.pjt_event_pjt_max_version_f( i_ou_code           => #{OU_CODE}
+                                                                         , i_project_code      => #{PROJECT_CODE}) AS FROZEN_PROJECT_VERSION
+            from    dual
+   		]]>
+   	</select>
+
+    <select id="SELECT_FROZEN_PLAN_VERSION" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+            select  oms_project_long_plan_pkg.pjt_event_lp_max_version_f( i_ou_code            => #{OU_CODE}
+                                                                        , i_base_year          => #{BASE_YEAR}
+                                                                        , i_project_code       => #{PROJECT_CODE}
+                                                                        , i_project_product_id => #{PROJECT_PRODUCT_ID}) AS FROZEN_PLAN_VERSION
+            from    dual
+   		]]>
+   	</select>
+
+</mapper>

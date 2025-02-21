@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+
+	 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+
+	 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OmsExchangeMapper">
+		    
+    <!-- 환율관리 : 환율관리 정보 조회 -->				
+	<select id="SELECT_EXCHANGE_RATE_HEADER" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT EH.OU_CODE
+			     , EH.EXG_ID
+			     , EH.STD_YEAR
+			     , EH.EXG_NAME
+			     , EH.REMARK
+			  FROM OMS_EXCHANGE_RATE_HEADER   EH
+			 WHERE EH.OU_CODE = #{OU_CODE}
+			   AND EH.STD_YEAR = #{STD_YEAR}
+		]]>	
+		<if test="@com.oms.MyBatisUtil@isNotEmpty(EXG_NAME)">
+            <![CDATA[
+        	   AND EH.EXG_NAME LIKE '%'|| #{EXG_NAME} || '%'  
+        	]]>
+        </if>
+		<![CDATA[
+			 ORDER BY EH.STD_YEAR, EH.EXG_NAME
+        ]]>
+    </select>
+    
+    <!-- 환율관리 : 환율관리 정보 (LINE) 조회 -->				
+	<select id="SELECT_EXCHANGE_RATE_LINE" parameterType="java.util.Map" resultType="java.util.Map">     
+	 	<![CDATA[
+	 		SELECT EL.OU_CODE
+			     , EL.EXG_ID
+			     , EL.EXG_LINE_ID
+			     , EL.STD_YEAR
+			     , EL.FROM_CURR_CODE
+			     , EL.TO_CURR_CODE
+			     , EL.EXCHANGE_RATE
+			     , EL.REMARK
+			  FROM OMS_EXCHANGE_RATE_LINE  EL
+			 WHERE EL.OU_CODE = #{OU_CODE}
+			   AND EL.EXG_ID = #{EXG_ID}
+             ORDER BY EL.STD_YEAR, EL.FROM_CURR_CODE, EL.TO_CURR_CODE
+		]]>	
+    </select>
+    
+    <!-- 환율관리  : OMS_EXG_ID_SEQ -->  
+    <select id="SELECT_OMS_EXG_ID_SEQ" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT OMS_EXG_ID_SEQ.NEXTVAL  SEQ 
+          	  FROM DUAL
+   		]]>
+   	</select>
+   	
+   	<!-- 환율관리  : OMS_EXG_LINE_ID_SEQ -->  
+    <select id="SELECT_OMS_EXG_LINE_ID_SEQ" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT OMS_EXG_LINE_ID_SEQ.NEXTVAL  SEQ 
+          	  FROM DUAL
+   		]]>
+   	</select>
+   	
+   	<!-- 환율관리 : 환율관리  정보 insert -->
+    <insert id="INSERT_EXCHANGE_RATE_HEADER" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+            INSERT INTO OMS_EXCHANGE_RATE_HEADER
+			  (OU_CODE
+			  ,EXG_ID
+			  ,STD_YEAR
+			  ,EXG_NAME
+			  ,REMARK
+			  ,INS_DATE
+			  ,INS_USER_ID
+			  ,UPD_DATE
+			  ,UPD_USER_ID)
+			VALUES
+			  (#{OU_CODE}
+			  ,#{EXG_ID}
+			  ,#{STD_YEAR}
+			  ,#{EXG_NAME}
+			  ,#{REMARK}
+			  ,SYSDATE
+	          ,#{GV_USER_ID}
+	          ,SYSDATE
+	          ,#{GV_USER_ID})
+        ]]>
+    </insert>
+    
+    <!-- 환율관리 : 환율관리 정보 update -->
+    <update id="UPDATE_EXCHANGE_RATE_HEADER" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_EXCHANGE_RATE_HEADER
+			   SET STD_YEAR             = #{STD_YEAR}
+			     , EXG_NAME             = #{EXG_NAME}
+			     , REMARK               = #{REMARK}
+			     , UPD_DATE             = SYSDATE
+			     , UPD_USER_ID          = #{GV_USER_ID}
+			 WHERE OU_CODE              = #{OU_CODE}
+			   AND EXG_ID               = #{EXG_ID}
+        ]]> 
+    </update>
+    
+    <!-- 환율관리 : 환율관리 정보 삭제 -->
+    <delete id="DELETE_EXCHANGE_RATE_HEADER" parameterType="java.util.Map">  
+    		DELETE OMS_EXCHANGE_RATE_HEADER
+			 WHERE OU_CODE     = #{OU_CODE}
+			   AND EXG_ID      = #{EXG_ID}
+    </delete>
+    
+   	<!-- 환율관리 : 환율관리 정보 (LINE) insert -->
+    <insert id="INSERT_EXCHANGE_RATE_LINE" parameterType="java.util.Map" useGeneratedKeys="false">
+        <![CDATA[
+            INSERT INTO OMS_EXCHANGE_RATE_LINE
+			  (OU_CODE
+			  ,EXG_ID
+			  ,EXG_LINE_ID
+			  ,STD_YEAR
+			  ,FROM_CURR_CODE
+			  ,TO_CURR_CODE
+			  ,EXCHANGE_RATE
+			  ,REMARK
+			  ,INS_DATE
+			  ,INS_USER_ID
+			  ,UPD_DATE
+			  ,UPD_USER_ID)
+			VALUES
+			  (#{OU_CODE}
+			  ,#{EXG_ID}
+			  ,#{EXG_LINE_ID}
+			  ,#{STD_YEAR}
+			  ,#{FROM_CURR_CODE}
+			  ,#{TO_CURR_CODE}
+			  ,#{EXCHANGE_RATE}
+			  ,#{REMARK}
+			  ,SYSDATE
+	          ,#{GV_USER_ID}
+	          ,SYSDATE
+	          ,#{GV_USER_ID})
+        ]]>
+    </insert>
+    
+    <!-- 환율관리 : 환율관리 정보 (LINE) update -->
+    <update id="UPDATE_EXCHANGE_RATE_LINE" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_EXCHANGE_RATE_LINE
+			   SET STD_YEAR             = #{STD_YEAR}
+			     , FROM_CURR_CODE       = #{FROM_CURR_CODE}
+			     , TO_CURR_CODE     	= #{TO_CURR_CODE}
+			     , EXCHANGE_RATE        = #{EXCHANGE_RATE}
+			     , REMARK               = #{REMARK}
+			     , UPD_DATE             = SYSDATE
+			     , UPD_USER_ID          = #{GV_USER_ID}
+			 WHERE OU_CODE              = #{OU_CODE}
+			   AND EXG_ID               = #{EXG_ID}
+			   AND EXG_LINE_ID          = #{EXG_LINE_ID}
+        ]]> 
+    </update>
+    
+    <!-- 환율관리 : 환율관리 정보 (LINE) 삭제 -->
+    <delete id="DELETE_EXCHANGE_RATE_LINE" parameterType="java.util.Map">  
+    		DELETE OMS_EXCHANGE_RATE_LINE
+			 WHERE OU_CODE     = #{OU_CODE}
+			   AND EXG_ID      = #{EXG_ID}
+			   AND EXG_LINE_ID = #{EXG_LINE_ID}
+    </delete>     
+    
+    <!-- 환율관리  : ERP사업계획환율 정보 중복 CHECK -->  
+    <select id="SELECT_OMS_EXG_DUP_CHK" parameterType="java.util.Map" resultType="java.util.Map">    
+   		<![CDATA[       
+        	SELECT COUNT(1) AS CNT 
+          	  FROM OMS_EXCHANGE_RATE_HEADER
+			 WHERE OU_CODE     = #{OU_CODE}
+			   AND STD_YEAR    = #{STD_YEAR}
+			   AND EXG_NAME    = #{EXG_NAME}
+   		]]>
+   	</select>
+   	
+    <!-- 환율관리 : ERP사업계획환율 정보 생성 -->
+    <select id="OMS_EXCHANGE_RATE_IF_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+        <![CDATA[       
+			CALL  OMS_ERP_INTERFACE_PKG.OMS_EXCHANGE_RATE_IF_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{USER_ID}
+			                                            ,#{OU_CODE}
+			                                            ,#{STD_YEAR}			                                            
+			                                            )
+        ]]>
+    </select>
+    
+    <!-- 환율관리 : 환율관리 정보 복사   -->
+    <select id="COPY_EXCHANGE_RATE_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">    
+    	<![CDATA[       
+			CALL  OMS_PROJECT_PKG.COPY_OMS_EXG_RATE_PROC( 
+			                                             #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
+                                                        ,#{USER_ID}
+			                                            ,#{OU_CODE}
+			                                            ,#{EXG_ID}
+			                                             )
+    	]]>
+    </select> 
+        
+</mapper>
