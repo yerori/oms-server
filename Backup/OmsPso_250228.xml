@@ -245,7 +245,7 @@
    		]]>
    	</select>
    	
-    <!-- PSO대상프로젝트관리 : PSO대상 프로젝트 정보 조회 -->		
+    <!-- PSO대상프로젝트관리 : PSO대상 프로젝트 정보 조회 -->				
 	<select id="SELECT_PSO_PROJECT_MSTR" parameterType="java.util.Map" resultType="java.util.Map">     
 	 	<![CDATA[
 	 		SELECT PM.OU_CODE
@@ -284,7 +284,6 @@
 			     , PM.PSO_CREATE_YN
 			     , PRB.R_BOARD_ID
 			  FROM OMS_PSO_PROJECT_MSTR  PM
-			  	 , OMS_PSO_PROJECT_MSTR_AUTH PA
 			     , OMS_PROJECT           OP
 			     , SMT_CUSTOMER          SC
 			     , OMS_PROJECT_PRODUCT   PP
@@ -293,9 +292,6 @@
 			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
 			   AND PM.OU_CODE = PRB.OU_CODE(+) 
                AND PM.PSO_PROJECT_ID = PRB.PSO_PROJECT_ID(+) 
-               AND PM.OU_CODE = PA.OU_CODE(+)
-			   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID(+)
-			   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE(+) AND NVL(PA.END_DATE(+), '9999-12-31')
 			   AND NVL(OP.LATEST_YN,'N') = 'Y'
 			   AND OP.OU_CODE = SC.OU_CODE
 			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
@@ -312,7 +308,7 @@
 		]]>	
 		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
         	<![CDATA[
-        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	   AND PM.PROJECT_CODE = #{PROJECT_CODE}
         	]]>  
         </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_TARGET_YN)">
@@ -322,7 +318,7 @@
         </if>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_ID)">
         	<![CDATA[
-        	   AND PA.CHARGE_USER_ID = #{PM_CHG_ID} 
+        	   AND PM.UPD_USER_ID = #{PM_CHG_ID} 
         	]]>  
         </if>		   
 		<![CDATA[
@@ -343,7 +339,6 @@
 			   AND PSO_PROJECT_ID       = #{PSO_PROJECT_ID}
         ]]> 
     </update>
-    
     
     <!-- PSO대상프로젝트관리 : PSO대상 프로젝트 정보(POPUP) 조회 -->				
 	<select id="SELECT_PSO_PROJECT_ALL" parameterType="java.util.Map" resultType="java.util.Map">     
@@ -383,22 +378,18 @@
 			     , SMT_GET_COMMON_CODE_NAME_FUNC('P005', PM.PSO_TARGET_YN, #{GV_LANG}) AS PSO_TARGET_YN_NAME 
 			     , PM.NO_TARGET_REASON
 			     , PM.PSO_CREATE_YN
-			     , SM.USER_ID  AS PM_USER
-				 , SM.USER_NAME AS PM_USER_NAME
-			  FROM OMS_PSO_PROJECT_MSTR  	  PM
-			  	 , OMS_PSO_PROJECT_MSTR_AUTH  PA
-			     , OMS_PROJECT           	  OP
-			     , SMT_CUSTOMER          	  SC
-			     , OMS_PROJECT_PRODUCT   	  PP
-			     , SMT_USER_MSTR              SM
+			     , PM.UPD_USER_ID   AS PM_USER
+			     , SMT_GET_USER_NAME_FUNC(PM.OU_CODE,PM.UPD_USER_ID) AS PM_USER_NAME 
+			  FROM OMS_PSO_PROJECT_MSTR  PM
+			     , OMS_PROJECT           OP
+			     , SMT_CUSTOMER          SC
+			     , OMS_PROJECT_PRODUCT   PP
 			 WHERE PM.OU_CODE = OP.OU_CODE
 			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
 			   AND NVL(OP.LATEST_YN,'N') = 'Y'
 			   AND OP.OU_CODE = SC.OU_CODE
 			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
 			   AND OP.OU_CODE = PP.OU_CODE
-			   AND PM.OU_CODE = PA.OU_CODE(+)
-			   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID(+)
 			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
 			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
 			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
@@ -408,9 +399,6 @@
 			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
 			   AND PM.ITEM_NAME = PP.ITEM_NAME   
 			   AND PM.OU_CODE = #{OU_CODE}
-			   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE(+) AND NVL(PA.END_DATE(+), '9999-12-31')
-			   AND OP.OU_CODE = SM.OU_CODE
-			   AND SM.USER_ID = NVL(PA.CHARGE_USER_ID, PM.UPD_USER_ID)
 		]]>	
 		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
         	<![CDATA[
@@ -432,7 +420,7 @@
         	   AND PM.PSO_TARGET_YN = #{PSO_TARGET_YN} 
         	]]>  
         </if>
-        <!-- <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
         	<![CDATA[
         	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
         	]]>  
@@ -441,22 +429,10 @@
         	<![CDATA[
         	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
         	]]>  
-        </if>  -->
-        <choose>
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID} 
-	        	]]>  
-        	</when>  
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-	        	]]>  
-	        </when> 
-        </choose> 
+        </if>  
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_ID)">
         	<![CDATA[
-        	   AND PA.CHARGE_USER_ID = #{PM_CHG_ID} 
+        	   AND PM.UPD_USER_ID = #{PM_CHG_ID} 
         	]]>  
         </if> 
 		<![CDATA[
@@ -523,14 +499,13 @@
 			     , PRB.APQP_YN
 			     , PRB.IND_GROUP
 			     , PRB.REMARK
-			     , DECODE(#{GV_USER_ID}, PA.CHARGE_USER_ID,'W','R') AS READ_WRITE
+			     , DECODE(#{GV_USER_ID},PM.UPD_USER_ID,'W','R') AS READ_WRITE
 			     , OMS_PSO_GET_USER_AUTH_FUNC(PM.OU_CODE,#{GV_USER_ID}) AS PM_AUTH  
-			  FROM OMS_PSO_PROJECT_R_BOARD   PRB
-			     , OMS_PSO_PROJECT_MSTR      PM
-			     , OMS_PSO_PROJECT_MSTR_AUTH PA
-			     , OMS_PROJECT               OP
-			     , SMT_CUSTOMER              SC
-			     , OMS_PROJECT_PRODUCT       PP
+			  FROM OMS_PSO_PROJECT_R_BOARD  PRB
+			     , OMS_PSO_PROJECT_MSTR     PM
+			     , OMS_PROJECT              OP
+			     , SMT_CUSTOMER             SC
+			     , OMS_PROJECT_PRODUCT      PP
 			 WHERE PRB.OU_CODE = PM.OU_CODE
 			   AND PRB.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
 			   AND PM.OU_CODE = OP.OU_CODE
@@ -548,9 +523,6 @@
 			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
 			   AND PM.ITEM_NAME = PP.ITEM_NAME   
 			   AND PRB.OU_CODE = #{OU_CODE}
-			   AND PM.OU_CODE = PA.OU_CODE
-			   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID
-			   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, '9999-12-31')
 		]]>	
 		<if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_PROJECT_ID)">
         	<![CDATA[
@@ -665,14 +637,13 @@
 			     , PRB.APQP_YN
 			     , PRB.IND_GROUP
 			     , PRB.REMARK
-			     , PA.CHARGE_USER_ID   AS PM_USER
-			     , SMT_GET_USER_NAME_FUNC(PA.OU_CODE,PA.CHARGE_USER_ID) AS PM_USER_NAME 	
-			  FROM OMS_PSO_PROJECT_R_BOARD   PRB
-			     , OMS_PSO_PROJECT_MSTR      PM
-			     , OMS_PSO_PROJECT_MSTR_AUTH PA
-			     , OMS_PROJECT               OP
-			     , SMT_CUSTOMER              SC
-			     , OMS_PROJECT_PRODUCT       PP
+			     , PM.UPD_USER_ID   AS PM_USER
+			     , SMT_GET_USER_NAME_FUNC(PM.OU_CODE,PM.UPD_USER_ID) AS PM_USER_NAME 	
+			  FROM OMS_PSO_PROJECT_R_BOARD  PRB
+			     , OMS_PSO_PROJECT_MSTR     PM
+			     , OMS_PROJECT              OP
+			     , SMT_CUSTOMER             SC
+			     , OMS_PROJECT_PRODUCT      PP
 			 WHERE PRB.OU_CODE = PM.OU_CODE
 			   AND PRB.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
 			   AND PM.OU_CODE = OP.OU_CODE
@@ -690,9 +661,6 @@
 			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
 			   AND PM.ITEM_NAME = PP.ITEM_NAME   
 			   AND PRB.OU_CODE = #{OU_CODE}
-			   AND PM.OU_CODE = PA.OU_CODE
-			   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID
-			   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, '9999-12-31')
 		]]>	
 		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
         	<![CDATA[
@@ -709,7 +677,7 @@
         	   AND PM.ITEM_NAME LIKE '%'|| #{ITEM_NAME} || '%'
         	]]>  
         </if>
-        <!-- <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
         	<![CDATA[
         	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
         	]]>  
@@ -718,19 +686,7 @@
         	<![CDATA[
         	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
         	]]>  
-        </if>  -->
-        <choose>
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID} 
-	        	]]>  
-        	</when>  
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-	        	]]>  
-	        </when> 
-        </choose>
+        </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(R_BOARD_STATUS)">
         	<![CDATA[
         	   AND PRB.R_BOARD_STATUS = #{R_BOARD_STATUS} 
@@ -738,7 +694,7 @@
         </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_ID)">
         	<![CDATA[
-        	   AND PA.CHARGE_USER_ID = #{PM_CHG_ID} 
+        	   AND PRB.INS_USER_ID = #{PM_CHG_ID} 
         	]]>  
         </if>  
 		<![CDATA[
@@ -831,11 +787,10 @@
 			     , PD.PSO_DOCU_STATUS
 			     , SMT_GET_COMMON_CODE_NAME_FUNC('P008', PD.PSO_DOCU_STATUS, #{GV_LANG}) AS DOCU_STATUS_NAME
 			     , PD.DESCRIPTION
-			     , DECODE(#{GV_USER_ID}, PA.CHARGE_USER_ID,'W','R') AS READ_WRITE
+			     , DECODE(#{GV_USER_ID},PM.UPD_USER_ID,'W','R') AS READ_WRITE
 			     , OMS_PSO_GET_USER_AUTH_FUNC(PM.OU_CODE,#{GV_USER_ID}) AS PM_AUTH
 			  FROM OMS_PSO_PROJECT_DOCU     PD
 			     , OMS_PSO_PROJECT_MSTR     PM
-			     , OMS_PSO_PROJECT_MSTR_AUTH PA
 			     , OMS_PSO_PROJECT_R_BOARD  RB
 			     , OMS_PROJECT              OP
 			     , SMT_CUSTOMER             SC
@@ -860,9 +815,6 @@
 			   AND PM.ITEM_NAME = PP.ITEM_NAME   
 			   AND PD.OU_CODE = #{OU_CODE}
 			   AND PD.PSO_DOCU_ID = #{PSO_DOCU_ID}
-			   AND PM.OU_CODE = PA.OU_CODE
-			   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID
-			   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, '9999-12-31')
 		]]>	
         <if test='USER_PM_DIV.equals("N")'>
         	<![CDATA[
@@ -870,13 +822,10 @@
         	   AND PD.PSO_DOCU_ID IN (SELECT PPD.PSO_DOCU_ID
 			                            FROM OMS_PSO_PROJECT_DOCU       PPD
 			                               , OMS_PSO_PROJECT_DOCU_LINE  PPL
-			                               , OMS_PSO_PROJECT_DOCU_LINE_auth DA
 			                           WHERE PPD.OU_CODE = PD.OU_CODE
 			                             AND PPD.OU_CODE = PPL.OU_CODE
-			                             AND PPL.OU_CODE = DA.OU_CODE
-			                             AND PPL.PSO_DOCU_LINE_ID = DA.PSO_DOCU_LINE_ID
 			                             AND PPD.PSO_DOCU_ID = PPL.PSO_DOCU_ID
-			                             AND (DA.CHARGE_USER_ID = #{GV_USER_ID} OR DA.CHARGE_EMP_NO = #{CHARGE_EMP_NO})  )
+			                             AND PPL.CHG_USER_ID = #{GV_USER_ID})
         	]]>  
         </if> 
     </select>
@@ -894,33 +843,24 @@
 			     , PDL.PSO_DOC_DETAIL_CHASU
 			     , PDL.PSO_CONTENTS
 			     , PDL.MANAGER_DEPT
-			     , DP.DEPT_CODE AS PSO_DEPT_CODE
-				 , DP.DEPT_NAME AS PSO_DEPT_NAME
-			     , PA.CHARGE_USER_ID AS CHG_USER_ID  
-			     , PA.CHARGE_EMP_NO AS CHG_EMP_NO
-			     , PSO_GET_USER_NAME_FUNC(PA.CHARGE_USER_ID, PA.CHARGE_EMP_NO) AS CHG_USER_NAME
-			     , HR.EMAIL_ADDR AS CHG_EMAIL_ADDR
+			     , PDL.PSO_DEPT_CODE
+			     , PDL.PSO_DEPT_NAME
+			     , PDL.CHG_USER_ID
+			     , PDL.CHG_USER_NAME
+			     , PDL.CHG_EMAIL_ADDR
 			     , TO_CHAR(PDL.MAKE_PLAN_DATE,'RRRRMMDD') AS MAKE_PLAN_DATE
 			     , TO_CHAR(PDL.MAKE_COMP_DATE,'RRRRMMDD') AS MAKE_COMP_DATE
 			     , DECODE(NVL(SMT_GET_ATTFILE_ID_NID_FUNC(PDL.OU_CODE,'Pso1010',PDL.DOC_ID,NULL),'N'),'N','N','Y') AS STD_DOCU_ATT_YN
 			     , DECODE(NVL(SMT_GET_ATTFILE_ID_NID_FUNC(PDL.OU_CODE,'Pso1050',PDL.PSO_DOCU_LINE_ID,NULL),'N'),'N','N','Y') AS PSO_DOCU_ATT_YN
-			     , TO_CHAR(PA.START_DATE,'YYYY-MM-DD') AS START_DATE
 			     , PDL.PSO_DOCU_LINE_STAT
 			     , PDL.REMARK
-			     , CASE WHEN PA.CHARGE_USER_ID IS NULL AND PA.CHARGE_EMP_NO IS NULL THEN 'I'
-						ELSE 'U' END AS ROW_STATUS
-			  FROM OMS_PSO_PROJECT_DOCU_LINE    	  PDL
-			  LEFT OUTER JOIN OMS_PSO_PROJECT_DOCU_LINE_AUTH PA ON PDL.OU_CODE = PA.OU_CODE AND PDL.PSO_DOCU_LINE_ID = PA.PSO_DOCU_LINE_ID
-			  LEFT OUTER JOIN HS_HRM.EHR_INSA_MSTR        HR ON PA.OU_CODE = HR.OU_CODE AND PA.CHARGE_EMP_NO = HR.EMP_NO
-			  LEFT OUTER JOIN HS_HRM.EHR_DEPT_MSTR        DP ON  HR.OU_CODE = DP.OU_CODE AND DP.DEPT_CODE = HR.DEPT_CODE
+			  FROM OMS_PSO_PROJECT_DOCU_LINE     PDL
 			 WHERE PDL.OU_CODE = #{OU_CODE}
 			   AND PDL.PSO_DOCU_ID = #{PSO_DOCU_ID}
-			   AND (PA.START_DATE IS NULL 
-				OR (TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, TO_DATE('9999-12-31', 'YYYY-MM-DD'))))
         ]]>
         <if test='USER_PM_DIV.equals("N")'>
         	<![CDATA[
-        	   AND (PA.CHARGE_USER_ID = #{GV_USER_ID} OR PA.CHARGE_EMP_NO = #{CHARGE_EMP_NO})
+        	   AND PDL.CHG_USER_ID = #{GV_USER_ID}
         	]]>  
         </if>
         <![CDATA[
@@ -941,11 +881,10 @@
 			     , PDL.PSO_DOC_DETAIL_CHASU
 			     , PDL.PSO_CONTENTS
 			     , PDL.MANAGER_DEPT
-			     , DP.DEPT_CODE AS PSO_DEPT_CODE
-				 , DP.DEPT_NAME AS PSO_DEPT_NAME
-			     , PA.CHARGE_USER_ID AS CHG_USER_ID  
-			     , PA.CHARGE_EMP_NO AS CHG_EMP_NO
-			     , PSO_GET_USER_NAME_FUNC(PA.CHARGE_USER_ID, PA.CHARGE_EMP_NO) AS CHG_USER_NAME
+			     , PDL.PSO_DEPT_CODE
+			     , PDL.PSO_DEPT_NAME
+			     , PDL.CHG_USER_ID
+			     , PDL.CHG_USER_NAME
 			     , PDL.CHG_EMAIL_ADDR
 			     , TO_CHAR(PDL.MAKE_PLAN_DATE,'RRRRMMDD') AS MAKE_PLAN_DATE
 			     , TO_CHAR(PDL.MAKE_COMP_DATE,'RRRRMMDD') AS MAKE_COMP_DATE
@@ -954,18 +893,8 @@
 			     , PDL.PSO_DOCU_LINE_STAT
 			     , PDL.REMARK
 			  FROM OMS_PSO_PROJECT_DOCU_LINE     PDL
-			  	 , OMS_PSO_PROJECT_DOCU_LINE_AUTH     PA
-			  	 , HS_HRM.EHR_INSA_MSTR      HR
-				 , HS_HRM.EHR_DEPT_MSTR      DP
 			 WHERE PDL.OU_CODE = #{OU_CODE}
 			   AND PDL.PSO_DOCU_ID = #{PSO_DOCU_ID}
-			   AND PDL.OU_CODE = PA.OU_CODE
-			   AND PDL.OU_CODE = HR.OU_CODE
-			   AND PDL.OU_CODE = DP.OU_CODE    
-			   AND PA.CHARGE_EMP_NO = HR.EMP_NO
-			   AND DP.DEPT_CODE = HR.DEPT_CODE
-			   AND PDL.PSO_DOCU_LINE_ID = PA.PSO_DOCU_LINE_ID
-			   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, '9999-12-31')
 			 ORDER BY PDL.PSO_DOC_STEP, TO_NUMBER(PDL.PSO_DOC_CHASU), TO_NUMBER(PDL.PSO_DOC_DETAIL_CHASU)
 		]]>	
     </select>
@@ -994,175 +923,84 @@
     <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록(DETAIL)  정보 insert -->
     <insert id="INSERT_PSO_DOCU_DETAIL" parameterType="java.util.Map" useGeneratedKeys="false">
         <![CDATA[
-        	BEGIN
-	            INSERT INTO OMS_PSO_PROJECT_DOCU_LINE
-				  (OU_CODE
-				  ,PSO_DOCU_ID
-				  ,PSO_DOCU_LINE_ID
-				  ,DOC_ID
-				  ,PSO_DOC_STEP
-				  ,PSO_DOC_CHASU
-				  ,PSO_DOC_DETAIL_CHASU
-				  ,PSO_CONTENTS
-				  ,MANAGER_DEPT
-				  ,PSO_DEPT_CODE
-				  ,PSO_DEPT_NAME
-				  ,CHG_USER_ID
-				  ,CHG_USER_NAME
-				  ,CHG_EMAIL_ADDR
-				  ,MAKE_PLAN_DATE
-				  ,MAKE_COMP_DATE
-				  ,PSO_DOCU_LINE_STAT
-				  ,REMARK
-				  ,INS_DATE
-				  ,INS_USER_ID
-				  ,UPD_DATE
-				  ,UPD_USER_ID)
-				VALUES
-				  (#{OU_CODE}
-				  ,#{PSO_DOCU_ID}
-				  ,#{PSO_DOCU_LINE_ID}
-				  ,#{DOC_ID}
-				  ,#{PSO_DOC_STEP}
-				  ,#{PSO_DOC_CHASU}
-				  ,#{PSO_DOC_DETAIL_CHASU}
-				  ,#{PSO_CONTENTS}
-				  ,#{MANAGER_DEPT}
-				  ,#{PSO_DEPT_CODE}
-				  ,#{PSO_DEPT_NAME}
-				  ,#{CHG_USER_ID}
-				  ,#{CHG_USER_NAME}
-				  ,#{CHG_EMAIL_ADDR}
-				  ,TO_DATE(#{MAKE_PLAN_DATE},'RRRRMMDD')
-				  ,TO_DATE(#{MAKE_COMP_DATE},'RRRRMMDD')
-				  ,'N'
-				  ,#{REMARK}
-				  ,SYSDATE
-		          ,#{GV_USER_ID}
-		          ,SYSDATE
-		          ,#{GV_USER_ID});
-	          
-		       INSERT INTO OMS_PSO_PROJECT_DOCU_LINE_AUTH
-		       	  (OU_CODE
-				  ,PSO_DOCU_LINE_ID
-				  ,CHARGE_USER_ID
-				  ,CHARGE_EMP_NO
-				  ,PREV_CHARGE_USER_ID
-				  ,PREV_CHARGE_EMP_NO
-				  ,START_DATE
-				  ,END_DATE
-				  ,UPD_TYPE_CODE
-				  ,INS_DATE
-				  ,INS_USER_ID
-				  ,UPD_DATE
-				  ,UPD_USER_ID)
-				VALUES
-				  (#{OU_CODE}
-				  ,#{PSO_DOCU_LINE_ID}
-				  ,#{CHG_USER_ID}
-				  ,#{CHG_EMP_NO}
-				  ,-1
-				  ,''
-				  ,TRUNC(SYSDATE)
-				  ,#{END_DATE}
-				  ,'NEW'
-				  ,SYSDATE
-				  ,#{GV_USER_ID}
-				  ,SYSDATE
-				  ,#{GV_USER_ID});
-			  
-				COMMIT;
-			END;
+            INSERT INTO OMS_PSO_PROJECT_DOCU_LINE
+			  (OU_CODE
+			  ,PSO_DOCU_ID
+			  ,PSO_DOCU_LINE_ID
+			  ,DOC_ID
+			  ,PSO_DOC_STEP
+			  ,PSO_DOC_CHASU
+			  ,PSO_DOC_DETAIL_CHASU
+			  ,PSO_CONTENTS
+			  ,MANAGER_DEPT
+			  ,PSO_DEPT_CODE
+			  ,PSO_DEPT_NAME
+			  ,CHG_USER_ID
+			  ,CHG_USER_NAME
+			  ,CHG_EMAIL_ADDR
+			  ,MAKE_PLAN_DATE
+			  ,MAKE_COMP_DATE
+			  ,PSO_DOCU_LINE_STAT
+			  ,REMARK
+			  ,INS_DATE
+			  ,INS_USER_ID
+			  ,UPD_DATE
+			  ,UPD_USER_ID)
+			VALUES
+			  (#{OU_CODE}
+			  ,#{PSO_DOCU_ID}
+			  ,#{PSO_DOCU_LINE_ID}
+			  ,#{DOC_ID}
+			  ,#{PSO_DOC_STEP}
+			  ,#{PSO_DOC_CHASU}
+			  ,#{PSO_DOC_DETAIL_CHASU}
+			  ,#{PSO_CONTENTS}
+			  ,#{MANAGER_DEPT}
+			  ,#{PSO_DEPT_CODE}
+			  ,#{PSO_DEPT_NAME}
+			  ,#{CHG_USER_ID}
+			  ,#{CHG_USER_NAME}
+			  ,#{CHG_EMAIL_ADDR}
+			  ,TO_DATE(#{MAKE_PLAN_DATE},'RRRRMMDD')
+			  ,TO_DATE(#{MAKE_COMP_DATE},'RRRRMMDD')
+			  ,'N'
+			  ,#{REMARK}
+			  ,SYSDATE
+	          ,#{GV_USER_ID}
+	          ,SYSDATE
+	          ,#{GV_USER_ID})
         ]]>
     </insert>
     
     <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록(DETAIL) 정보 update -->
-    <update id="UPDATE_PSO_DOCU_DETAIL" parameterType="java.util.Map">
-	    <![CDATA[
-	    	BEGIN
-				UPDATE OMS_PSO_PROJECT_DOCU_LINE
-			    	SET PSO_DOC_STEP         = #{PSO_DOC_STEP}
-			          , PSO_DOC_CHASU        = #{PSO_DOC_CHASU}
-			          , PSO_DOC_DETAIL_CHASU = #{PSO_DOC_DETAIL_CHASU}
-			          , PSO_CONTENTS         = #{PSO_CONTENTS}
-			          , PSO_DEPT_CODE        = #{PSO_DEPT_CODE}
-			          , PSO_DEPT_NAME        = #{PSO_DEPT_NAME}
-			          , CHG_USER_ID          = #{CHG_USER_ID}
-			          , CHG_USER_NAME        = #{CHG_USER_NAME}
-			          , CHG_EMAIL_ADDR       = #{CHG_EMAIL_ADDR}
-			          , MAKE_PLAN_DATE       = TO_DATE(#{MAKE_PLAN_DATE}, 'RRRRMMDD')
-			          , MAKE_COMP_DATE       = TO_DATE(#{MAKE_COMP_DATE}, 'RRRRMMDD')
-			          , PSO_DOCU_LINE_STAT   = #{PSO_DOCU_LINE_STAT}
-			          , REMARK               = #{REMARK}
-			          , UPD_DATE             = SYSDATE
-			          , UPD_USER_ID          = #{GV_USER_ID}
-			     WHERE OU_CODE              = #{OU_CODE}
-			           AND PSO_DOCU_LINE_ID     = #{PSO_DOCU_LINE_ID};
-		 ]]>
-	         <if test='ROW_STATUS.equals("I")'> 
-	         	<![CDATA[ 
-		        	INSERT INTO OMS_PSO_PROJECT_DOCU_LINE_AUTH
-						(OU_CODE
-						,PSO_DOCU_LINE_ID
-						,CHARGE_USER_ID
-						,CHARGE_EMP_NO
-						,PREV_CHARGE_USER_ID
-						,PREV_CHARGE_EMP_NO
-						,START_DATE
-						,END_DATE
-						,UPD_TYPE_CODE
-						,INS_DATE
-						,INS_USER_ID
-						,UPD_DATE
-						,UPD_USER_ID)
-					VALUES
-						(#{OU_CODE}
-						,#{PSO_DOCU_LINE_ID}
-						,#{CHG_USER_ID}
-						,#{CHG_EMP_NO}
-						,-1
-						,''
-						,TRUNC(SYSDATE)
-						,#{END_DATE}
-						,'NEW'
-						,SYSDATE
-						,#{GV_USER_ID}
-						,SYSDATE
-						,#{GV_USER_ID});
-	        	]]>
-	    	</if>
-	    	COMMIT;
-    	END;
-	</update>
-	
-	<!-- 프로젝트 복사  -->
-    <select id="UPDATE_PSO_DOCU_DETAIL_AUTH_PROC"  statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map">
-    	CALL OMS_UPDATE_PSO_DOCU_LINE_AUTH(
-			            #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String},
-			            #{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String},
-			            #{OU_CODE},
-			            #{PSO_DOCU_LINE_ID},
-			            #{START_DATE},
-			            #{GV_USER_ID},
-			            #{CHG_USER_ID},
-			            #{CHG_EMP_NO}
-		)
-    </select>
-
+    <update id="UPDATE_PSO_DOCU_DETAIL" parameterType="java.util.Map" >
+        <![CDATA[
+            UPDATE OMS_PSO_PROJECT_DOCU_LINE
+			   SET PSO_DOC_STEP         = #{PSO_DOC_STEP}
+			     , PSO_DOC_CHASU        = #{PSO_DOC_CHASU}
+			     , PSO_DOC_DETAIL_CHASU = #{PSO_DOC_DETAIL_CHASU}
+			     , PSO_CONTENTS         = #{PSO_CONTENTS}
+			     , PSO_DEPT_CODE        = #{PSO_DEPT_CODE}
+			     , PSO_DEPT_NAME        = #{PSO_DEPT_NAME}
+			     , CHG_USER_ID          = #{CHG_USER_ID}
+			     , CHG_USER_NAME        = #{CHG_USER_NAME}
+			     , CHG_EMAIL_ADDR       = #{CHG_EMAIL_ADDR}
+			     , MAKE_PLAN_DATE 	    = TO_DATE(#{MAKE_PLAN_DATE},'RRRRMMDD')
+			     , MAKE_COMP_DATE   	= TO_DATE(#{MAKE_COMP_DATE},'RRRRMMDD')
+			     , PSO_DOCU_LINE_STAT   = #{PSO_DOCU_LINE_STAT}
+			     , REMARK               = #{REMARK}
+			     , UPD_DATE             = SYSDATE
+			     , UPD_USER_ID          = #{GV_USER_ID}
+			 WHERE OU_CODE              = #{OU_CODE}
+			   AND PSO_DOCU_LINE_ID     = #{PSO_DOCU_LINE_ID}
+        ]]> 
+    </update>
     
     <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록(DETAIL) 정보 삭제 -->
-    <delete id="DELETE_PSO_DOCU_DETAIL" parameterType="java.util.Map"> 
-    	BEGIN 
+    <delete id="DELETE_PSO_DOCU_DETAIL" parameterType="java.util.Map">  
     		DELETE OMS_PSO_PROJECT_DOCU_LINE
-			WHERE OU_CODE          = #{OU_CODE}
-			AND PSO_DOCU_LINE_ID = #{PSO_DOCU_LINE_ID};
-			
-			DELETE OMS_PSO_PROJECT_DOCU_LINE_AUTH
-			WHERE OU_CODE          = #{OU_CODE}
-			AND PSO_DOCU_LINE_ID   = #{PSO_DOCU_LINE_ID}
-			AND START_DATE 		   = #{START_DATE};
-		COMMIT;
-		END;
+			 WHERE OU_CODE          = #{OU_CODE}
+			   AND PSO_DOCU_LINE_ID = #{PSO_DOCU_LINE_ID}
     </delete>
     
     <!-- PSO신제품개발서류목록관리 : PSO신제품개발서류목록 정보(POPUP) 조회 -->				
@@ -1208,15 +1046,14 @@
 			     , PD.PSO_DOCU_STATUS
 			     , SMT_GET_COMMON_CODE_NAME_FUNC('P008', PD.PSO_DOCU_STATUS, #{GV_LANG}) AS DOCU_STATUS_NAME
 			     , PD.DESCRIPTION
-			     , PA.CHARGE_USER_ID   AS PM_USER
-				 , SMT_GET_USER_NAME_FUNC(PA.OU_CODE,PA.CHARGE_USER_ID) AS PM_USER_NAME	
-			  FROM OMS_PSO_PROJECT_DOCU       PD
-			     , OMS_PSO_PROJECT_MSTR		  PM
-			     , OMS_PSO_PROJECT_MSTR_AUTH  PA
-			     , OMS_PSO_PROJECT_R_BOARD    RB
-			     , OMS_PROJECT                OP
-			     , SMT_CUSTOMER               SC
-			     , OMS_PROJECT_PRODUCT        PP
+			     , PM.UPD_USER_ID   AS PM_USER
+			     , SMT_GET_USER_NAME_FUNC(PM.OU_CODE,PM.UPD_USER_ID) AS PM_USER_NAME 	
+			  FROM OMS_PSO_PROJECT_DOCU     PD
+			     , OMS_PSO_PROJECT_MSTR     PM
+			     , OMS_PSO_PROJECT_R_BOARD  RB
+			     , OMS_PROJECT              OP
+			     , SMT_CUSTOMER             SC
+			     , OMS_PROJECT_PRODUCT      PP
 			 WHERE PD.OU_CODE = PM.OU_CODE
 			   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
 			   AND PD.OU_CODE = RB.OU_CODE
@@ -1236,9 +1073,6 @@
 			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
 			   AND PM.ITEM_NAME = PP.ITEM_NAME   
 			   AND PD.OU_CODE = #{OU_CODE}
-			   AND PM.OU_CODE = PA.OU_CODE
-			   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID
-			   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, '9999-12-31')
 		]]>	
 		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
         	<![CDATA[
@@ -1255,7 +1089,7 @@
         	   AND PM.ITEM_NAME LIKE '%'|| #{ITEM_NAME} || '%'
         	]]>  
         </if>
-        <!-- <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
         	<![CDATA[
         	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
         	]]>  
@@ -1264,19 +1098,7 @@
         	<![CDATA[
         	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
         	]]>  
-        </if>  -->
-        <choose>
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID} 
-	        	]]>  
-        	</when>  
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-	        	]]>  
-	        </when> 
-        </choose>
+        </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DOCU_STATUS)">
         	<![CDATA[
         	   AND PD.PSO_DOCU_STATUS = #{PSO_DOCU_STATUS} 
@@ -1288,18 +1110,15 @@
         	   AND PD.PSO_DOCU_ID IN (SELECT PPD.PSO_DOCU_ID
 			                            FROM OMS_PSO_PROJECT_DOCU       PPD
 			                               , OMS_PSO_PROJECT_DOCU_LINE  PPL
-			                               , OMS_PSO_PROJECT_DOCU_LINE_AUTH DA
 			                           WHERE PPD.OU_CODE = PD.OU_CODE
 			                             AND PPD.OU_CODE = PPL.OU_CODE
-			                             AND PPL.OU_CODE = DA.OU_CODE
-			                             AND PPL.PSO_DOCU_LINE_ID = DA.PSO_DOCU_LINE_ID
 			                             AND PPD.PSO_DOCU_ID = PPL.PSO_DOCU_ID
-			                             AND (DA.CHARGE_USER_ID = #{GV_USER_ID} OR DA.CHARGE_EMP_NO = #{CHARGE_EMP_NO})  )
+			                             AND PPL.CHG_USER_ID = #{GV_USER_ID})
         	]]>  
         </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_ID)">
         	<![CDATA[
-        	   AND PA.CHARGE_USER_ID = #{PM_CHG_ID} 
+        	   AND PM.UPD_USER_ID = #{PM_CHG_ID} 
         	]]>  
         </if>  
 		<![CDATA[
@@ -1311,32 +1130,20 @@
 	<select id="SELECT_PSO_DOCU_CHG_LIST" parameterType="java.util.Map" resultType="java.util.Map">     
 	 	<![CDATA[
 	 		SELECT DL.OU_CODE
-				 , DL.PSO_DOCU_ID
-				 , DP.DEPT_CODE AS PSO_DEPT_CODE
-				 , DP.DEPT_NAME AS PSO_DEPT_NAME
-				 , DA.CHARGE_USER_ID
-				 , DA.CHARGE_EMP_NO
-				 , PSO_GET_USER_NAME_FUNC(DA.CHARGE_USER_ID, DA.CHARGE_EMP_NO) AS CHG_USER_NAME
+	 		     , DL.PSO_DOCU_ID
+			     , DL.PSO_DEPT_CODE
+			     , DL.PSO_DEPT_NAME
+			     , DL.CHG_USER_ID
+			     , DL.CHG_USER_NAME
 			  FROM OMS_PSO_PROJECT_DOCU_LINE  DL
-			  	 , OMS_PSO_PROJECT_DOCU_LINE_AUTH DA
-			  	 , HS_HRM.EHR_INSA_MSTR      HR
-				 , HS_HRM.EHR_DEPT_MSTR      DP
 			 WHERE DL.OU_CODE = #{OU_CODE}
 			   AND DL.PSO_DOCU_ID = #{PSO_DOCU_ID}
-			   AND DL.OU_CODE = DA.OU_CODE
-			   AND DL.OU_CODE = HR.OU_CODE
-			   AND DL.OU_CODE = DP.OU_CODE
-			   AND DA.CHARGE_EMP_NO = HR.EMP_NO
-			   AND DP.DEPT_CODE = HR.DEPT_CODE
-			   AND DL.PSO_DOCU_LINE_ID = DA.PSO_DOCU_LINE_ID
- 			   AND TRUNC(SYSDATE) BETWEEN DA.START_DATE AND NVL(DA.END_DATE, '9999-12-31')
 			 GROUP BY DL.OU_CODE
-				 , DL.PSO_DOCU_ID
-				 , DP.DEPT_CODE
-				 , DP.DEPT_NAME
-				 , DA.CHARGE_USER_ID
-				 , DA.CHARGE_EMP_NO
-				 , PSO_GET_USER_NAME_FUNC(DA.CHARGE_USER_ID, DA.CHARGE_EMP_NO)
+			        , DL.PSO_DOCU_ID
+			        , DL.PSO_DEPT_CODE
+			        , DL.PSO_DEPT_NAME
+			        , DL.CHG_USER_ID
+			        , DL.CHG_USER_NAME
 		]]>	
     </select>
     
@@ -1346,7 +1153,7 @@
 	 		SELECT DL.OU_CODE
 	 		     , DL.PSO_DOCU_ID
 			     , DL.PSO_DOC_STEP
-			     , SMT_GET_CODE_NAME_FUNC('P003',DL.PSO_DOC_STEP,#{GV_LANG}) AS DOC_STEP_NAME
+			     , SMT_GET_CODE_NAME_FUNC('P003',DL.PSO_DOC_STEP,'KO') AS DOC_STEP_NAME
 			     , TO_CHAR(MAX(DL.MAKE_PLAN_DATE),'RRRRMMDD') AS M_MAKE_PLAN_DATE
 			  FROM OMS_PSO_PROJECT_DOCU_LINE  DL
 			 WHERE DL.OU_CODE = #{OU_CODE}
@@ -1399,10 +1206,9 @@
 			     , SMT_GET_COMMON_CODE_NAME_FUNC('O016', OP.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
 			     , PRB.R_BOARD_STATUS
 			     , NVL(PM.PSO_COMPLETE_YN,'N')  AS PSO_COMPLETE_YN
-			     , PA.CHARGE_USER_ID   AS PM_USER
-				 , SMT_GET_USER_NAME_FUNC(PA.OU_CODE,PA.CHARGE_USER_ID) AS PM_USER_NAME
+			     , PM.UPD_USER_ID   AS PM_USER
+			     , SMT_GET_USER_NAME_FUNC(PM.OU_CODE,PM.UPD_USER_ID) AS PM_USER_NAME   
 			  FROM OMS_PSO_PROJECT_R_BOARD  PRB
-			     , OMS_PSO_PROJECT_MSTR_AUTH PA
 			     , OMS_PSO_PROJECT_MSTR     PM
 			     , OMS_PROJECT              OP
 			     , SMT_CUSTOMER             SC
@@ -1425,9 +1231,6 @@
 			   AND PM.ITEM_NAME = PP.ITEM_NAME  
 			   AND NVL(PRB.R_BOARD_STATUS,'N') = 'Y' 
 			   AND PRB.OU_CODE = #{OU_CODE}
-			   AND PM.OU_CODE = PA.OU_CODE
-			   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID
-			   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, '9999-12-31')
 		]]>	
 		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
         	<![CDATA[
@@ -1454,18 +1257,16 @@
         	   AND NVL(PM.PSO_COMPLETE_YN,'N') = #{PSO_COMPLETE_YN} 
         	]]>  
         </if>
-        <choose>
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID} 
-	        	]]>  
-        	</when>  
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-	        	]]>  
-	        </when> 
-        </choose>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
+        </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_GROUP_CODE)">
         	<![CDATA[
         	   AND PM.PRODUCT_GROUP_CODE '%'|| #{PRODUCT_GROUP_CODE} || '%'
@@ -1511,43 +1312,32 @@
 			     , DL.PSO_DOC_CHASU
 			     , DL.PSO_DOC_DETAIL_CHASU
 			     , DL.PSO_CONTENTS
-			     , DP.DEPT_CODE
-				 , DP.DEPT_NAME AS PSO_DEPT_NAME
-			     , DA.CHARGE_USER_ID AS CHG_USER_ID
-				 , DA.CHARGE_EMP_NO AS CHG_EMP_NO
-				 , PSO_GET_USER_NAME_FUNC(DA.CHARGE_USER_ID, DA.CHARGE_EMP_NO) AS CHG_USER_NAME
+			     , DL.PSO_DEPT_CODE
+			     , DL.PSO_DEPT_NAME
+			     , DL.CHG_USER_ID
+			     , DL.CHG_USER_NAME
 			     , TO_CHAR(DL.MAKE_PLAN_DATE,'RRRR-MM-DD') AS MAKE_PLAN_DATE 
 			     , TO_CHAR(DL.MAKE_COMP_DATE,'RRRR-MM-DD') AS MAKE_COMP_DATE
 			     , DL.DELAY_DAY  
 			  FROM OMS_PSO_PROJECT_DOCU      PD
 			     , OMS_PSO_PROJECT_DOCU_LINE DL
-			     , OMS_PSO_PROJECT_DOCU_LINE_AUTH DA
 			     , OMS_PSO_PROJECT_MSTR      PM
 			     , OMS_PSO_PROJECT_R_BOARD   RB
 			     , OMS_PROJECT               OP
 			     , SMT_CUSTOMER              SC
 			     , OMS_PROJECT_PRODUCT       PP
-			     , HS_HRM.EHR_INSA_MSTR      HR
-				 , HS_HRM.EHR_DEPT_MSTR      DP
 			 WHERE PD.OU_CODE = PM.OU_CODE
-			   AND PD.OU_CODE = DL.OU_CODE
-			   AND PD.OU_CODE = RB.OU_CODE
-			   AND PM.OU_CODE = OP.OU_CODE
-			   AND OP.OU_CODE = PP.OU_CODE
-			   AND OP.OU_CODE = SC.OU_CODE
-			   AND PD.OU_CODE = DA.OU_CODE
-			   AND HR.OU_CODE = PD.OU_CODE
-			   AND PD.OU_CODE = DP.OU_CODE
-			   AND DA.CHARGE_EMP_NO = HR.EMP_NO
-			   AND DP.DEPT_CODE = HR.DEPT_CODE
-			   AND DA.PSO_DOCU_LINE_ID = DL.PSO_DOCU_LINE_ID
-			   AND TRUNC(SYSDATE) BETWEEN DA.START_DATE AND NVL(DA.END_DATE, '9999-12-31')
 			   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PD.OU_CODE = DL.OU_CODE
 			   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			   AND PD.OU_CODE = RB.OU_CODE
 			   AND PD.R_BOARD_ID = RB.R_BOARD_ID
+			   AND PM.OU_CODE = OP.OU_CODE
 			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
 			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
 			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
 			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
 			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
 			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
@@ -1572,8 +1362,23 @@
         </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
         	<![CDATA[
-        	   AND DP.DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
-        	]]>
+        	   AND DL.PSO_DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
+        	]]>  
+        </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_NAME)">
+        	<![CDATA[
+        	   AND DL.PSO_DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
         </if> 
         <if test='PSO_COMPLETE_YN.equals("N")'>
         	<![CDATA[
@@ -1582,17 +1387,12 @@
         </if>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(CHG_USER_NAME)">
         	<![CDATA[
-        	   AND PSO_GET_USER_NAME_FUNC(DA.CHARGE_USER_ID, DA.CHARGE_EMP_NO) LIKE '%'|| #{CHG_USER_NAME} || '%'
+        	   AND DL.CHG_USER_NAME LIKE '%'|| #{CHG_USER_NAME} || '%'
         	]]>  
-        </if>
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CHG_USER_ID)">
         	<![CDATA[
-        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID} 
-        	]]>  
-        </if>  
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-        	<![CDATA[
-        	   AND SC.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
+        	   AND DL.CHG_USER_ID LIKE '%'|| #{CHG_USER_ID} || '%'
         	]]>  
         </if> 
 		<![CDATA[
@@ -1608,25 +1408,16 @@
     <!-- PSO진행지연프로젝트조회  : PSO진행지연프로젝트 주관부서 조회 -->  
     <select id="SELECT_PSO_DELAY_DEPT" parameterType="java.util.Map" resultType="java.util.Map">    
    		<![CDATA[       
-        	SELECT DP.DEPT_CODE   AS DEPT_CODE
-			     , DP.DEPT_NAME   AS DEPT_NAME
+        	SELECT DL.PSO_DEPT_CODE   AS DEPT_CODE
+			     , DL.PSO_DEPT_NAME   AS DEPT_NAME
 			  FROM OMS_PSO_PROJECT_DOCU      PD
-			     , OMS_PSO_PROJECT_DOCU_LINE_AUTH DA
 			     , OMS_PSO_PROJECT_DOCU_LINE DL
-			     , HS_HRM.EHR_INSA_MSTR      HR
-			     , HS_HRM.EHR_DEPT_MSTR      DP
-			 WHERE PD.OU_CODE = HR.OU_CODE
-			   AND PD.OU_CODE = DP.OU_CODE
-			   AND PD.OU_CODE = DA.OU_CODE
-			   AND PD.OU_CODE = DL.OU_CODE 
+			 WHERE PD.OU_CODE = DL.OU_CODE
 			   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
 			   AND NVL(PD.PSO_DOCU_STATUS,'N') = 'Y'
-			   AND DA.PSO_DOCU_LINE_ID = DL.PSO_DOCU_LINE_ID       
-               AND DA.CHARGE_EMP_NO = HR.EMP_NO
-			   AND DP.DEPT_CODE = HR.DEPT_CODE
 			   AND PD.OU_CODE = #{OU_CODE}
-			 GROUP BY DP.DEPT_CODE
-			        , DP.DEPT_NAME
+			 GROUP BY DL.PSO_DEPT_CODE
+			        , DL.PSO_DEPT_NAME
    		]]>
    	</select>
    	
@@ -1655,44 +1446,34 @@
 			     , DL.PSO_DOC_CHASU
 			     , DL.PSO_DOC_DETAIL_CHASU
 			     , DL.PSO_CONTENTS
-			     , DP.DEPT_CODE AS PSO_DEPT_CODE
-				 , DP.DEPT_NAME AS PSO_DEPT_NAME
-			     , DA.CHARGE_USER_ID AS CHG_USER_ID
-				 , DA.CHARGE_EMP_NO AS CHG_EMP_NO
-			     , PSO_GET_USER_NAME_FUNC(DA.CHARGE_USER_ID, DA.CHARGE_EMP_NO) AS CHG_USER_NAME
+			     , DL.PSO_DEPT_CODE
+			     , DL.PSO_DEPT_NAME
+			     , DL.CHG_USER_ID
+			     , DL.CHG_USER_NAME
 			     , TO_CHAR(DL.MAKE_PLAN_DATE,'RRRR-MM-DD') AS MAKE_PLAN_DATE 
 			     , TO_CHAR(DL.MAKE_COMP_DATE,'RRRR-MM-DD') AS MAKE_COMP_DATE
 			     , DL.DELAY_DAY  
 			     , DL.PROGRESS_RATE
 			     , DL.PROGRESS_GRADE
-			  FROM OMS_PSO_PROJECT_DOCU            PD
-				 , OMS_PSO_PROJECT_DOCU_LINE_AUTH  DA
-				 , OMS_PSO_PROJECT_DOCU_LINE       DL
-				 , OMS_PSO_PROJECT_MSTR            PM
-				 , OMS_PSO_PROJECT_R_BOARD         RB
-				 , OMS_PROJECT                     OP
-				 , SMT_CUSTOMER                    SC
-				 , OMS_PROJECT_PRODUCT             PP
-				 , HS_HRM.EHR_INSA_MSTR      	   HR
-				 , HS_HRM.EHR_DEPT_MSTR      	   DP
+			  FROM OMS_PSO_PROJECT_DOCU      PD
+			     , OMS_PSO_PROJECT_DOCU_LINE DL
+			     , OMS_PSO_PROJECT_MSTR      PM
+			     , OMS_PSO_PROJECT_R_BOARD   RB
+			     , OMS_PROJECT               OP
+			     , SMT_CUSTOMER              SC
+			     , OMS_PROJECT_PRODUCT       PP
 			 WHERE PD.OU_CODE = PM.OU_CODE
-			   AND PD.OU_CODE = DL.OU_CODE
-			   AND PD.OU_CODE = RB.OU_CODE
-			   AND PM.OU_CODE = OP.OU_CODE
-			   AND OP.OU_CODE = PP.OU_CODE
-			   AND OP.OU_CODE = SC.OU_CODE
-			   AND OP.OU_CODE = DA.OU_CODE
-			   AND DL.OU_CODE = HR.OU_CODE
-			   AND DL.OU_CODE = DP.OU_CODE
-			   AND DA.CHARGE_EMP_NO = HR.EMP_NO
-			   AND DP.DEPT_CODE = HR.DEPT_CODE
-			   AND DA.PSO_DOCU_LINE_ID = DL.PSO_DOCU_LINE_ID
 			   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PD.OU_CODE = DL.OU_CODE
 			   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			   AND PD.OU_CODE = RB.OU_CODE
 			   AND PD.R_BOARD_ID = RB.R_BOARD_ID
+			   AND PM.OU_CODE = OP.OU_CODE
 			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
 			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
 			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
 			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
 			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
 			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
@@ -1703,7 +1484,6 @@
 			   AND PM.ITEM_NAME = PP.ITEM_NAME   
 			   AND NVL(PD.PSO_DOCU_STATUS,'N') = 'Y'
 			   AND PD.OU_CODE = #{OU_CODE}
-			   AND TRUNC(SYSDATE) BETWEEN DA.START_DATE AND NVL(DA.END_DATE, '9999-12-31')
 		]]>	
 		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
         	<![CDATA[
@@ -1713,12 +1493,12 @@
          
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
         	<![CDATA[
-        	   AND DP.DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
+        	   AND DL.PSO_DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
         	]]>  
         </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_NAME)">
         	<![CDATA[
-        	   AND DP.DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
+        	   AND DL.PSO_DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
         	]]>  
         </if>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_GRADE)">
@@ -1773,8 +1553,8 @@
 			             , X.PSO_DEPT_NAME
 			             , ROUND(AVG(X.DELAY_DAY),2)      AS AVG_DELAY_DAY  
 			             , ROUND(AVG(X.PROGRESS_RATE),2)  AS AVG_PRO_RATE
-			          FROM (SELECT DP.DEPT_CODE AS PSO_DEPT_CODE
-								 , DP.DEPT_NAME AS PSO_DEPT_NAME
+			          FROM (SELECT DL.PSO_DEPT_CODE
+			                     , DL.PSO_DEPT_NAME
 			                     , DL.DELAY_DAY  
 			                     , DL.PROGRESS_RATE
 			                  FROM OMS_PSO_PROJECT_DOCU      PD
@@ -1784,18 +1564,9 @@
 			                     , OMS_PROJECT               OP
 			                     , SMT_CUSTOMER              SC
 			                     , OMS_PROJECT_PRODUCT       PP
-			                     , OMS_PSO_PROJECT_DOCU_LINE_AUTH DA
-								 , HS_HRM.EHR_INSA_MSTR      HR
-								 , HS_HRM.EHR_DEPT_MSTR      DP
 			                 WHERE PD.OU_CODE = PM.OU_CODE
 			                   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
 			                   AND PD.OU_CODE = DL.OU_CODE
-			                   AND DL.OU_CODE = HR.OU_CODE
-							   AND DL.OU_CODE = DP.OU_CODE
-							   AND DL.OU_CODE = DA.OU_CODE
-							   AND DL.PSO_DOCU_LINE_ID = DA.PSO_DOCU_LINE_ID
-							   AND DA.CHARGE_EMP_NO = HR.EMP_NO
-							   AND DP.DEPT_CODE = HR.DEPT_CODE
 			                   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
 			                   AND PD.OU_CODE = RB.OU_CODE
 			                   AND PD.R_BOARD_ID = RB.R_BOARD_ID
@@ -1824,12 +1595,12 @@
          
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
         	<![CDATA[
-        	   AND DP.DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
+        	   AND DL.PSO_DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
         	]]>  
         </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_NAME)">
         	<![CDATA[
-        	   AND DP.DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
+        	   AND DL.PSO_DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
         	]]>  
         </if>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_GRADE)">
@@ -1886,45 +1657,34 @@
 			     , DL.PSO_DOC_CHASU
 			     , DL.PSO_DOC_DETAIL_CHASU
 			     , DL.PSO_CONTENTS
-			     , DP.DEPT_CODE AS PSO_DEPT_CODE
-				 , DP.DEPT_NAME AS PSO_DEPT_NAME
-			     , DA.CHARGE_USER_ID AS CHG_USER_ID
-				 , DA.CHARGE_EMP_NO AS CHG_EMP_NO
-				 , PSO_GET_USER_NAME_FUNC(DA.CHARGE_USER_ID, DA.CHARGE_EMP_NO) AS CHG_USER_NAME
+			     , DL.PSO_DEPT_CODE
+			     , DL.PSO_DEPT_NAME
+			     , DL.CHG_USER_ID
+			     , DL.CHG_USER_NAME
 			     , TO_CHAR(DL.MAKE_PLAN_DATE,'RRRR-MM-DD') AS MAKE_PLAN_DATE 
 			     , TO_CHAR(DL.MAKE_COMP_DATE,'RRRR-MM-DD') AS MAKE_COMP_DATE
 			     , DL.DELAY_DAY  
 			     , DECODE(DL.MAKE_COMP_DATE, NULL, 0, 100)   PROGRESS_RATE
 			     , DECODE(DL.MAKE_COMP_DATE, NULL, 'D', 'S') PROGRESS_GRADE
-			  FROM OMS_PSO_PROJECT_DOCU      	   PD
-			     , OMS_PSO_PROJECT_DOCU_LINE 	   DL
-			     , OMS_PSO_PROJECT_DOCU_LINE_AUTH  DA
-			     , OMS_PSO_PROJECT_MSTR      	   PM
-			     , OMS_PSO_PROJECT_R_BOARD   	   RB
-			     , OMS_PROJECT               	   OP
-			     , SMT_CUSTOMER              	   SC
-			     , OMS_PROJECT_PRODUCT       	   PP
-			     , HS_HRM.EHR_INSA_MSTR      HR
-				 , HS_HRM.EHR_DEPT_MSTR      DP
+			  FROM OMS_PSO_PROJECT_DOCU      PD
+			     , OMS_PSO_PROJECT_DOCU_LINE DL
+			     , OMS_PSO_PROJECT_MSTR      PM
+			     , OMS_PSO_PROJECT_R_BOARD   RB
+			     , OMS_PROJECT               OP
+			     , SMT_CUSTOMER              SC
+			     , OMS_PROJECT_PRODUCT       PP
 			 WHERE PD.OU_CODE = PM.OU_CODE
-			   AND PD.OU_CODE = DL.OU_CODE
-			   AND PD.OU_CODE = RB.OU_CODE
-		   	   AND PD.OU_CODE = OP.OU_CODE
-			   AND PD.OU_CODE = PP.OU_CODE
-			   AND PD.OU_CODE = SC.OU_CODE
-			   AND PD.OU_CODE = DA.OU_CODE
-			   AND PD.OU_CODE = HR.OU_CODE
-			   AND PD.OU_CODE = DP.OU_CODE   
-			   AND DA.CHARGE_EMP_NO = HR.EMP_NO
-			   AND DP.DEPT_CODE = HR.DEPT_CODE
-			   AND DA.PSO_DOCU_LINE_ID = DL.PSO_DOCU_LINE_ID
-			   AND TRUNC(SYSDATE) BETWEEN DA.START_DATE AND NVL(DA.END_DATE, '9999-12-31')
 			   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
+			   AND PD.OU_CODE = DL.OU_CODE
 			   AND PD.PSO_DOCU_ID = DL.PSO_DOCU_ID
+			   AND PD.OU_CODE = RB.OU_CODE
 			   AND PD.R_BOARD_ID = RB.R_BOARD_ID
+			   AND PM.OU_CODE = OP.OU_CODE
 			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
 			   AND NVL(OP.LATEST_YN,'N') = 'Y'
+			   AND OP.OU_CODE = SC.OU_CODE
 			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
+			   AND OP.OU_CODE = PP.OU_CODE
 			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
 			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
 			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
@@ -1944,12 +1704,12 @@
          
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
         	<![CDATA[
-        	   AND DP.DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
+        	   AND DL.PSO_DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
         	]]>  
         </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_NAME)">
         	<![CDATA[
-        	   AND DP.DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
+        	   AND DL.PSO_DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
         	]]>  
         </if>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_GRADE)">
@@ -2004,8 +1764,8 @@
 			             , X.PSO_DEPT_NAME
 			             , ROUND(AVG(X.DELAY_DAY),2)      AS AVG_DELAY_DAY  
 			             , ROUND(AVG(X.PROGRESS_RATE),2)  AS AVG_PRO_RATE
-			          FROM (SELECT DP.DEPT_CODE AS PSO_DEPT_CODE
-                 				 , DP.DEPT_NAME AS PSO_DEPT_NAME
+			          FROM (SELECT DL.PSO_DEPT_CODE
+			                     , DL.PSO_DEPT_NAME
 			                     , DL.DELAY_DAY  
 			                     , DECODE(DL.MAKE_COMP_DATE, NULL, 0, 100)   PROGRESS_RATE
 			                  FROM OMS_PSO_PROJECT_DOCU      PD
@@ -2015,9 +1775,6 @@
 			                     , OMS_PROJECT               OP
 			                     , SMT_CUSTOMER              SC
 			                     , OMS_PROJECT_PRODUCT       PP
-			                     , OMS_PSO_PROJECT_DOCU_LINE_AUTH DA
-			                     , HS_HRM.EHR_INSA_MSTR      HR
-                 				 , HS_HRM.EHR_DEPT_MSTR      DP
 			                 WHERE PD.OU_CODE = PM.OU_CODE
 			                   AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
 			                   AND PD.OU_CODE = DL.OU_CODE
@@ -2038,12 +1795,6 @@
 			                   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
 			                   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
 			                   AND PM.ITEM_NAME = PP.ITEM_NAME   
-			                   AND DL.OU_CODE = HR.OU_CODE
-			                   AND DL.OU_CODE = DP.OU_CODE
-			                   AND DL.OU_CODE = DA.OU_CODE
-			                   AND DL.PSO_DOCU_LINE_ID = DA.PSO_DOCU_LINE_ID
-			                   AND DA.CHARGE_EMP_NO = HR.EMP_NO
-			                   AND DP.DEPT_CODE = HR.DEPT_CODE
 			                   AND NVL(PD.PSO_DOCU_STATUS,'N') = 'Y'
 			                   AND PD.OU_CODE = #{OU_CODE}
 		]]>	
@@ -2055,12 +1806,12 @@
          
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
         	<![CDATA[
-        	   AND DP.DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
+        	   AND DL.PSO_DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
         	]]>  
         </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_NAME)">
         	<![CDATA[
-        	   AND DP.DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
+        	   AND DL.PSO_DEPT_NAME LIKE '%'|| #{PSO_DEPT_NAME} || '%' 
         	]]>  
         </if>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_GRADE)">
@@ -2091,350 +1842,5 @@
           ORDER BY XX.PSO_DEPT_NAME
         ]]>
     </select>    
-    
-    
-    <!-- PSO 이관 조회 -->
-	<select id="SELECT_PSO_PROJECT_DOCU_LINE_TRANSFER" parameterType="java.util.Map" resultType="java.util.Map">     
-		SELECT PM.OU_CODE
-		   	 , PM.PROJECT_CODE
-		   	 , AU.PSO_DOCU_LINE_ID
-			 , SMT_GET_USER_NAME_FUNC(PA.OU_CODE, PA.CHARGE_USER_ID) AS PM_CHG_USER_NAME
-			 , SMT_GET_COMMON_CODE_NAME_FUNC('O001', OP.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
-			 , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
-			 , SC.CUSTOMER_NAME
-			 , SMT_GET_CODE_NAME_FUNC('P003',PD.PSO_DOC_STEP,#{GV_LANG}) AS PSO_DOC_STEP
-			 , PD.PSO_DOC_CHASU
-			 , PD.PSO_DOC_DETAIL_CHASU
-			 , PD.PSO_CONTENTS
-			 , DP.DEPT_NAME AS PSO_DEPT_NAME
-			 , AU.CHARGE_USER_ID AS PSO_CHARGE_USER_ID
-			 , AU.CHARGE_EMP_NO AS PSO_CHARGE_EMP_NO
-			 , PSO_GET_USER_NAME_FUNC(AU.CHARGE_USER_ID, AU.CHARGE_EMP_NO) AS PSO_CHARGE_USER_NAME
-			 , TO_CHAR(PD.MAKE_PLAN_DATE,'YYYYMMDD') AS MAKE_PLAN_DATE
-			 , TO_CHAR(PD.MAKE_COMP_DATE,'YYYYMMDD') AS MAKE_COMP_DATE
-			 , TO_CHAR(AU.START_DATE, 'YYYYMMDD' ) AS START_DATE
-			 , TO_CHAR(AU.END_DATE, 'YYYYMMDD' ) AS END_DATE
-			 , DECODE(NVL(SMT_GET_ATTFILE_ID_NID_FUNC(PD.OU_CODE,'Pso1010',PD.DOC_ID,NULL),'N'),'N','N','Y') AS STD_DOCU_ATT_YN
-			 , DECODE(NVL(SMT_GET_ATTFILE_ID_NID_FUNC(PD.OU_CODE,'Pso1050',PD.PSO_DOCU_LINE_ID,NULL),'N'),'N','N','Y') AS PSO_DOCU_ATT_YN
-			 , CASE WHEN COUNT(PM.PROJECT_CODE) OVER (PARTITION BY PM.PROJECT_CODE) >1 THEN 'Y'
-			        ELSE 'N' 
-			   END AS DUPLICATE_FLAG
-		 FROM OMS_PSO_PROJECT_DOCU_LINE        PD
-			 , OMS_PSO_PROJECT_DOCU_LINE_AUTH  AU
-			 , OMS_PSO_PROJECT_DOCU            DO
-			 , OMS_PSO_PROJECT_MSTR            PM
-			 , OMS_PSO_PROJECT_MSTR_AUTH       PA
-			 , OMS_PROJECT                     OP
-			 , SMT_CUSTOMER                    SC
-			 , HS_HRM.EHR_INSA_MSTR            HR
-			 , HS_HRM.EHR_DEPT_MSTR            DP
-		 WHERE PD.OU_CODE = #{OU_CODE}
-           AND PD.OU_CODE = OP.OU_CODE
-		   AND PD.OU_CODE = PM.OU_CODE
-		   AND PD.OU_CODE = SC.OU_CODE
-		   AND PD.OU_CODE = DO.OU_CODE
-		   AND PD.OU_CODE = AU.OU_CODE
-		   AND PD.OU_CODE = HR.OU_CODE
-		   AND PD.OU_CODE = DP.OU_CODE
-		   AND PD.OU_CODE = PA.OU_CODE
-		   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID
-		   AND AU.PSO_DOCU_LINE_ID = PD.PSO_DOCU_LINE_ID       
-		   AND AU.CHARGE_EMP_NO = HR.EMP_NO
-		   AND DP.DEPT_CODE = HR.DEPT_CODE
-		   AND DO.PSO_DOCU_ID = PD.PSO_DOCU_ID
-		   AND PM.PROJECT_CODE = OP.PROJECT_CODE
-		   AND NVL(OP.LATEST_YN,'N') = 'Y'
-		   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
-		   AND DO.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
-		   AND PD.PSO_DOCU_LINE_ID = AU.PSO_DOCU_LINE_ID
-		   AND TRUNC(SYSDATE) BETWEEN AU.START_DATE AND NVL(AU.END_DATE, '9999-12-31')
-		   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, '9999-12-31')
- 		   AND PA.CHARGE_USER_ID = #{GV_USER_ID}
-
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
-        	<![CDATA[
-        	   AND PM.PROJECT_CODE like  '%'|| #{PROJECT_CODE}|| '%'
-        	]]>
-        </if>
-        <choose>
-        	<when test="@com.oms.MyBatisUtil@isNotEmpty(PSO_CHARGE_USER_ID)">
-	        	<![CDATA[
-	        	   AND AU.CHARGE_USER_ID = #{PSO_CHARGE_USER_ID} 
-	        	]]>
-       		</when>
-       		<otherwise>
-       			<![CDATA[
-	        	   AND AU.CHARGE_EMP_NO = #{PSO_CHARGE_EMP_NO}
-	        	]]>
-       		</otherwise>
-        </choose>
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_USER_ID)">
-        	<![CDATA[
-        	   AND PD.MAKE_PLAN_DATE BETWEEN TO_DATE(#{MAKE_PLAN_START_DATE},'YYYY-MM-DD')
-        	]]>  
-        </if>  
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(MAKE_PLAN_START_DATE)">
-        	<![CDATA[
-        	   AND PD.MAKE_PLAN_DATE BETWEEN TO_DATE(#{MAKE_PLAN_START_DATE},'YYYY-MM-DD')
-               AND TO_DATE(NVL(#{MAKE_PLAN_END_DATE}, '9999-12-31'),'YYYY-MM-DD')
-        	]]>  
-        </if>    
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DEPT_CODE)">
-        	<![CDATA[
-        	   AND DP.DEPT_CODE = #{PSO_DEPT_CODE} 
-        	]]>  
-        </if> 
-       
-		 ORDER BY PM.PROJECT_CODE, PD.PSO_DOC_STEP, PD.PSO_DOC_CHASU, PD.PSO_DOC_DETAIL_CHASU
-    </select>  
-    
-    
-    <!-- PSO 권한 이관 -->
-	<select id="CREATE_PSO_DOCU_LINE_TRANSFER" statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map" >
-    	<![CDATA[
-	        CALL OMS_PSO_DOCU_LINE_TRANSFER(
-                 #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
-            	,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
-	            ,#{UPD_OU_CODE}
-	            ,#{GV_USER_ID}
-	            ,#{UPD_USER_ID}
-	            ,#{UPD_EMP_NO}
-	            ,#{TRANSFER_DATE}
-	            ,#{UPD_TYPE}
-	            ,utl_encode.text_decode(#{UPD_DETAILS}, 'UTF8', 1)
-	        )
-        ]]>
-<!--         ,utl_url.unescape(#{UPD_DETAILS}, 'UTF-8') -->
-    </select>
-    
-    <!-- PM 권한 이관 -->
-	<select id="CREATE_PM_TRANSFER" statementType="CALLABLE" parameterType="java.util.Map" resultType="java.util.Map" >
-    	<![CDATA[
-	        CALL OMS_PM_TRANSFER(
-                 #{RETCODE, mode=OUT, jdbcType=VARCHAR, javaType=String}
-            	,#{RETMESG, mode=OUT, jdbcType=VARCHAR, javaType=String}
-	            ,#{UPD_OU_CODE}
-	            ,#{GV_USER_ID}
-	            ,#{UPD_USER_ID}
-	            ,#{TRANSFER_DATE}
-	            ,#{UPD_TYPE}
-	            ,utl_encode.text_decode(#{UPD_DETAILS}, 'UTF8', 1)
-	        )
-        ]]>
-    </select>
-    
-    <!-- PSO 서류 담당자 변경유무에 따른 정보 이력 조회 -->
-	<select id="SELECT_PSO_DOCU_BY_CHARGE_USER_CHANGE" parameterType="java.util.Map" resultType="java.util.Map">       
-		SELECT ROW_NUMBER() OVER (ORDER BY PM.PROJECT_CODE, LI.PSO_DOC_STEP, LI.PSO_DOC_CHASU, LI.PSO_DOC_DETAIL_CHASU) AS IDX
-		 	 , PM.PROJECT_CODE
-	 		 , SMT_GET_CODE_NAME_FUNC('P003', LI.PSO_DOC_STEP, #{GV_LANG}) AS PSO_DOC_STEP
-			 , LI.PSO_DOC_CHASU
-			 , LI.PSO_DOC_DETAIL_CHASU
-			 , PSO_GET_USER_NAME_FUNC(PA.CHARGE_USER_ID, PA.CHARGE_EMP_NO) AS CHARGE_USER_NAME
-			 , NVL(PSO_GET_USER_NAME_FUNC(PA.PREV_CHARGE_USER_ID, PA.PREV_CHARGE_EMP_NO), PSO_GET_USER_NAME_FUNC(PA.CHARGE_USER_ID, PA.CHARGE_EMP_NO)) AS PREV_CHARGE_USER_NAME
-			 , SMT_GET_COMMON_CODE_NAME_FUNC('O031', COALESCE(PA.UPD_TYPE_CODE, 'NEW'), #{GV_LANG}) AS UPD_TYPE_NAME
-			 , PA.UPD_DETAILS
-			 , TO_CHAR(PA.START_DATE,'YYYY-MM-DD') AS START_DATE
-			 , TO_CHAR(PA.END_DATE,'YYYY-MM-DD') AS END_DATE
-			 , (SELECT USER_NAME  FROM SMT_USER_MSTR WHERE USER_ID = PA.UPD_USER_ID) AS UPD_USER_NAME
-			 , TO_CHAR(PA.UPD_DATE,'YYYY-MM-DD') AS UPD_DATE
-		 FROM OMS_PSO_PROJECT_DOCU_LINE_AUTH PA
-			, OMS_PSO_PROJECT_DOCU_LINE LI
-			, OMS_PSO_PROJECT_MSTR     PM
-			, OMS_PSO_PROJECT_DOCU     PD
-		WHERE 1=1
-	      AND PA.OU_CODE = #{OU_CODE}
-		  AND PA.OU_CODE = LI.OU_CODE
-		  AND LI.OU_CODE = PM.OU_CODE
-		  AND PM.OU_CODE = PD.OU_CODE
-		  AND PD.PSO_DOCU_ID = LI.PSO_DOCU_ID
-		  AND PD.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
-		  AND LI.PSO_DOCU_LINE_ID = PA.PSO_DOCU_LINE_ID
-	    <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
-        	<![CDATA[
-            	AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
-        	]]>  
-	    </if>
-	    
-	    <if test="@com.oms.MyBatisUtil@isNotEmpty(CHARGE_USER_NAME)">
-	        <choose>
-			    <when test="@com.oms.MyBatisUtil@isNotEmpty(CHARGE_USER_ID)">
-			    	<![CDATA[
-				      AND
-						(
-						  (COALESCE(PA.UPD_TYPE_CODE, 'NEW') = 'NEW' 
-						  AND (PA.PREV_CHARGE_USER_ID = #{CHARGE_USER_ID} OR PA.CHARGE_USER_ID = #{CHARGE_USER_ID}))
-						  OR
-						  (COALESCE(PA.UPD_TYPE_CODE, 'NEW') <> 'NEW'
-					]]> 
-				    <if test="CHANGE_FLAG == 'PREV'">
-					        AND PA.PREV_CHARGE_USER_ID = #{CHARGE_USER_ID}
-					    </if>
-					    <if test="CHANGE_FLAG == 'CURR'">
-					        AND PA.CHARGE_USER_ID = #{CHARGE_USER_ID}
-				    </if>
-				    ))
-			    </when>
-			    <when test="@com.oms.MyBatisUtil@isNotEmpty(CHARGE_EMP_NO)">
-			    	<![CDATA[
-				      AND
-						(
-						  (COALESCE(PA.UPD_TYPE_CODE, 'NEW') = 'NEW' 
-						  AND (PA.PREV_CHARGE_EMP_NO = #{CHARGE_EMP_NO} OR PA.CHARGE_EMP_NO = #{CHARGE_EMP_NO}))
-						  OR
-						  (COALESCE(PA.UPD_TYPE_CODE, 'NEW') <> 'NEW'
-					]]> 
-			    	<if test="CHANGE_FLAG == 'PREV'">
-					        AND PA.PREV_CHARGE_EMP_NO = #{CHARGE_EMP_NO}
-					    </if>
-					    <if test="CHANGE_FLAG == 'CURR'">
-					        AND PA.CHARGE_EMP_NO = #{CHARGE_EMP_NO}
-				    </if>
-				    ))
-			    </when>
-		    </choose>
-	    </if>
-	    
-	    <if test="@com.oms.MyBatisUtil@isNotEmpty(TRANSFER_DATE)">
-	    	<![CDATA[ 
-	            AND TO_DATE(#{TRANSFER_DATE}, 'YYYY-MM-DD') BETWEEN PA.START_DATE
-	            AND NVL(PA.END_DATE, '9999-12-31')
-	        ]]>  
-	    </if>
-	    ORDER BY PM.PROJECT_CODE, LI.PSO_DOC_STEP, LI.PSO_DOC_CHASU, LI.PSO_DOC_DETAIL_CHASU, PA.START_DATE, PA.END_DATE
-    </select>    
-    
-    <!-- PM 이관 조회 -->
-	<select id="SELECT_PM_TRANSFER" parameterType="java.util.Map" resultType="java.util.Map">     
-		SELECT PA.OU_CODE
-			 , PA.PSO_PROJECT_ID
-			 , PM.PROJECT_CODE
-			 , PA.CHARGE_USER_ID AS PM_CHG_USER_ID
-			 , SMT_GET_USER_NAME_FUNC(PA.OU_CODE,PA.CHARGE_USER_ID) AS PM_CHG_USER_NAME
-			 , SMT_GET_COMMON_CODE_NAME_FUNC('O018', OP.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
-			 , OP.REGISTER_YEAR
-			 , SMT_GET_COMMON_CODE_NAME_FUNC('O001', OP.OU_COUNTRY_CODE, #{GV_LANG}) AS OU_COUNTRY_NAME
-			 , SC.CUSTOMER_NAME
-			 , SMT_GET_COMMON_CODE_NAME_FUNC('O008', PM.PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
-			 , PM.ITEM_NAME
-			 , PP.ERP_ITEM_NO 
-			 , PM.PSO_TARGET_YN 
-			 , TO_CHAR(PA.START_DATE, 'YYYYMMDD') AS START_DATE
-			 , TO_CHAR(PA.END_DATE, 'YYYYMMDD') AS END_DATE
-		 FROM  OMS_PSO_PROJECT_MSTR  	 PM
-			,  OMS_PSO_PROJECT_MSTR_AUTH PA
-			,  OMS_PROJECT           	 OP
-			,  SMT_CUSTOMER          	 SC
-			,  OMS_PROJECT_PRODUCT   	 PP
-		 WHERE PM.OU_CODE = #{OU_CODE}
-           AND PM.OU_CODE = OP.OU_CODE
-		   AND OP.OU_CODE = SC.OU_CODE
-		   AND OP.OU_CODE = PP.OU_CODE
-		   AND OP.OU_CODE = PA.OU_CODE
-		   AND PM.PROJECT_CODE = OP.PROJECT_CODE
-		   AND NVL(OP.LATEST_YN,'N') = 'Y'
-		   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
-		   AND OP.PROJECT_CODE = PP.PROJECT_CODE
-		   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
-		   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
-		   AND PM.PRODUCT_GROUP_CODE = PP.PRODUCT_GROUP_CODE
-		   AND PM.PRODUCT_NAME_CODE = PP.PRODUCT_NAME_CODE
-		   AND PM.PRODUCT_MODEL_CODE = PP.PRODUCT_MODEL_CODE
-		   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
-		   AND PM.ITEM_NAME = PP.ITEM_NAME
-		   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID
-		   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, '9999-12-31')
- 		   AND OP.REGISTER_YEAR BETWEEN NVL(#{REGISTER_FROM_YEAR}, 0)
-            							AND NVL(#{REGISTER_TO_YEAR}, 9999)
-
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
-        	<![CDATA[
-        	   AND PM.PROJECT_CODE like  '%'|| #{PROJECT_CODE}|| '%'
-        	]]>
-        </if>
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(OU_COUNTRY_CODE)">
-        	<![CDATA[
-        	   AND REGEXP_LIKE(OP.OU_COUNTRY_CODE, #{OU_COUNTRY_CODE}, 'i')
-        	]]>  
-        </if> 
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_USER_ID)">
-        	<if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_USER_NAME)">
-	        	<![CDATA[
-	        	   AND PA.CHARGE_USER_ID = #{PM_CHG_USER_ID}
-	        	]]>
-        	</if>
-        </if>
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
-        	<if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">    
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID}
-	        	   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
-	        	]]>
-	        </if>
-	    </if>
-	    <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_CODE)">
-        	<![CDATA[
-        	   	AND PM.PRODUCT_NAME_CODE  = #{PRODUCT_CODE}
-        	]]>  
-        </if>    
-           <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
-        	<![CDATA[
-        	   AND OP.CAR_TYPE_CODE = #{CAR_TYPE_CODE} 
-        	]]>  
-        </if>   
-       
-		 ORDER BY PM.PROJECT_CODE, SMT_GET_USER_NAME_FUNC(PM.OU_CODE, PA.CHARGE_USER_ID)
-    </select>  
-    
-    <!-- PM 담당자 변경유무에 따른 정보 이력 조회 -->
-	<select id="SELECT_PM_BY_CHARGE_USER_CHANGE" parameterType="java.util.Map" resultType="java.util.Map">       
-		SELECT ROW_NUMBER() OVER (ORDER BY PM.PROJECT_CODE, PA.START_DATE, PA.END_DATE) AS IDX
-		 	 , PM.PROJECT_CODE
-			 , SMT_GET_USER_NAME_FUNC(PA.OU_CODE, PA.CHARGE_USER_ID) AS CHARGE_USER_NAME
-			 , SMT_GET_USER_NAME_FUNC(PA.OU_CODE, DECODE(PA.PREV_CHARGE_USER_ID, -1, PA.CHARGE_USER_ID, PA.PREV_CHARGE_USER_ID )) AS PREV_CHARGE_USER_NAME
-			 , SMT_GET_COMMON_CODE_NAME_FUNC('O031', COALESCE(PA.UPD_TYPE_CODE, 'NEW'), #{GV_LANG}) AS UPD_TYPE_NAME
-			 , PA.UPD_DETAILS
-			 , TO_CHAR(PA.START_DATE,'YYYY-MM-DD') AS START_DATE
-			 , TO_CHAR(PA.END_DATE,'YYYY-MM-DD') AS END_DATE
-			 , (SELECT USER_NAME  FROM SMT_USER_MSTR WHERE USER_ID = PA.UPD_USER_ID) AS UPD_USER_NAME
-			 , TO_CHAR(PA.UPD_DATE,'YYYY-MM-DD') AS UPD_DATE
-		 FROM OMS_PSO_PROJECT_MSTR_AUTH PA
-			, OMS_PSO_PROJECT_MSTR 		PM
-		WHERE 1=1
-	      AND PA.OU_CODE = #{OU_CODE}
-		  AND PA.OU_CODE = PM.OU_CODE
-		  AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID
-	    <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
-        	<![CDATA[
-            	AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
-        	]]>  
-	    </if>
-	    <if test="@com.oms.MyBatisUtil@isNotEmpty(CHARGE_USER_ID)">
-		    <if test="@com.oms.MyBatisUtil@isNotEmpty(CHARGE_USER_NAME)">
-		    	<![CDATA[
-			      AND
-					(
-					  (COALESCE(PA.UPD_TYPE_CODE, 'NEW') = 'NEW' 
-					  AND (PA.PREV_CHARGE_USER_ID = #{CHARGE_USER_ID} OR PA.CHARGE_USER_ID = #{CHARGE_USER_ID}))
-					  OR
-					  (COALESCE(PA.UPD_TYPE_CODE, 'NEW') <> 'NEW'
-				]]> 
-			    <if test="CHANGE_FLAG == 'PREV'">
-				        AND PA.PREV_CHARGE_USER_ID = #{CHARGE_USER_ID}
-				    </if>
-				    <if test="CHANGE_FLAG == 'CURR'">
-				        AND PA.CHARGE_USER_ID = #{CHARGE_USER_ID}
-			    </if>
-			    ))
-		    </if>
-	    </if>
-	    <if test="@com.oms.MyBatisUtil@isNotEmpty(TRANSFER_DATE)">
-	    	<![CDATA[ 
-	            AND TO_DATE(#{TRANSFER_DATE}, 'YYYY-MM-DD') BETWEEN PA.START_DATE
-	            AND NVL(PA.END_DATE, '9999-12-31')
-	        ]]>  
-	    </if>
-	    ORDER BY PM.PROJECT_CODE, PA.START_DATE, PA.END_DATE
-    </select> 
         
 </mapper>

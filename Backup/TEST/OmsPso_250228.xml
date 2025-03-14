@@ -240,12 +240,14 @@
 			 WHERE UM.OU_CODE = #{OU_CODE}
 			   AND UM.BIZ_DIV = 'PM'
 			   AND UPPER(UM.LOGIN_NO) <> 'PMADMIN'
-			   AND TRUNC(SYSDATE) BETWEEN NVL(UM.ST_DATE,TRUNC(SYSDATE))
-			                          AND NVL(UM.ED_DATE,TRUNC(SYSDATE))
+			   
    		]]>
+   		<!-- 퇴사자 포함 조회하기 위해 수정 by. yelee 
+	           AND TRUNC(SYSDATE) BETWEEN NVL(UM.ST_DATE,TRUNC(SYSDATE))
+	                                AND NVL(UM.ED_DATE,TRUNC(SYSDATE)) -->
    	</select>
    	
-    <!-- PSO대상프로젝트관리 : PSO대상 프로젝트 정보 조회 -->		
+    <!-- PSO대상프로젝트관리 : PSO대상 프로젝트 정보 조회 -->				
 	<select id="SELECT_PSO_PROJECT_MSTR" parameterType="java.util.Map" resultType="java.util.Map">     
 	 	<![CDATA[
 	 		SELECT PM.OU_CODE
@@ -309,10 +311,11 @@
 			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
 			   AND PM.ITEM_NAME = PP.ITEM_NAME   
 			   AND PM.OU_CODE = #{OU_CODE}
+			  
 		]]>	
 		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
         	<![CDATA[
-        	   AND PM.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	   AND PM.PROJECT_CODE = #{PROJECT_CODE}
         	]]>  
         </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_TARGET_YN)">
@@ -383,22 +386,21 @@
 			     , SMT_GET_COMMON_CODE_NAME_FUNC('P005', PM.PSO_TARGET_YN, #{GV_LANG}) AS PSO_TARGET_YN_NAME 
 			     , PM.NO_TARGET_REASON
 			     , PM.PSO_CREATE_YN
-			     , SM.USER_ID  AS PM_USER
-				 , SM.USER_NAME AS PM_USER_NAME
+			     , PA.CHARGE_USER_ID   AS PM_USER
+			     , SMT_GET_USER_NAME_FUNC(PA.OU_CODE,PA.CHARGE_USER_ID) AS PM_USER_NAME 
 			  FROM OMS_PSO_PROJECT_MSTR  	  PM
 			  	 , OMS_PSO_PROJECT_MSTR_AUTH  PA
 			     , OMS_PROJECT           	  OP
 			     , SMT_CUSTOMER          	  SC
 			     , OMS_PROJECT_PRODUCT   	  PP
-			     , SMT_USER_MSTR              SM
 			 WHERE PM.OU_CODE = OP.OU_CODE
 			   AND PM.PROJECT_CODE = OP.PROJECT_CODE
 			   AND NVL(OP.LATEST_YN,'N') = 'Y'
 			   AND OP.OU_CODE = SC.OU_CODE
 			   AND OP.CUSTOMER_ID = SC.CUSTOMER_ID
 			   AND OP.OU_CODE = PP.OU_CODE
-			   AND PM.OU_CODE = PA.OU_CODE(+)
-			   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID(+)
+			   AND PM.OU_CODE = PA.OU_CODE
+			   AND PM.PSO_PROJECT_ID = PA.PSO_PROJECT_ID
 			   AND OP.PROJECT_CODE = PP.PROJECT_CODE
 			   AND OP.PROJECT_VERSION = PP.PROJECT_VERSION
 			   AND PM.BUSINESS_GROUP_CODE = PP.BUSINESS_GROUP_CODE
@@ -408,9 +410,7 @@
 			   AND PM.PRODUCT_PKG_CODE = PP.PRODUCT_PKG_CODE
 			   AND PM.ITEM_NAME = PP.ITEM_NAME   
 			   AND PM.OU_CODE = #{OU_CODE}
-			   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE(+) AND NVL(PA.END_DATE(+), '9999-12-31')
-			   AND OP.OU_CODE = SM.OU_CODE
-			   AND SM.USER_ID = NVL(PA.CHARGE_USER_ID, PM.UPD_USER_ID)
+			   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, '9999-12-31')
 		]]>	
 		<if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
         	<![CDATA[
@@ -432,7 +432,7 @@
         	   AND PM.PSO_TARGET_YN = #{PSO_TARGET_YN} 
         	]]>  
         </if>
-        <!-- <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
         	<![CDATA[
         	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
         	]]>  
@@ -441,19 +441,7 @@
         	<![CDATA[
         	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
         	]]>  
-        </if>  -->
-        <choose>
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID} 
-	        	]]>  
-        	</when>  
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-	        	]]>  
-	        </when> 
-        </choose> 
+        </if>  
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PM_CHG_ID)">
         	<![CDATA[
         	   AND PA.CHARGE_USER_ID = #{PM_CHG_ID} 
@@ -709,7 +697,7 @@
         	   AND PM.ITEM_NAME LIKE '%'|| #{ITEM_NAME} || '%'
         	]]>  
         </if>
-        <!-- <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
         	<![CDATA[
         	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
         	]]>  
@@ -718,19 +706,7 @@
         	<![CDATA[
         	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
         	]]>  
-        </if>  -->
-        <choose>
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID} 
-	        	]]>  
-        	</when>  
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-	        	]]>  
-	        </when> 
-        </choose>
+        </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(R_BOARD_STATUS)">
         	<![CDATA[
         	   AND PRB.R_BOARD_STATUS = #{R_BOARD_STATUS} 
@@ -1255,7 +1231,7 @@
         	   AND PM.ITEM_NAME LIKE '%'|| #{ITEM_NAME} || '%'
         	]]>  
         </if>
-        <!-- <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
         	<![CDATA[
         	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
         	]]>  
@@ -1264,19 +1240,7 @@
         	<![CDATA[
         	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
         	]]>  
-        </if>  -->
-        <choose>
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID} 
-	        	]]>  
-        	</when>  
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-	        	]]>  
-	        </when> 
-        </choose>
+        </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PSO_DOCU_STATUS)">
         	<![CDATA[
         	   AND PD.PSO_DOCU_STATUS = #{PSO_DOCU_STATUS} 
@@ -1454,18 +1418,16 @@
         	   AND NVL(PM.PSO_COMPLETE_YN,'N') = #{PSO_COMPLETE_YN} 
         	]]>  
         </if>
-        <choose>
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID} 
-	        	]]>  
-        	</when>  
-       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-	        	<![CDATA[
-	        	   AND SC.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-	        	]]>  
-	        </when> 
-        </choose>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
+        </if> 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_GROUP_CODE)">
         	<![CDATA[
         	   AND PM.PRODUCT_GROUP_CODE '%'|| #{PRODUCT_GROUP_CODE} || '%'
@@ -1575,6 +1537,16 @@
         	   AND DP.DEPT_CODE LIKE '%'|| #{PSO_DEPT_CODE} || '%' 
         	]]>
         </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
+        	]]>  
+        </if>    
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
+        	<![CDATA[
+        	   AND SC.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
+        	]]>  
+        </if> 
         <if test='PSO_COMPLETE_YN.equals("N")'>
         	<![CDATA[
         	   AND NVL(PM.PSO_COMPLETE_YN,'N') = #{PSO_COMPLETE_YN} 
@@ -1584,17 +1556,13 @@
         	<![CDATA[
         	   AND PSO_GET_USER_NAME_FUNC(DA.CHARGE_USER_ID, DA.CHARGE_EMP_NO) LIKE '%'|| #{CHG_USER_NAME} || '%'
         	]]>  
-        </if>
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
+        </if>     
+        
+       	<if test="@com.oms.MyBatisUtil@isNotEmpty(CHG_USER_ID)">
         	<![CDATA[
-        	   AND SC.CUSTOMER_ID = #{CUSTOMER_ID} 
-        	]]>  
-        </if>  
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-        	<![CDATA[
-        	   AND SC.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-        	]]>  
-        </if> 
+        	   AND (DA.CHARGE_USER_ID = #{CHG_USER_ID} OR DA.CHARGE_EMP_NO = #{CHG_EMP_NO}) 
+        	]]>
+      	</if>
 		<![CDATA[
 			 ORDER BY TO_NUMBER(SUBSTR(PM.PROJECT_CODE
 			        , LENGTH(PM.PROJECT_CODE)-2))
@@ -2148,8 +2116,7 @@
 		   AND DO.PSO_PROJECT_ID = PM.PSO_PROJECT_ID
 		   AND PD.PSO_DOCU_LINE_ID = AU.PSO_DOCU_LINE_ID
 		   AND TRUNC(SYSDATE) BETWEEN AU.START_DATE AND NVL(AU.END_DATE, '9999-12-31')
-		   AND TRUNC(SYSDATE) BETWEEN PA.START_DATE AND NVL(PA.END_DATE, '9999-12-31')
- 		   AND PA.CHARGE_USER_ID = #{GV_USER_ID}
+		   AND PA.CHARGE_USER_ID = #{GV_USER_ID}
 
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
         	<![CDATA[

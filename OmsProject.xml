@@ -92,16 +92,18 @@
         	   AND PV.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
         	]]>  
         </if>  
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-        	<![CDATA[
-        	   AND PV.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
-        	]]>  
-        </if>    
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
-        	<![CDATA[
-        	   AND PV.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
-        	]]>  
-        </if> 
+        <choose>
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
+	        	<![CDATA[
+	        	   AND PV.CUSTOMER_ID = #{CUSTOMER_ID} 
+	        	]]>  
+        	</when>  
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+	        	<![CDATA[
+	        	   AND PV.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
+	        	]]>  
+	        </when> 
+        </choose>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
                AND REGEXP_LIKE(PV.ACT_STATUS_CODE, #{ACT_STATUS_CODE}, 'i')
 
@@ -116,6 +118,49 @@
         	   AND PV.RFQ_CODE LIKE '%'|| #{RFQ_CODE} || '%'
         	]]>  
         </if> 
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND PV.CAR_TYPE_CODE LIKE '%'|| #{CAR_TYPE_CODE} || '%'
+        	]]>  
+        </if>  
+		 ORDER BY REGISTER_YEAR, TO_NUMBER (SUBSTR( PV.PROJECT_CODE,LENGTH(PV.PROJECT_CODE)-2) )     
+	 </select>	
+	 
+	 
+	 <!-- 프로젝트 (팝업)조회 -->
+	<select id="SELECT_PROJECT_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT PV.OU_CODE
+		      ,PV.PROJECT_CODE
+		      ,PV.PROJECT_VERSION
+		      ,PV.CAR_TYPE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', PV.CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+		      ,PV.REGISTER_YEAR
+		      ,PV.ACT_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O015', PV.ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+		      ,PV.DETAIL_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O016', PV.DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+		      ,PV.CUSTOMER_ID
+		      ,PV.CUSTOMER_NAME
+              ,PV.CUSTOMER_AREA AS CUSTOMER_AREA_NAME
+		      -- OMS_PROJECT_AUTH 테이블에서 권한 관리
+ 		      ,OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                  PV.OU_CODE,
+                                                  PV.PROJECT_CODE)  AS AUTH
+		  FROM OMS_PROJECT_V PV
+		 WHERE PV.OU_CODE = #{OU_CODE}
+ 		   AND OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                  PV.OU_CODE,
+                                                  PV.PROJECT_CODE) !='N'
+        <if test="@com.oms.MyBatisUtil@isEmpty(PROJECT_VERSION)">
+        	<![CDATA[
+        	   AND PV.LATEST_YN = 'Y' --최신 버젼   
+        	]]>  
+        </if>                                           
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PV.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>  
         <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
         	<![CDATA[
         	   AND PV.CAR_TYPE_CODE LIKE '%'|| #{CAR_TYPE_CODE} || '%'
@@ -232,16 +277,18 @@
         	   AND PV.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
         	]]>  
         </if>  
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-        	<![CDATA[
-        	   AND PV.CUSTOMER_NAME LIKE '%'|| #{CUSTOMER_NAME} || '%'
-        	]]>  
-        </if>    
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
-        	<![CDATA[
-        	   AND PV.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
-        	]]>  
-        </if>   
+        <choose>
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
+	        	<![CDATA[
+	        	   AND PV.CUSTOMER_ID = #{CUSTOMER_ID} 
+	        	]]>  
+        	</when>  
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+	        	<![CDATA[
+	        	   AND PV.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
+	        	]]>  
+	        </when> 
+        </choose>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
                AND REGEXP_LIKE(PV.ACT_STATUS_CODE, #{ACT_STATUS_CODE}, 'i')
 
@@ -263,6 +310,74 @@
         </if>  
 		 ORDER BY REGISTER_YEAR, TO_NUMBER (SUBSTR( PV.PROJECT_CODE,LENGTH(PV.PROJECT_CODE)-2) ) 
     </select>
+    
+    
+    <!-- 프로젝트 조회 팝업 -->
+	<select id="SELECT_PROJECT_ALL_POP" parameterType="java.util.Map" resultType="java.util.Map">     
+		SELECT OU_CODE
+		      ,PROJECT_CODE
+		      ,PROJECT_VERSION
+		      ,CAR_TYPE_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
+		      ,REGISTER_YEAR
+		      ,ACT_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O015', ACT_STATUS_CODE, #{GV_LANG}) AS ACT_STATUS_NAME
+		      ,DETAIL_STATUS_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O016', DETAIL_STATUS_CODE, #{GV_LANG}) AS DETAIL_STATUS_NAME
+		      ,DOMESTIC_EXPORT_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O003', DOMESTIC_EXPORT_CODE, #{GV_LANG}) AS DOMESTIC_EXPORT_NAME
+		      ,CUSTOMER_ID
+		      ,CUSTOMER_NAME
+		      ,ITEM_NAME
+		      ,ERP_ITEM_NO
+		      ,BUSINESS_GROUP_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O013', BUSINESS_GROUP_CODE, #{GV_LANG}) AS BUSINESS_GROUP_NAME
+		      ,PRODUCT_GROUP_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O007', PRODUCT_GROUP_CODE, #{GV_LANG}) AS PRODUCT_GROUP_NAME
+		      ,PRODUCT_NAME_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O008', PRODUCT_NAME_CODE, #{GV_LANG}) AS PRODUCT_NAME
+		      ,PRODUCT_MODEL_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O010', PRODUCT_MODEL_CODE, #{GV_LANG}) AS PRODUCT_MODEL_NAME
+              ,CUSTOMER_AREA AS CUSTOMER_AREA_NAME
+		      ,CURRENCY_CODE
+		      ,SMT_GET_COMMON_CODE_NAME_FUNC('F018', CURRENCY_CODE, #{GV_LANG}) AS CURRENCY_NAME
+		      ,LATEST_YN
+		      ,ROLLING_YN
+		      ,PROJECT_PRODUCT_ID
+		      ,OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                  OU_CODE,
+                                                  PROJECT_CODE)  AS AUTH
+              ,ECOST_REG_FLAG
+              ,COST_REG_FLAG
+		  FROM OMS_PROJECT_PRODUCT_ALL_V PV
+		 WHERE OU_CODE = #{OU_CODE}
+		   AND OMS_PROJECT_PKG.GEN_USER_AUTH_FUNC(#{GV_USER_ID},
+                                                  OU_CODE,
+                                                  PROJECT_CODE) !='N'
+        <if test="@com.oms.MyBatisUtil@isEmpty(PROJECT_VERSION)">
+        	<![CDATA[
+        	   AND PV.LATEST_YN = 'Y' --최신 버젼   
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(PROJECT_CODE)">
+        	<![CDATA[
+        	   AND PV.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
+        	]]>  
+        </if>
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(CAR_TYPE_CODE)">
+        	<![CDATA[
+        	   AND PV.CAR_TYPE_CODE LIKE '%'|| #{CAR_TYPE_CODE} || '%'
+        	]]>  
+        </if>  
+        <if test="@com.oms.MyBatisUtil@isNotEmpty(ITEM_NAME)">
+        	<![CDATA[
+        	   AND PV.ITEM_NAME LIKE '%'|| #{ITEM_NAME} || '%'
+        	]]>  
+        </if>  
+		 ORDER BY REGISTER_YEAR, TO_NUMBER (SUBSTR( PV.PROJECT_CODE,LENGTH(PV.PROJECT_CODE)-2) ) 
+    </select>
+    
+    
     <!-- 프로젝트 버젼 조회 -->
 	<select id="SELECT_PROJECT_VERSION" parameterType="java.util.Map" resultType="java.util.Map">     
 		SELECT DISTINCT PROJECT_VERSION AS CODE
@@ -951,11 +1066,18 @@
         	   AND PRA.PROJECT_CODE like  '%'|| #{RFQ_CODE}|| '%'
         	]]>  
         </if>        
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
-        	<![CDATA[
-        	   AND PRA.CUSTOMER_ID =  #{CUSTOMER_ID}
-        	]]>  
-        </if>   
+        <choose>
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
+	        	<![CDATA[
+	        	   AND PRA.CUSTOMER_ID = #{CUSTOMER_ID} 
+	        	]]>  
+        	</when>  
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+	        	<![CDATA[
+	        	   AND PRA.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
+	        	]]>  
+	        </when> 
+        </choose>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(ACT_STATUS_CODE)">
                AND REGEXP_LIKE(PRA.ACT_STATUS_CODE, #{ACT_STATUS_CODE}, 'i')
         </if>   
@@ -1817,14 +1939,18 @@
         	   AND pv.PROJECT_CODE LIKE '%'|| #{PROJECT_CODE} || '%'
         	]]>
         </if>
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
-        	<if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">    
+        <choose>
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
 	        	<![CDATA[
-	        	   AND pv.CUSTOMER_ID = rf.CUSTOMER_ID
-	        	   AND rf.CUSTOMER_ID LIKE '%'|| #{CUSTOMER_ID} || '%'
-	        	]]>
-	        </if>
-	    </if>
+	        	   AND RF.CUSTOMER_ID = #{CUSTOMER_ID} 
+	        	]]>  
+        	</when>  
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+	        	<![CDATA[
+	        	   AND RF.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
+	        	]]>  
+	        </when> 
+        </choose>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_CODE)">
         	<![CDATA[
         	   	AND rf.PRODUCT_NAME_CODE  = #{PRODUCT_CODE}

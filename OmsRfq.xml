@@ -16,7 +16,7 @@
 		      ,SMT_GET_COMMON_CODE_NAME_FUNC('O018', CAR_TYPE_CODE, #{GV_LANG}) AS CAR_TYPE_NAME
 		      ,RF.TARGET_DATE
 		      ,RFA.CHARGE_USER_ID
-      		  ,(SELECT USER_NAME FROM SMT_USER_MSTR WHERE USER_ID = RFA.CHARGE_USER_ID) AS CHARGE_USER_NAME
+      		  ,(SELECT USER_NAME FROM SMT_USER_MSTR WHERE OU_CODE = RFA.OU_CODE AND USER_ID = RFA.CHARGE_USER_ID) AS CHARGE_USER_NAME
 		      ,RF.CUSTOMER_ID
 		      ,RF.CUSTOMER_NAME
 		      ,RF.CUSTOMER_GROUP
@@ -52,17 +52,22 @@
         	   AND RF.CAR_TYPE_CODE = #{CAR_TYPE_CODE} 
         	]]>  
         </if> 
-
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
-        	<![CDATA[
-        	   AND RF.CUSTOMER_ID = #{CUSTOMER_ID} 
-        	]]>  
-        </if>   
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-        	<![CDATA[
-        	   AND RF.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-        	]]>  
-        </if>   
+		<!-- 고객명이 공백일 시 고객 ID 값은 -111값을 가짐. -> 고객 ID가 양수일 시에는 ID로 검색
+			  고객 ID가 아닌 고객명으로 검색하고 싶다면, NAME으로 검색 250311 modified by.yelee -->
+		<choose>
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
+	        	<![CDATA[
+	        	   AND RF.CUSTOMER_ID = #{CUSTOMER_ID} 
+	        	]]>  
+        	</when>  
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+	        	<![CDATA[
+	        	   AND RF.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
+	        	]]>  
+	        </when> 
+        </choose>
+        
+        
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_NAME_CODE)">
         	<![CDATA[
         	   AND RF.PRODUCT_NAME_CODE = #{PRODUCT_NAME_CODE} 
@@ -138,20 +143,19 @@
         	   AND rf.CAR_TYPE_CODE = #{CAR_TYPE_CODE} 
         	   AND pv.CAR_TYPE_CODE = rf.CAR_TYPE_CODE
         	]]>  
-        </if> 
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID)">
-        	<if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+        </if>
+		<choose>
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_ID) and CUSTOMER_ID > 0">
 	        	<![CDATA[
-	        	   	AND rf.CUSTOMER_ID = #{CUSTOMER_ID}
-	        	]]>
-        	</if> 
-	    </if> 
-        <if test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
-        	<![CDATA[
-        	   AND rf.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
-        	]]>  
-        </if>      
-	        
+	        	   AND RF.CUSTOMER_ID = #{CUSTOMER_ID} 
+	        	]]>  
+        	</when>  
+       		<when test="@com.oms.MyBatisUtil@isNotEmpty(CUSTOMER_NAME)">
+	        	<![CDATA[
+	        	   AND RF.CUSTOMER_NAME LIKE '%'||  #{CUSTOMER_NAME} || '%'
+	        	]]>  
+	        </when> 
+        </choose>
         <if test="@com.oms.MyBatisUtil@isNotEmpty(PRODUCT_CODE)">
         	<![CDATA[
         	   AND rf.PRODUCT_NAME_CODE = #{PRODUCT_CODE} 
